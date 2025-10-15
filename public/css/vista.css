@@ -10,8 +10,8 @@ body {
 }
 
 .header {
-  background: #f4f4f4;
-  border-bottom: 1px solid #e5e7eb;
+  background: #bceef38a;
+  border-bottom: 1px solid, #9fcfd3;
 }
 
 .header h4 {
@@ -20,12 +20,12 @@ body {
 }
 
 .navbar{
-  background:  #8bb8bc;
+  background:  #9fcfd3;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .btn{
-    background:  #8bb8bc;
+    background:  #9fcfd3;
 }
 
 .sidebar {
@@ -120,7 +120,7 @@ body {
 }
 
 .modal-header {
-  background: #8bb8bc;
+  background: #9fcfd3;
   color: #fff;
   border-bottom: none;
   border-radius: 16px 16px 0 0;
@@ -136,7 +136,7 @@ body {
 
 .modal-footer {
   border-top: none;
-  background: #8bb8bc;
+  background: #9fcfd3;
   border-radius: 0 0 16px 16px;
 }
 
@@ -185,8 +185,8 @@ input[type="color"].form-control-color {
 }
 
 /* ====== Botones ====== */
-.modal-footer .btn-primary {
-  background: #8bb8bc;
+.btn-primary {
+  background: #9fcfd3;
   border: none;
   font-weight: 600;
   border-radius: 10px;

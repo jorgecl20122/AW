@@ -13,19 +13,20 @@ desde la base de datos al entrar en la vista de administración.
                 let html = '<div class="row g-3">';
 
                 concesionarios.forEach(c => {
-                    html += `
-                       <div class="col-md-6">
-                          <div class="vehicle-card">
-                            <h5>${c.nombre} <span class="badge bg-success">Activo</span></h5>
-                            <p class="text-muted"><i class="bi bi-geo-alt"></i> Ciudad: ${c.ciudad || 'Sin especificar'}</p>
-                            <p><i class="bi bi-telephone"></i> Teléfono: ${c.telefono || '-'}</p>
-                            <p><i class="bi bi-envelope"></i> Correo: ${c.correo}</p><br>
-                            <div class="d-flex gap-2">
-                              <button class="btn btn-edit">Editar</button>
-                              <button class="btn btn-delete">Eliminar</button>
-                            </div>
-                          </div>
-                        </div>`;
+                   html += `
+                    <div class="col-md-6">
+                        <div class="vehicle-card" data-id="${c.id}">
+                        <h5><strong>${c.nombre}</strong> <span class="badge bg-success">Activo</span></h5>
+                        <p class="text-muted"><i class="bi bi-geo-alt"></i> Ciudad: ${c.ciudad || 'Sin especificar'}</p>
+                        <p><i class="bi bi-telephone"></i> Teléfono: ${c.telefono || '-'}</p>
+                        <p><i class="bi bi-envelope"></i> Correo: ${c.correo}</p><br>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-ver-vehiculos"><i class="bi bi-car-front"></i><strong>Vehículos</strong></button>
+                            <button class="btn btn-edit"><strong>Editar</strong></button>
+                            <button class="btn btn-delete"><strong>Eliminar</strong></button>
+                        </div>
+                        </div>
+                    </div>`;
                 });
 
                 html += '</div>';
@@ -66,46 +67,69 @@ desde la base de datos al entrar en la vista de administración.
     });
 
     // Editar concesionario
-    $('#concesionarios-container').on('click', '.btn-edit', function() {
-        const card = $(this).closest('.card');
-        const id = card.data('id');
-        const nombre = card.find('h5').text();
-        const ubicacion = card.find('p.text-muted:first').text().replace('Ubicación: ', '');
+$('#concesionarios-container').on('click', '.btn-edit', function() {
+    const card = $(this).closest('.card');
+    const id = card.data('id');
 
-        $('#modalEdit #editNombre').val(nombre);
-        $('#modalEdit #editUbicacion').val(ubicacion);
-        $('#modalEdit').data('id', id);
+    // Extraer los valores del card
+    const nombre = card.find('h5').text().trim();
+    const ubicacion = card.find('p.text-muted[data-field="ubicacion"]').text().replace('Ubicación: ', '').trim();
+    const correo = card.find('p[data-field="correo"]').text().replace('Correo: ', '').trim();
+    const telefono = card.find('p[data-field="telefono"]').text().replace('Teléfono: ', '').trim();
 
-        const modal = new bootstrap.Modal(document.getElementById('modalEdit'));
-        modal.show();
-    });
+    // Rellenar los campos del modal
+    $('#modalEdit').data('id', id);
+    $('#editNombre').val(nombre);
+    $('#editUbicacion').val(ubicacion);
+    $('#editCorreo').val(correo);
+    $('#editTelefono').val(telefono);
 
-    // Guardar cambios: para que al editar se guarde bien la información actualizada
-    $('#guardarEdit').on('click', function() {
-        const id = $('#modalEdit').data('id');
-        const nombre = $('#editNombre').val().trim();
-        const ubicacion = $('#editUbicacion').val().trim();
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalEdit'));
+    modal.show();
+});
 
-        if (!nombre || !ubicacion) {
-            alert('Por favor, completa todos los campos');
-            return;
+
+    // Guardar cambios del concesionario editado
+$('#guardarEdit').on('click', function() {
+    const id = $('#modalEdit').data('id');
+    const nombre = $('#editNombre').val().trim();
+    const ubicacion = $('#editUbicacion').val().trim();
+    const correo = $('#editCorreo').val().trim();
+    const telefono = $('#editTelefono').val().trim();
+
+    // Validar campos obligatorios
+    if (!nombre || !ubicacion || !correo || !telefono) {
+        alert('Por favor, completa todos los campos');
+        return;
+    }
+
+    // Crear el objeto con los datos actualizados
+    const datosActualizados = {
+        nombre,
+        ubicacion,
+        correo,
+        telefono
+    };
+
+    // Enviar actualización al backend
+    $.ajax({
+        method: 'PUT',
+        url: `/admin/api/${id}`,
+        contentType: 'application/json',
+        data: JSON.stringify(datosActualizados),
+        success: function(data) {
+            alert(data.mensaje || 'Concesionario actualizado correctamente');
+            cargarConcesionarios(); 
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEdit'));
+            modal.hide();
+        },
+        error: function(err) {
+            alert(err.responseJSON?.mensaje || 'Error al actualizar concesionario');
         }
-
-        $.ajax({
-            method: 'PUT',
-            url: `/admin/api/${id}`,
-            contentType: 'application/json',
-            data: JSON.stringify({ nombre, ubicacion }),
-            success: function(data) {
-                alert(data.mensaje || 'Concesionario actualizado correctamente');
-                cargarConcesionarios(); // 🔁 actualizar lista desde la base de datos
-                bootstrap.Modal.getInstance(document.getElementById('modalEdit')).hide();
-            },
-            error: function(err) {
-                alert(err.responseJSON?.mensaje || 'Error al actualizar concesionario');
-            }
-        });
     });
+});
+
 
 //-------------------------------------------------------------------------------
 // ESTA SECCIÓN GESTIONA EL FORMULARIO DE AÑADIR NUEVO CONCESIONARIO
@@ -185,7 +209,6 @@ function cargarVehiculosTabla() {
                         <th>Color</th>
                         <th>Imagen</th>
                         <th>Concesionario</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -201,11 +224,11 @@ function cargarVehiculosTabla() {
                         <td>${v.numero_plazas}</td>
                         <td>${v.autonomia_km} km</td>
                         <td>${v.color}</td>
-                        <td>${v.imagen ? `<img src="${v.imagen}" alt="Imagen" style="width:50px; height:auto;">` : '-'}</td>
+                        <td>${v.imagen ? `<img src="${v.imagen}" alt="Imagen">` : '-'}</td>
                         <td>${v.concesionario}</td>
                         <td>
-                            <button class="btn btn-sm btn-edit-vehiculo">Editar</button>
-                            <button class="btn btn-sm btn-delete-vehiculo">Eliminar</button>
+                            <button class="btn btn-sm btn-edit-vehiculo"><strong>Editar</strong></button>
+                            <button class="btn btn-sm btn-delete-vehiculo"><strong>Eliminar</strong></button>
                         </td>
                     </tr>
                 `;
@@ -219,7 +242,7 @@ function cargarVehiculosTabla() {
             $('#vehiculos-container').html(html).show();
         },
         error: function(err) {
-            console.error('Error al cargar vehículos:', err);
+            console.error('Error al cargar todos los vehículos:', err);
             $('#vehiculos-container').html('<p class="text-danger">Error al cargar vehículos.</p>');
         }
     });
@@ -324,5 +347,78 @@ $('#guardarEditVehiculo').on('click', function() {
         }
     });
 });
+
+// Cargar vehículos de un concesionario específico
+function cargarVehiculosPorConcesionario(idConcesionario) {
+  $.ajax({
+    url: `/admin/lista_vehiculos/${idConcesionario}`,
+    method: 'GET',
+    success: function(vehiculos) {
+
+      if (!vehiculos || vehiculos.length === 0) {
+        $('#listaVehiculosConcesionario').html('<p class="text-center">Este concesionario no tiene vehículos registrados.</p>');
+        return;
+      }
+
+      let html = `
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-info">
+            <tr>
+              <th>Matrícula</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Año</th>
+              <th>Plazas</th>
+              <th>Autonomía</th>
+              <th>Color</th>
+              <th>Imagen</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      vehiculos.forEach(v => {
+        html += `
+          <tr data-id="${v.id}">
+            <td>${v.matricula}</td>
+            <td>${v.marca}</td>
+            <td>${v.modelo}</td>
+            <td>${v.anio_matriculacion}</td>
+            <td>${v.numero_plazas}</td>
+            <td>${v.autonomia_km} km</td>
+            <td>${v.color}</td>
+            <td>${v.imagen ? `<img src="${v.imagen}" alt="Imagen" style="width:50px;">` : '-'}</td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      $('#listaVehiculosConcesionario').html(html);
+    },
+    error: function(err) {
+      console.error('Error al cargar vehículos del concesionario:', err);
+      $('#listaVehiculosConcesionario').html('<p class="text-danger">Error al cargar los vehículos.</p>');
+    }
+  });
+}
+
+
+$(document).on('click', '.btn-ver-vehiculos', function() {
+      const idConcesionario = $(this).closest('[data-id]').data('id'); 
+    console.log('ID del concesionario clicado:', idConcesionario);
+
+    if (!idConcesionario) {
+        alert('No se ha encontrado el ID del concesionario');
+        return;
+    }
+
+    $('#modalVehiculosConcesionario').data('id', idConcesionario);
+
+    cargarVehiculosPorConcesionario(idConcesionario);
+
+    const modal = new bootstrap.Modal(document.getElementById('modalVehiculosConcesionario'));
+    modal.show();
+});
+
 
 });

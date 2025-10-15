@@ -19,19 +19,19 @@
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
     <div class="d-flex align-items-center">
-      <a href="/admin/vista_admin" class="btn-custom mx-2 nav-link" data-route="/admin/vista_admin"><i class="bi bi-house"></i> Inicio</a>
-      <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i> Vehículos</a>
-      <a href="/usuario/vistaLista" class="btn-custom mx-2 nav-link" data-route="/usuarios"><i class="bi bi-people"></i> Usuarios</a>
-      <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i>Accesibilidad</a>
+      <a href="/admin/vista_admin" class="btn-custom mx-2 nav-link" data-route="/admin/vista_admin"><i class="bi bi-house"></i><strong>Inicio</strong> </a>
+      <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i><strong>Vehículos</strong> </a>
+      <a href="/usuario/vistaLista" class="btn-custom mx-2 nav-link" data-route="/usuarios"><i class="bi bi-people"></i><strong>Usuarios</strong> </a>
+      <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i><strong>Accesibilidad</strong></a>
     </div>
 
     <div class="d-flex align-items-center ms-auto">
       <a href="/admin/vista_admin" id="btnAdmin" class="btn-custom mx-2 nav-link">
-          <i class="bi bi-gear"></i> Administración
+          <i class="bi bi-gear"></i><strong>Administración</strong>
       </a>
 
       <a href="/usuario/logout" class="btn btn-custom mx-2">
-        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+        <i class="bi bi-box-arrow-right"></i> <strong>Cerrar sesión</strong>
       </a>
     </div>
   </div>
@@ -56,7 +56,7 @@
       <h2 class="fw-bold">Portal de Administrador</h2>
      <div class="ms-auto d-flex gap-2">
       <button class="btn" id="btnAddConcesionario">
-        <i class="bi bi-plus-lg"></i> Añadir Concesionario
+        <i class="bi bi-plus-lg"></i><strong> Añadir Concesionario</strong>
       </button>
     </div>
     </div>
@@ -85,8 +85,8 @@
       </div>
 
       <div class="mt-3 d-flex gap-2">
-        <button type="submit" class="btn">Guardar</button>
-        <button type="button" id="cancelarConcesionario" class="btn">Cancelar</button>
+        <button type="submit" class="btn"><strong>Guardar</strong></button>
+        <button type="button" id="cancelarConcesionario" class="btn"><strong>Cancelar</strong></button>
       </div>
     </form>
   </div>
@@ -126,8 +126,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn" data-bs-dismiss="modal">Cancelar</button>
-        <button id="guardarEdit" class="btn">Guardar cambios</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+        <button id="guardarEdit" class="btn btn-primary">Guardar cambios</button>
       </div>
     </div>
   </div>
@@ -207,7 +207,7 @@
 <div class="modal fade" id="modalVehiculosConcesionario" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header bg-info text-white">
+      <div class="modal-header text-white">
         <h5 class="modal-title fw-bold">
           <i class="bi bi-car-front me-2"></i> Vehículos del Concesionario
         </h5>

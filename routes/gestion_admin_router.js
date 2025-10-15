@@ -156,11 +156,20 @@ router.put('/vehiculos/:id', upload.single('imagen'), (req, res) => {
     });
 });
 
-// Vista de administración
-router.get('/vistaReserva', (req, res) => {
-    const usuario = req.session.usuario;
-    res.render('Reservas', { usuario });
+
+router.get('/lista_vehiculos/:id', (req, res) => {
+  const id = req.params.id_concesionario;
+  console.log('ID del concesionario clicado:', id);
+
+  pool.query('SELECT * FROM vehiculos WHERE concesionario_id = ?', [id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ mensaje: 'Error al obtener vehículos' });
+    }
+    res.json(results);
+  });
 });
+
+
 
 
 module.exports = router;
