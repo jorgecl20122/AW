@@ -1,5 +1,7 @@
 $(document).ready(function(){
 
+// Comentario de prueba
+
   // Cargar preferencias desde sessionStorage si existen
   if(sessionStorage.getItem('accesibilidad')) {
       let prefs = JSON.parse(sessionStorage.getItem('accesibilidad'));
