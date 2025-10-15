@@ -1,0 +1,35 @@
+-- Tabla USUARIOS
+CREATE TABLE  USUARIOS(
+    id_usuario INT PRIMARY KEY AUTO_INCREMENT,
+    nombre_completo VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) UNIQUE NOT NULL,
+    contraseña VARCHAR(20),
+    rol ENUM('administrador', 'empleado') NOT NULL,
+    telefono VARCHAR(20),
+    id_concesionario INT,
+     FOREIGN KEY (id_concesionario) REFERENCES CONCESIONARIOS(id_concesionario)
+);
+
+-- Tabla CONCESIONARIOS
+CREATE TABLE CONCESIONARIOS (
+    id_concesionario INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    ciudad VARCHAR(30),
+    correo VARCHAR(100) UNIQUE NOT NULL,
+    telefono VARCHAR(20)
+);
+
+CREATE TABLE vehiculos (
+    id_vehiculo INT AUTO_INCREMENT PRIMARY KEY,
+    matricula VARCHAR(10) NOT NULL UNIQUE,
+    marca VARCHAR(50) NOT NULL,
+    modelo VARCHAR(50) NOT NULL,
+    anio_matriculacion YEAR NOT NULL,
+    numero_plazas INT NOT NULL,
+    autonomia_km INT NOT NULL,
+    color VARCHAR(30),
+    imagen VARCHAR(255),
+    estado ENUM('disponible','reservado','mantenimiento') DEFAULT 'disponible',
+    id_concesionario INT NOT NULL,
+    FOREIGN KEY (id_concesionario) REFERENCES concesionarios(id_concesionario)
+);

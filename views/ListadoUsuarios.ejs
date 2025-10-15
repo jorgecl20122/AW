@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/vista.css">
+</head>
+<body>
+
+<header class="header d-flex align-items-center p-3">
+  <img src="/img/images.jpeg" alt="Logo Empresa" class="logo_img me-4">
+  <div>
+    <h4 class="mb-0 fw-bold">EcoFlota</h4>
+    <small class="text-muted fw-bold"><em>Plataforma web de Gestión de Flotas de Vehículos Eléctricos</em></small>
+  </div>
+</header>
+
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center">
+      <a href="/admin/vista_admin" class="btn-custom mx-2 nav-link" data-route="/admin/vista_admin"><i class="bi bi-house"></i> Inicio</a>
+      <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i> Vehículos</a>
+      <a href="/usuario/vistaLista" class="btn-custom mx-2 nav-link" data-route="/usuarios"><i class="bi bi-people"></i> Usuarios</a>
+      <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i>Accesibilidad</a>
+    </div>
+
+    <div class="d-flex align-items-center ms-auto">
+      <a href="/admin/vista_admin" id="btnAdmin" class="btn-custom mx-2 nav-link">
+          <i class="bi bi-gear"></i> Administración
+      </a>
+
+      <a href="/usuario/logout" class="btn btn-custom mx-2">
+        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- para lateral con las estadisticas y el usuario abajo-->
+<div class="d-flex">
+  <aside class="sidebar p-3">
+    <div class="mt-4">
+      <h6 class="text-muted">Estado de la Flota</h6><br>
+      <div class="status-box available">Disponibles <span>12</span></div>
+      <div class="status-box in-use">En uso <span>4</span></div>
+    </div>
+    <div class="user-info mt-auto">
+      <p class="fw-bold mb-0">Administrador</p>
+      <small class="text-muted">admin@empresa.com</small>
+    </div>
+  </aside>
+
+<main class="flex-grow-1 p-4">
+  <div class="d-flex align-items-center mb-4">
+    <h2 class="fw-bold">Lista de Usuarios Registrados</h2>
+  </div>
+
+  <!-- Barra de búsqueda -->
+  <div class="mb-3 d-flex justify-content-between align-items-center">
+    <input type="text" id="buscarUsuario" class="form-control w-50" placeholder="Buscar usuario por nombre o correo...">
+  </div>
+
+  <!-- Contenedor dinámico de usuarios -->
+  <div id="usuarios-container">
+    <!-- Aquí se insertará la tabla generada por cargarUsuariosTabla() -->
+    
+  </div>
+</main>
+
+</div>
+
+<!-- Modal de edición -->
+<div class="modal fade" id="modalEdit" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Concesionario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label>Nombre</label>
+          <input type="text" id="editNombre" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Ubicación</label>
+          <input type="text" id="editUbicacion" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Correo</label>
+          <input type="email" id="editCorreo" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Teléfono</label>
+          <input type="text" id="editTelefono" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Cancelar</button>
+        <button id="guardarEdit" class="btn">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de accesibilidad -->
+<div class="modal fade" id="configuradorModal" tabindex="-1" aria-labelledby="configuradorLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content shadow-lg rounded-4 border-0">
+      <div class="modal-header text-white rounded-top-4">
+        <h5 class="modal-title fw-bold" id="configuradorLabel">
+          <i class="bi bi-sliders2-vertical me-2"></i> Configurador de Estilo
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="form-configurador" class="row g-3">
+          <!-- Tamaño de títulos -->
+          <div class="col-md-6">
+            <label for="fuente-titulo" class="form-label fw-semibold">Tamaño de fuente (Títulos)</label>
+            <input type="range" id="fuente-titulo" min="1" max="3" step="0.1" value="1.5" class="form-range">
+          </div>
+          <!-- Tamaño de texto -->
+          <div class="col-md-6">
+            <label for="fuente-texto" class="form-label fw-semibold">Tamaño de fuente (Texto)</label>
+            <input type="range" id="fuente-texto" min="1" max="2" step="0.1" value="1" class="form-range">
+          </div>
+          <!-- Color títulos -->
+          <div class="col-md-6">
+            <label for="color-titulos" class="form-label fw-semibold">Color de los títulos</label>
+            <input type="color" id="color-titulos" class="form-control form-control-color" value="#000000">
+          </div>
+          <!-- Color texto -->
+          <div class="col-md-6">
+            <label for="color-texto" class="form-label fw-semibold">Color del texto</label>
+            <input type="color" id="color-texto" class="form-control form-control-color" value="#333333">
+          </div>
+          <!-- Fondo sección -->
+          <div class="col-md-6">
+            <label for="fondo-seccion" class="form-label fw-semibold">Color de fondo</label>
+            <input type="color" id="fondo-seccion" class="form-control form-control-color" value="#f8f9fa">
+          </div>
+          <!-- Subrayado enlaces -->
+          <div class="col-md-6 d-flex align-items-center">
+            <div class="form-check">
+              <input type="checkbox" id="subrayado-enlaces" class="form-check-input">
+              <label for="subrayado-enlaces" class="form-check-label fw-semibold">Subrayar enlaces</label>
+            </div>
+          </div>
+          <!-- Contraste alto -->
+          <div class="col-md-6 d-flex align-items-center">
+            <div class="form-check">
+              <input type="checkbox" id="modo-contraste" class="form-check-input">
+              <label for="modo-contraste" class="form-check-label fw-semibold">Modo alto contraste</label>
+            </div>
+          </div>
+          <!-- Paleta daltonismo -->
+          <div class="col-md-6 d-flex align-items-center">
+            <div class="form-check">
+              <input type="checkbox" id="modo-daltonismo" class="form-check-input">
+              <label for="modo-daltonismo" class="form-check-label fw-semibold">Paleta daltonismo</label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer rounded-bottom-4">
+        <button type="submit" form="form-configurador" class="btn btn-primary">
+          <i class="bi bi-check2-circle"></i> Aplicar cambios
+        </button>
+        <button type="button" class="btn btn-primary" id="btnRestaurar">Restaurar valores</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Vehículos del Concesionario -->
+<div class="modal fade" id="modalVehiculosConcesionario" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-car-front me-2"></i> Vehículos del Concesionario
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="listaVehiculosConcesionario" class="table-responsive">
+          <!-- Aquí se insertará la tabla de vehículos -->
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/javascripts/script_admin.js"></script>
+<script src="/javascripts/accesibilidad.js"></script>
+<script src="/javascripts/script_usuarios.js"></script>
+
+</body>
+</html>

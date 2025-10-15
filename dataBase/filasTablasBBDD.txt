@@ -1,0 +1,13 @@
+INSERT INTO vehiculos 
+(matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario)
+VALUES
+('1234ABC', 'Tesla', 'Model 3', 2022, 5, 450, 'Rojo', '/img/vehiculos/1234ABC.jpg', 'disponible', 3),
+('5678DEF', 'Nissan', 'Leaf', 2021, 5, 350, 'Blanco', '/img/vehiculos/5678DEF.jpg', 'reservado', 5),
+('9012GHI', 'Renault', 'Zoe', 2020, 5, 300, 'Azul', '/img/vehiculos/9012GHI.jpg', 'mantenimiento', 4),
+('3456JKL', 'BMW', 'i3', 2019, 4, 250, 'Negro', '/img/vehiculos/3456JKL.jpg', 'disponible', 11),
+('7890MNO', 'Volkswagen', 'ID.3', 2023, 5, 420, 'Gris', '/img/vehiculos/7890MNO.jpg', 'disponible', 3),
+('1122PQR', 'Hyundai', 'Kona Electric', 2022, 5, 480, 'Verde', '/img/vehiculos/1122PQR.jpg', 'reservado', 5),
+('3344STU', 'Audi', 'e-tron', 2021, 5, 400, 'Blanco', '/img/vehiculos/3344STU.jpg', 'disponible', 4),
+('5566VWX', 'Mercedes', 'EQC', 2020, 5, 390, 'Negro', '/img/vehiculos/5566VWX.jpg', 'mantenimiento', 11),
+('7788YZA', 'Peugeot', 'e-208', 2023, 5, 340, 'Rojo', '/img/vehiculos/7788YZA.jpg', 'disponible', 3),
+('9900BCD', 'Opel', 'Corsa-e', 2022, 5, 330, 'Azul', '/img/vehiculos/9900BCD.jpg', 'disponible', 5);

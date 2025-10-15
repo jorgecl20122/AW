@@ -1,0 +1,210 @@
+/* Layout */
+body {
+  background: #f4f4f4;
+  font-family: 'Inter', sans-serif;
+}
+
+.logo_img {
+  height: auto;
+}
+
+.header {
+  background: #f4f4f4;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header h4 {
+  color: #31a1a9;
+  font-size: 2.5em;
+}
+
+.navbar{
+  background:  #8bb8bc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.btn{
+    background:  #8bb8bc;
+}
+
+.sidebar {
+  width: 250px;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.sidebar .nav-link {
+  color: #555;
+  font-weight: 500;
+}
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover {
+  background: #e0f2fe;
+  color: #2563eb;
+  border-radius: 8px;
+}
+
+/* Estado flota */
+.status-box {
+  background: #f9fafb;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+}
+.status-box.available {
+  color: #16a34a;
+  border-left: 5px solid #16a34a;
+}
+.status-box.in-use {
+  color: #2563eb;
+  border-left: 5px solid #2563eb;
+}
+
+/* Tarjetas estadísticas */
+.stat-card {
+  background: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+.stat-card span {
+  display: block;
+  font-size: 1.5rem;
+  margin-top: 5px;
+}
+.stat-card.total { color: #2563eb; }
+.stat-card.available { color: #16a34a; }
+.stat-card.in-use { color: #2563eb; }
+.stat-card.charging { color: #ca8a04; }
+
+/* Vehículos */
+.vehicle-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.vehicle-card h5 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.vehicle-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #444;
+}
+.vehicle-card .btn {
+  border-radius: 8px;
+}
+
+.btn:hover {
+  background-color: #b8d6d9 !important; /* azul clarito */
+  color: #fff !important; /* texto sigue siendo blanco */
+}
+
+
+/* ====== Modal Custom Styles ====== */
+.modal-content {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+  background: #8bb8bc;
+  color: #fff;
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.modal-body {
+  background: #f4f4f4;
+}
+
+.modal-footer {
+  border-top: none;
+  background: #8bb8bc;
+  border-radius: 0 0 16px 16px;
+}
+
+/* ====== Sliders personalizados ====== */
+.form-range {
+  height: 6px;
+  background: #d1d5db;
+  border-radius: 5px;
+}
+
+.form-range::-webkit-slider-thumb {
+  background: #31a1a9;
+  border: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.form-range::-moz-range-thumb {
+  background: #31a1a9;
+  border: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  background: #31a1a9;
+  height: 6px;
+  border-radius: 5px;
+}
+
+.form-range::-moz-range-track {
+  background: #31a1a9;
+  height: 6px;
+  border-radius: 5px;
+}
+
+/* ====== Inputs de color ====== */
+input[type="color"].form-control-color {
+  border: 2px solid #8bb8bc;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ====== Botones ====== */
+.modal-footer .btn-primary {
+  background: #8bb8bc;
+  border: none;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.modal-footer .btn-primary:hover {
+  background: #8bb8bc;
+}
+
+/* Contraste alto */
+.alto-contraste {
+    background-color: #000 !important;
+    color: #fff !important;
+}
+.alto-contraste a { color: #0ff !important; }
+
+/* Paleta daltonismo */
+.daltonismo {
+    filter: grayscale(0.5);
+}
+
+
