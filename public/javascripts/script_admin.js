@@ -3,6 +3,7 @@ $(document).ready(function () {
 /* FUNCIÓN CARGAR CONCESIONARIOS: para cargar los concesionarios de forma dinámica en cards 
 desde la base de datos al entrar en la vista de administración.
 */
+hih
     function cargarConcesionarios() {
         $.ajax({
             url: '/admin/lista_concesionarios',
