@@ -101,34 +101,36 @@
 
 <!-- Modal de edición -->
 <div class="modal fade" id="modalEdit" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Editar Concesionario</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label>Nombre</label>
-          <input type="text" id="editNombre" class="form-control">
+      <form id="formEditConcesionario">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Concesionario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="mb-3">
-          <label>Ubicación</label>
-          <input type="text" id="editUbicacion" class="form-control">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="editNombre" class="form-label">Nombre *</label>
+            <input type="text" id="editNombre" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="editCiudad" class="form-label">Ciudad *</label>
+            <input type="text" id="editCiudad" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="editCorreo" class="form-label">Correo *</label>
+            <input type="email" id="editCorreo" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="editTelefono" class="form-label">Teléfono</label>
+            <input type="text" id="editTelefono" class="form-control">
+          </div>
         </div>
-        <div class="mb-3">
-          <label>Correo</label>
-          <input type="email" id="editCorreo" class="form-control">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
         </div>
-        <div class="mb-3">
-          <label>Teléfono</label>
-          <input type="text" id="editTelefono" class="form-control">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
-        <button id="guardarEdit" class="btn btn-primary">Guardar cambios</button>
-      </div>
+      </form>
     </div>
   </div>
 </div>
@@ -220,8 +222,8 @@
         </div>
       </div>
 
-      <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
           <i class="bi bi-x-circle"></i> Cerrar
         </button>
       </div>

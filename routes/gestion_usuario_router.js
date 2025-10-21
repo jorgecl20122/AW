@@ -175,11 +175,33 @@ router.get('/lista_usuarios', (req, res) => {
     });
 });
 
-
 // Vista de administración
 router.get('/vistaLista', (req, res) => {
     const usuario = req.session.usuario;
     res.render('ListadoUsuarios', { usuario });
+});
+
+// Ruta para actualizar solo rol y concesionario
+router.put('/:id', (req, res) => {
+  const id = req.params.id;
+  const { rol, concesionario_id } = req.body;
+
+  pool.query(
+    `UPDATE usuarios SET rol = ?, id_concesionario = ? WHERE id_usuario = ?`,
+    [rol, concesionario_id || null, id],
+    (err, results) => {
+      if (err) {
+        console.error('Error al actualizar usuario:', err);
+        return res.status(500).json({ mensaje: 'Error al actualizar usuario' });
+      }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+      }
+
+      res.json({ mensaje: 'Usuario actualizado correctamente' });
+    }
+  );
 });
 
 module.exports = router;

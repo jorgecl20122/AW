@@ -34,7 +34,7 @@ body {
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .sidebar .nav-link {
@@ -196,6 +196,17 @@ input[type="color"].form-control-color {
   background: #8bb8bc;
 }
 
+main {
+  width: calc(100% - 15.625em);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Evita que el formulario emergente afecte el layout */
+#formVehiculoContainer {
+  position: relative;
+}
+
 /* Contraste alto */
 .alto-contraste {
     background-color: #000 !important;
@@ -207,5 +218,15 @@ input[type="color"].form-control-color {
 .daltonismo {
     filter: grayscale(0.5);
 }
+
+/* ====== Imagen de coches ====== */
+table img.vehiculo-img {
+  width: 12em ;   
+  height: auto;  
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
+}
+
 
 

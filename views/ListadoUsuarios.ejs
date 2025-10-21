@@ -19,19 +19,19 @@
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
     <div class="d-flex align-items-center">
-      <a href="/admin/vista_admin" class="btn-custom mx-2 nav-link" data-route="/admin/vista_admin"><i class="bi bi-house"></i> Inicio</a>
-      <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i> Vehículos</a>
-      <a href="/usuario/vistaLista" class="btn-custom mx-2 nav-link" data-route="/usuarios"><i class="bi bi-people"></i> Usuarios</a>
-      <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i>Accesibilidad</a>
+      <a href="/admin/vista_admin" class="btn-custom mx-2 nav-link" data-route="/admin/vista_admin"><i class="bi bi-house"></i><strong>Inicio</strong> </a>
+      <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i><strong>Vehículos</strong> </a>
+      <a href="/usuario/vistaLista" class="btn-custom mx-2 nav-link" data-route="/usuarios"><i class="bi bi-people"></i><strong>Usuarios</strong> </a>
+      <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i><strong>Accesibilidad</strong></a>
     </div>
 
     <div class="d-flex align-items-center ms-auto">
       <a href="/admin/vista_admin" id="btnAdmin" class="btn-custom mx-2 nav-link">
-          <i class="bi bi-gear"></i> Administración
+          <i class="bi bi-gear"></i><strong>Administración</strong>
       </a>
 
       <a href="/usuario/logout" class="btn btn-custom mx-2">
-        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+        <i class="bi bi-box-arrow-right"></i> <strong>Cerrar sesión</strong>
       </a>
     </div>
   </div>
@@ -70,35 +70,48 @@
 
 </div>
 
-<!-- Modal de edición -->
-<div class="modal fade" id="modalEdit" tabindex="-1">
+<!-- Modal para editar usuario -->
+<div class="modal fade" id="modalEditUsuario" tabindex="-1" aria-labelledby="modalEditUsuarioLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Editar Concesionario</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="modalEditUsuarioLabel">Editar Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="mb-3">
-          <label>Nombre</label>
-          <input type="text" id="editNombre" class="form-control">
-        </div>
-        <div class="mb-3">
-          <label>Ubicación</label>
-          <input type="text" id="editUbicacion" class="form-control">
-        </div>
-        <div class="mb-3">
-          <label>Correo</label>
-          <input type="email" id="editCorreo" class="form-control">
-        </div>
-        <div class="mb-3">
-          <label>Teléfono</label>
-          <input type="text" id="editTelefono" class="form-control">
-        </div>
+        <form id="formEditUsuario">
+          <!-- Información del Usuario -->
+          <div class="mb-3">
+            <label class="form-label"><strong>Usuario:</strong></label>
+            <div class="border rounded p-3 bg-light">
+              <p class="mb-1 fw-bold" id="editUsuarioNombre"></p>
+              <p class="mb-0 text-muted small" id="editUsuarioCorreo"></p>
+            </div>
+          </div>
+          
+          <!-- Rol -->
+          <div class="mb-3">
+            <label for="editUsuarioRol" class="form-label">Rol <span class="text-danger">*</span></label>
+            <select class="form-select" id="editUsuarioRol" required>
+              <option value="">Selecciona un rol</option>
+              <option value="administrador">Administrador</option>
+              <option value="empleado">Empleado</option>
+            </select>
+          </div>
+          
+          <!-- Concesionario -->
+          <div class="mb-3">
+            <label for="editUsuarioConcesionario" class="form-label">Concesionario</label>
+            <select class="form-select" id="editUsuarioConcesionario">
+             
+            </select>
+            <small class="text-muted">Selecciona "Sin asignar" para quitar el concesionario</small>
+          </div>
+        </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn" data-bs-dismiss="modal">Cancelar</button>
-        <button id="guardarEdit" class="btn">Guardar cambios</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="guardarEditUsuario">Guardar Cambios</button>
       </div>
     </div>
   </div>
