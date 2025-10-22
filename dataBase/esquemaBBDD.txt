@@ -32,4 +32,19 @@ CREATE TABLE vehiculos (
     estado ENUM('disponible','reservado','mantenimiento') DEFAULT 'disponible',
     id_concesionario INT NOT NULL,
     FOREIGN KEY (id_concesionario) REFERENCES concesionarios(id_concesionario)
+); 
+
+CREATE TABLE Reservas (
+    id_reserva INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_vehiculo INT NOT NULL,
+    fecha_inicio DATETIME NOT NULL,
+    fecha_fin DATETIME NOT NULL,
+    estado ENUM('activa', 'finalizada', 'cancelada') NOT NULL DEFAULT 'activa',
+    kilometros_recorridos DECIMAL(10,2) NULL,
+    incidencias_reportadas TEXT NULL,
+    CONSTRAINT fk_reserva_usuario
+        FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario),
+    CONSTRAINT fk_reserva_vehiculo
+        FOREIGN KEY (id_vehiculo) REFERENCES Vehiculos(id_vehiculo)
 );

@@ -36,6 +36,12 @@ router.get('/vista_admin', (req, res) => {
     res.render('VistaAdmin', { usuario });
 });
 
+// Vista de administración
+router.get('/vista_ini', (req, res) => {
+    const usuario = req.session.usuario;
+    res.render('Inicio_app', { usuario });
+});
+
 //obtener lista de concesionarios
 router.get('/lista_concesionarios', (req, res) => {
     const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
@@ -317,6 +323,34 @@ router.get('/lista_vehiculos/:id', (req, res) => {
   });
 });
 
+// Obtener datos para gráfica de kilómetros por mes
+router.get('/estadisticas/km-tiempo', (req, res) => {
+    const { periodo = '6' } = req.query; // Por defecto últimos 6 meses
 
+    const query = `
+        SELECT 
+            DATE_FORMAT(r.fecha_fin, '%Y-%m') as mes,
+            DATE_FORMAT(r.fecha_fin, '%M %Y') as mes_nombre,
+            SUM(r.km_recorridos) as km_mes,
+            COUNT(r.id_reserva) as reservas_mes,
+            GROUP_CONCAT(DISTINCT CONCAT(v.marca, ' ', v.modelo) SEPARATOR ', ') as vehiculos
+        FROM reservas r
+        INNER JOIN vehiculos v ON r.id_vehiculo = v.id_vehiculo
+        WHERE r.estado = 'finalizada' 
+            AND r.km_recorridos > 0
+            AND r.fecha_fin >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+        GROUP BY DATE_FORMAT(r.fecha_fin, '%Y-%m')
+        ORDER BY mes ASC
+    `;
+
+    pool.query(query, [periodo], (err, results) => {
+        if (err) {
+            console.error('Error al obtener datos de kilómetros:', err);
+            return res.status(500).json({ mensaje: 'Error al obtener estadísticas' });
+        }
+
+        res.json(results);
+    });
+});
 
 module.exports = router;

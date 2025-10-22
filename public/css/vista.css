@@ -228,5 +228,110 @@ table img.vehiculo-img {
   margin: 0 auto;
 }
 
+.user-info {
+    padding: 15px;
+    border-top: 1px solid #dee2e6;
+}
+
+#userAvatar {
+    border: 2px solid #0D8ABC;
+}
+
+.user-info p {
+    font-size: 14px;
+}
+
+.user-info small {
+    font-size: 12px;
+}
+
+/* ----------------------------- */
+/* Dashboard - Tarjetas y Gráficas */
+/* ----------------------------- */
+
+/* Contenedor general */
+#tarjetas-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+/* Tarjetas */
+#tarjetas-resumen .card {
+  flex: 1;
+  min-width: 12em;
+  background-color: #fff;
+}
+
+#tarjetas-resumen .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Cuerpo de la tarjeta */
+#tarjetas-resumen h6 {
+  font-size: 0.95rem;
+  color: #555;
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700; /* 🔹 Negrita */
+}
+
+#tarjetas-resumen h3 {
+  margin: 0.3rem 0 0;
+  font-size: 1.8rem;
+  font-weight: 700; /* 🔹 Negrita */
+}
+
+/* Si quieres que todo el texto dentro de las cards (incluso los <h5>) esté en negrita */
+#tarjetas-resumen .card-body i {
+  font-size: 2.5rem; 
+  margin-bottom: 0.5rem;
+  display: block;
+}
 
 
+/* Para el campo de texto del vehículo más usado */
+#vehiculo-top {
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* ----------------------------- */
+/* Gráficas */
+/* ----------------------------- */
+
+.card-header {
+  font-weight: 600;
+}
+
+/* ----------------------------- */
+/* Responsividad */
+/* ----------------------------- */
+
+@media (max-width: 992px) {
+  #tarjetas-resumen {
+    justify-content: center;
+  }
+
+  #tarjetas-resumen .card {
+    flex: 0 0 45%;
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  #tarjetas-resumen .card {
+    flex: 0 0 100%;
+  }
+
+  #tarjetas-resumen h3 {
+    font-size: 1.4rem;
+  }
+
+  #tarjetas-resumen i {
+    font-size: 1.5rem;
+  }
+}

@@ -10,7 +10,6 @@ desde la base de datos al entrar en la vista de administración.
             url: '/admin/lista_concesionarios',
             method: 'GET',
             success: function(concesionarios) {
-                console.log('Concesionarios recibidos:', concesionarios);
 
                 let html = '<div class="row g-3">';
 
@@ -23,9 +22,9 @@ desde la base de datos al entrar en la vista de administración.
                         <p><i class="bi bi-telephone"></i> Teléfono: ${c.telefono || '-'}</p>
                         <p><i class="bi bi-envelope"></i> Correo: ${c.correo}</p><br>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-ver-vehiculos" data-id="${c.id_concesionario}"><i class="bi bi-car-front"></i><strong>Vehículos</strong></button>
-                            <button class="btn btn-edit"><strong>Editar</strong></button>
-                            <button class="btn btn-delete"><strong>Eliminar</strong></button>
+                            <button class="btn btn-ver-vehiculos" data-id="${c.id_concesionario}"><i class="bi bi-car-front"></i><strong> Vehículos</strong></button>
+                            <button class="btn btn-edit"><i class="bi bi-pencil-fill"></i><strong> Editar</strong></button>
+                            <button class="btn btn-delete"><i class="bi bi-trash-fill"></i><strong> Eliminar</strong></button>
                         </div>
                         </div>
                     </div>`;
@@ -236,8 +235,8 @@ function cargarVehiculosTabla() {
                         <td>${v.imagen ? `<img src="${v.imagen}" alt="Imagen" class="vehiculo-img">` : '-'}</td>
                         <td>${v.concesionario}</td>
                         <td>
-                            <button class="btn btn-sm btn-edit-vehiculo"><strong>Editar</strong></button>
-                            <button class="btn btn-sm btn-delete-vehiculo"><strong>Eliminar</strong></button>
+                            <button class="btn btn-sm btn-edit-vehiculo"><i class="bi bi-pencil-fill"></i><strong> Editar</strong></button>
+                            <button class="btn btn-sm btn-delete-vehiculo"><i class="bi bi-trash-fill"></i></i><strong> Eliminar</strong></button>
                         </td>
                     </tr>
                 `;
@@ -539,13 +538,12 @@ function cargarVehiculosPorConcesionario(idConcesionario) {
 $(document).on('click', '.btn-ver-vehiculos', function() {
     // Obtener el ID del botón clicado (this)
    const id = $(this).data('id'); 
-    console.log('ID del concesionario clicado:', id);
     
     if (!id) {
         alert('No se ha encontrado el ID del concesionario');
         return;
     }
-    
+
     // Guardar el ID en el modal para referencia futura
     $('#modalVehiculosConcesionario').data('id', id);
     

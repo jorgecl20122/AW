@@ -36,7 +36,7 @@ function cargarUsuariosTabla() { //CHECK.
                             </span>
                         </td>
                         <td>${u.telefono || '-'}</td>
-                        <td>${u.concesionario || '<span class="text-muted">Sin asignar</span>'}</td>
+                        <td>${u.concesionario || '-'}</td>
                         <td>
                             <button class="btn btn-sm  btn-edit-usuario" data-concesionario-id="${u.concesionario_id || ''}">
                                 <i class="bi bi-pencil-fill"></i> <strong>Editar</strong>
@@ -55,8 +55,7 @@ function cargarUsuariosTabla() { //CHECK.
         }
     });
 }
-
-// Cargar concesionarios en el modal de edición CHECK.
+// Cargar concesionarios en el modal de edición
 function cargarConcesionariosSelectEdit(concesionarioIdActual = '') {
     $.ajax({
         url: '/admin/lista_concesionarios',
@@ -64,7 +63,6 @@ function cargarConcesionariosSelectEdit(concesionarioIdActual = '') {
         success: function(concesionarios) {
             const select = $('#editUsuarioConcesionario');
             select.empty();
-            select.append('<option value="">Sin asignar</option>');
             
             concesionarios.forEach(function(concesionario) {
                 const selected = concesionario.id_concesionario == concesionarioIdActual ? 'selected' : '';
@@ -74,8 +72,14 @@ function cargarConcesionariosSelectEdit(concesionarioIdActual = '') {
                     </option>`
                 );
             });
+
+            // Solo agregar "Sin asignar" como opción, NO como predeterminado
+            select.append('<option value="">Sin asignar</option>');
             
-            console.log('Concesionarios cargados en el select de edición');
+            // Si no hay concesionario actual, entonces sí seleccionar "Sin asignar"
+            if (!concesionarioIdActual) {
+                select.val('');
+            }
         },
         error: function(xhr) {
             console.error('Error al cargar concesionarios:', xhr);
@@ -89,8 +93,7 @@ $(document).on('click', '.btn-edit-usuario', function() {
     const fila = $(this).closest('tr');
     const id = fila.data('id');
     const concesionarioId = $(this).data('concesionario-id');
-    
-    console.log('ID del usuario:', id);
+
 
     // Extraer los valores de la fila
     const nombre = fila.find('td').eq(0).text().trim();
@@ -114,7 +117,7 @@ $(document).on('click', '.btn-edit-usuario', function() {
 });
 
 
-// Guardar cambios del usuario (solo rol y concesionario)
+// Guardar cambios del usuario (solo rol y concesionario) CHECK.
 $('#guardarEditUsuario').on('click', function() {
     const id = $('#modalEditUsuario').data('id');
     const rol = $('#editUsuarioRol').val();
@@ -126,11 +129,9 @@ $('#guardarEditUsuario').on('click', function() {
         return;
     }
 
-    console.log('Guardando cambios:', { id, rol, concesionario_id });
-
     $.ajax({
         method: 'PUT',
-        url: `/usuarios/${id}`,
+        url: `/usuario/${id}`,
         contentType: 'application/json',
         data: JSON.stringify({
             rol,
@@ -149,3 +150,59 @@ $('#guardarEditUsuario').on('click', function() {
 });
 
 $(document).ready(() => cargarUsuariosTabla());
+
+// Función para cargar los datos del usuario actual
+function cargarDatosUsuarioActual() {
+    $.ajax({
+        url: '/usuario/actual',
+        method: 'GET',
+        success: function(usuario) {
+            console.log('Usuario actual:', usuario);
+            
+            // Actualizar rol
+            const rolTexto = usuario.rol === 'administrador' ? 'Administrador' : 'Empleado';
+            $('#userRole').text(rolTexto);
+            
+            // Actualizar email
+            $('#userEmail').text(usuario.correo);
+            
+            // Actualizar foto de perfil
+            // Si tienes foto en la BD:
+            if (usuario.foto_perfil) {
+                $('#userAvatar').attr('src', usuario.foto_perfil);
+            } else {
+                // Usar avatar por defecto con iniciales
+                const iniciales = obtenerIniciales(usuario.nombre_completo);
+                $('#userAvatar').attr('src', generarAvatarIniciales(iniciales));
+            }
+        },
+        error: function(err) {
+            console.error('Error al cargar datos del usuario:', err);
+            $('#userRole').text('Usuario');
+            $('#userEmail').text('No disponible');
+        }
+    });
+}
+
+// Función para obtener iniciales del nombre
+function obtenerIniciales(nombreCompleto) {
+    if (!nombreCompleto) return 'U';
+    
+    const palabras = nombreCompleto.trim().split(' ');
+    if (palabras.length >= 2) {
+        return (palabras[0][0] + palabras[1][0]).toUpperCase();
+    }
+    return palabras[0][0].toUpperCase();
+}
+
+// Función para generar avatar con iniciales (usando UI Avatars API)
+function generarAvatarIniciales(iniciales) {
+    // Puedes personalizar los colores cambiando 'background' y 'color'
+    return `https://ui-avatars.com/api/?name=${iniciales}&background=0D8ABC&color=fff&size=128&bold=true`;
+}
+
+// Cargar al inicio
+$(document).ready(function() {
+    cargarDatosUsuarioActual();
+    cargarUsuariosTabla();
+});

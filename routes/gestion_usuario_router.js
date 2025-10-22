@@ -4,7 +4,7 @@ const router = express.Router();
 const pool = require('../dataBase/conexion_db'); 
 const { validarDatosBBDD } = require('../utils/validarDatosBBDD'); 
 
-// Función para obtener los concesionarios
+// Función para obtener los concesionarios CHECK.
 function extraerConcesionarios(callback) {
     pool.query(`SELECT id_concesionario AS id, nombre FROM concesionarios`, (err, result) => {
         if (err) {
@@ -15,7 +15,7 @@ function extraerConcesionarios(callback) {
     });
 }
 
-// Página de registro
+// Página de registro CHECK.
 router.get('/registro', (req, res) => {
     extraerConcesionarios((err, concesionarios) => {
         if (err) {
@@ -25,7 +25,7 @@ router.get('/registro', (req, res) => {
     });
 });
 
-// Registro de usuario
+// Registro de usuario CHECK.
 router.post('/signup', (req, res) => {
     const { nombre, apellido, email, contraseña, rol, telefono, id_concesionario } = req.body;
 
@@ -65,7 +65,7 @@ router.post('/signup', (req, res) => {
         });
    });
 
-// Logout
+// Logout CHECK.
 router.get('/logout', (req, res) => {
     if (res.length === 0) {
     return res.render('InicioSesion', { success: null, error: 'Correo o contraseña incorrectos.' });
@@ -78,7 +78,7 @@ router.get('/login', (req, res) => {
 });
 
 
-// Login
+// Login CHECK.
 router.post('/login', (req, res) => {
     const { email, contraseña } = req.body;
 
@@ -102,7 +102,7 @@ router.post('/login', (req, res) => {
 
         // Redirigir solo si login fue exitoso
         if (usuario.rol === 'administrador') {
-            return res.redirect(`/admin/vista_admin`);
+            return res.redirect(`/admin/vista_ini`);
         } else if (usuario.rol === 'empleado') {
             return res.redirect(`/empleado/vista_empleado`);
         } else {
@@ -152,7 +152,7 @@ router.post('/restablecerCon', (req, res) => {
     });
 });
 
-//obtener lista de concesionarios
+//obtener lista de concesionarios CHECK.
 router.get('/lista_usuarios', (req, res) => {
     const query = `
         SELECT 
@@ -175,13 +175,44 @@ router.get('/lista_usuarios', (req, res) => {
     });
 });
 
-// Vista de administración
+// Vista de administración CHECK.
 router.get('/vistaLista', (req, res) => {
     const usuario = req.session.usuario;
     res.render('ListadoUsuarios', { usuario });
 });
 
-// Ruta para actualizar solo rol y concesionario
+
+// Obtener datos del usuario actual (sesión activa) 
+router.get('/actual', (req, res) => {
+    const query = `
+        SELECT 
+            u.id_usuario,
+            u.nombre_completo,
+            u.correo,
+            u.telefono,
+            u.rol,
+            c.nombre AS concesionario,
+            u.id_concesionario AS concesionario_id
+        FROM usuarios u
+        LEFT JOIN concesionarios c ON u.id_concesionario = c.id_concesionario
+        WHERE u.id_usuario = ?
+    `;
+
+    pool.query(query, [req.session.id], (error, results) => {
+        if (error) {
+            console.error('Error al obtener usuario actual:', error);
+            return res.status(500).json({ mensaje: 'Error al obtener datos del usuario' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+        }
+
+        res.json(results[0]);
+    });
+});
+
+// Ruta para actualizar solo rol y concesionario CHECK.
 router.put('/:id', (req, res) => {
   const id = req.params.id;
   const { rol, concesionario_id } = req.body;

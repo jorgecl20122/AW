@@ -11,3 +11,5 @@ VALUES
 ('5566VWX', 'Mercedes', 'EQC', 2020, 5, 390, 'Negro', '/img/vehiculos/VW5.png', 'mantenimiento', 11),
 ('7788YZA', 'Peugeot', 'e-208', 2023, 5, 340, 'Rojo', '/img/vehiculos/byd_seal3.png', 'disponible', 3),
 ('9900BCD', 'Opel', 'Corsa-e', 2022, 5, 330, 'Azul', '/img/vehiculos/byd_seal2.png', 'disponible', 5);
+
+
