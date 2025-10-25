@@ -22,97 +22,37 @@ router.get('/vista_empleado', (req, res) => {
     });
 });
 
-
-
-router.get('/lista_reservas', (req, res) => {
-    const query = `
-        SELECT 
-            r.id_reserva,
-            r.fecha_inicio,
-            r.fecha_fin,
-            r.estado,
-            c.nombre AS coche_nombre,
-            c.matricula AS coche_matricula,
-            u.nombre_completo AS usuario_nombre
-        FROM reservas r
-        LEFT JOIN coches c ON r.id_coche = c.id_coche
-        LEFT JOIN usuarios u ON r.id_usuario = u.id_usuario
-        ORDER BY r.fecha_inicio DESC;
-    `;
-
-    pool.query(query, (err, result) => {
-        if (err) {
-            console.error('❌ Error al obtener las reservas:', err);
-            return res.status(500).json({ mensaje: 'Error al obtener las reservas.' });
-        }
-        res.json(result);
-    });
-});
-
-
-router.post('/nueva', (req, res) => {
-    const { fecha_inicio, fecha_fin, coche } = req.body;
-    const id_usuario = req.session?.usuario?.id_usuario || 1; // ID de sesión (ajusta según tu login)
-
-    if (!fecha_inicio || !fecha_fin || !coche) {
-        return res.status(400).json({ mensaje: 'Todos los campos son obligatorios.' });
+// Obtener vehículos DISPONIBLES del concesionario del empleado (sin reserva activa)
+router.get('/vehiculos_disponibles', (req, res) => {
+  const idEmpleado = req.session.empleado.id_empleado;
+  
+  const query = `
+    SELECT 
+      v.id_vehiculo AS id,
+      v.matricula,
+      v.marca,
+      v.modelo,
+      v.anio_matriculacion,
+      v.numero_plazas,
+      v.autonomia_km,
+      v.color,
+      v.imagen
+    FROM vehiculos v
+    INNER JOIN empleados e ON v.id_concesionario = e.id_concesionario
+    LEFT JOIN reservas r ON v.id_vehiculo = r.id_vehiculo AND r.estado = 'activa'
+    WHERE e.id = ? AND r.id_reserva IS NULL
+    ORDER BY v.marca, v.modelo
+  `;
+  
+  pool.query(query, [idEmpleado], (error, resultados) => {
+    if (error) {
+      console.error('Error al obtener vehículos disponibles:', error);
+      return res.status(500).json({ error: 'Error al obtener los vehículos disponibles' });
     }
-
-    // Buscar ID del coche por nombre o matrícula
-    const buscarCoche = `
-        SELECT id_coche 
-        FROM coches 
-        WHERE nombre = ? OR matricula = ? 
-        LIMIT 1
-    `;
-    pool.query(buscarCoche, [coche, coche], (err, result) => {
-        if (err) {
-            console.error('❌ Error al buscar coche:', err);
-            return res.status(500).json({ mensaje: 'Error interno al buscar el coche.' });
-        }
-
-        if (result.length === 0) {
-            return res.status(404).json({ mensaje: 'No se encontró el coche especificado.' });
-        }
-
-        const id_coche = result[0].id_coche;
-
-        const insertReserva = `
-            INSERT INTO reservas (fecha_inicio, fecha_fin, estado, id_coche, id_usuario)
-            VALUES (?, ?, 'activa', ?, ?)
-        `;
-        pool.query(insertReserva, [fecha_inicio, fecha_fin, id_coche, id_usuario], (err) => {
-            if (err) {
-                console.error('❌ Error al crear la reserva:', err);
-                return res.status(500).json({ mensaje: 'Error al crear la reserva.' });
-            }
-            res.json({ mensaje: 'Reserva creada correctamente.' });
-        });
-    });
+    
+    res.json({ vehiculos: resultados });
+  });
 });
 
-
-router.put('/:id/cancelar', (req, res) => {
-    const id_reserva = req.params.id;
-
-    const query = `
-        UPDATE reservas
-        SET estado = 'cancelada'
-        WHERE id_reserva = ?
-    `;
-
-    pool.query(query, [id_reserva], (err, result) => {
-        if (err) {
-            console.error('❌ Error al cancelar la reserva:', err);
-            return res.status(500).json({ mensaje: 'Error al cancelar la reserva.' });
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ mensaje: 'Reserva no encontrada.' });
-        }
-
-        res.json({ mensaje: 'Reserva cancelada correctamente.' });
-    });
-});
 
 module.exports = router;
