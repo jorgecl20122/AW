@@ -41,12 +41,12 @@ function cargarVehiculosParaReserva() {
             <td>${v.color}</td>
             <td>${v.imagen ? `<img src="${v.imagen}" alt="Imagen" class="vehiculo-img">` : '-'}</td>
             <td>
-              <button class="btn btn-primary btn-sm btn-reservar" 
+              <button class="btn btn-reservar" 
                       data-vehiculo-id="${v.id}"
                       data-matricula="${v.matricula}"
                       data-marca="${v.marca}"
                       data-modelo="${v.modelo}">
-                <i class="fas fa-calendar-check"></i> Reservar
+                <i class="bi bi-calendar-check"></i><strong> Reservar</strong>
               </button>
             </td>
           </tr>
@@ -81,16 +81,36 @@ function abrirModalReserva(vehiculoId, matricula, marca, modelo) {
   $('#fechaInicioReserva').val('');
   $('#fechaFinReserva').val('');
   
+  // Configurar fecha mínima
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  const fechaMin = now.toISOString().slice(0,16);
+  
+  const inputInicio = document.getElementById("fechaInicioReserva");
+  const inputFin = document.getElementById("fechaFinReserva");
+  
+  if (inputInicio) inputInicio.min = fechaMin;
+  if (inputFin) inputFin.min = fechaMin;
+  
   $('#modalReserva').modal('show');
 }
 
 // Función para guardar la reserva
 function guardarReserva() {
+  console.log('=== INICIANDO GUARDADO DE RESERVA ===');
+  
   const vehiculoId = $('#vehiculoIdReserva').val();
   const fechaInicio = $('#fechaInicioReserva').val();
   const fechaFin = $('#fechaFinReserva').val();
 
+  console.log('Datos capturados:', {vehiculoId, fechaInicio, fechaFin});
+
   // Validaciones
+  if (!vehiculoId) {
+    alert('Error: No se ha seleccionado un vehículo');
+    return;
+  }
+
   if (!fechaInicio || !fechaFin) {
     alert('Por favor, completa ambas fechas');
     return;
@@ -99,25 +119,42 @@ function guardarReserva() {
   const inicio = new Date(fechaInicio);
   const fin = new Date(fechaFin);
 
+  if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
+    alert('Las fechas no son válidas');
+    return;
+  }
+
   if (fin <= inicio) {
     alert('La fecha de fin debe ser posterior a la fecha de inicio');
     return;
   }
 
+  // Convertir las fechas a formato ISO para enviar al servidor
+  const fechaInicioISO = inicio.toISOString();
+  const fechaFinISO = fin.toISOString();
+
+  console.log('Fechas convertidas a ISO:', {fechaInicioISO, fechaFinISO});
+
   // Deshabilitar botón mientras se procesa
   const btnGuardar = $('#btnGuardarReserva');
   btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
+
+  const datosReserva = {
+    vehiculo_id: parseInt(vehiculoId),
+    fecha_inicio: fechaInicioISO,
+    fecha_fin: fechaFinISO
+  };
+
+  console.log('Datos a enviar:', datosReserva);
 
   $.ajax({
     url: '/empleado/crear_reserva',
     method: 'POST',
     contentType: 'application/json',
-    data: JSON.stringify({
-      vehiculo_id: vehiculoId,
-      fecha_inicio: fechaInicio,
-      fecha_fin: fechaFin
-    }),
+    data: JSON.stringify(datosReserva),
     success: function(response) {
+      console.log('Respuesta exitosa:', response);
+      
       // Cerrar modal
       $('#modalReserva').modal('hide');
       
@@ -137,12 +174,26 @@ function guardarReserva() {
       // Mostrar mensaje de éxito
       mostrarAlerta('Reserva creada exitosamente', 'success');
     },
-    error: function(err) {
-      console.error('Error al crear reserva:', err);
+    error: function(xhr, status, error) {
+      console.error('=== ERROR AL CREAR RESERVA ===');
+      console.error('Status:', xhr.status);
+      console.error('Error:', error);
+      console.error('Response:', xhr.responseText);
+      console.error('Response JSON:', xhr.responseJSON);
+      
       let mensaje = 'Error al crear la reserva';
-      if (err.responseJSON && err.responseJSON.mensaje) {
-        mensaje = err.responseJSON.mensaje;
+      
+      if (xhr.status === 404) {
+        mensaje = 'Ruta no encontrada. Verifica la configuración del servidor.';
+      } else if (xhr.status === 401) {
+        mensaje = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else if (xhr.responseJSON && xhr.responseJSON.mensaje) {
+        mensaje = xhr.responseJSON.mensaje;
       }
+      
       mostrarAlerta(mensaje, 'danger');
     },
     complete: function() {
@@ -152,7 +203,7 @@ function guardarReserva() {
   });
 }
 
-// Función para cargar reservas
+// Función para cargar reservas - CORREGIDA
 function cargarReservas() {
   $.ajax({
     url: '/empleado/mis_reservas',
@@ -184,17 +235,28 @@ function cargarReservas() {
         const fechaInicio = new Date(r.fecha_inicio).toLocaleString('es-ES');
         const fechaFin = new Date(r.fecha_fin).toLocaleString('es-ES');
         
+        // CORRECCIÓN: Verde para activa, Rojo para finalizada
+        const estadoNormalizado = r.estado.toLowerCase();
+        const badgeClass = estadoNormalizado === 'activa' ? 'bg-success' : 'bg-danger';
+        const estadoTexto = r.estado.charAt(0).toUpperCase() + r.estado.slice(1);
+        
         html += `
           <tr id="reserva-${r.id}">
             <td>${r.vehiculo_marca} ${r.vehiculo_modelo}</td>
             <td>${r.vehiculo_matricula}</td>
             <td>${fechaInicio}</td>
             <td>${fechaFin}</td>
-            <td><span class="badge bg-success">${r.estado || 'Activa'}</span></td>
             <td>
-              <button class="btn btn-danger btn-sm btn-cancelar-reserva" data-reserva-id="${r.id}">
-                <i class="fas fa-times"></i> Cancelar
-              </button>
+              <span class="badge ${badgeClass}">
+                ${estadoTexto}
+              </span>
+            </td>
+            <td>
+              ${estadoNormalizado === 'activa' ? `
+                <button class="btn btn-cancelar-reserva" data-reserva-id="${r.id}">
+                  <i class="bi bi-x-circle"></i><strong> Cancelar </strong>
+                </button>
+              ` : '<span class="text-muted">-</span>'}
             </td>
           </tr>
         `;
@@ -216,16 +278,20 @@ function cargarReservas() {
   });
 }
 
-// Función para cancelar reserva
+// Función para cancelar reserva - CORREGIDA
 function cancelarReserva(reservaId) {
   if (!confirm('¿Estás seguro de que deseas cancelar esta reserva?')) {
     return;
   }
 
+  console.log('Cancelando reserva ID:', reservaId);
+
   $.ajax({
-    url: `/empleado/cancelar_reserva/${reservaId}`,
+    url: `/empleado/cancelar_reserva/${reservaId}`,  // SIN barra al inicio después de empleado
     method: 'DELETE',
     success: function(response) {
+      console.log('Reserva cancelada exitosamente:', response);
+      
       $(`#reserva-${reservaId}`).fadeOut(400, function() {
         $(this).remove();
         
@@ -233,15 +299,23 @@ function cancelarReserva(reservaId) {
           $('#listaReservas').html('<p class="text-center">No tienes reservas activas.</p>');
         }
       });
-
+      
       // Recargar vehículos disponibles
       cargarVehiculosParaReserva();
 
       mostrarAlerta('Reserva cancelada exitosamente', 'success');
     },
-    error: function(err) {
-      console.error('Error al cancelar reserva:', err);
-      mostrarAlerta('Error al cancelar la reserva', 'danger');
+    error: function(xhr, status, error) {
+      console.error('Error al cancelar reserva:', xhr);
+      console.error('Status:', xhr.status);
+      console.error('Response:', xhr.responseText);
+      
+      let mensaje = 'Error al cancelar la reserva';
+      if (xhr.responseJSON && xhr.responseJSON.mensaje) {
+        mensaje = xhr.responseJSON.mensaje;
+      }
+      
+      mostrarAlerta(mensaje, 'danger');
     }
   });
 }
@@ -262,11 +336,38 @@ function mostrarAlerta(mensaje, tipo) {
   }, 5000);
 }
 
+// Función para finalizar reservas vencidas automáticamente
+function finalizarReservasVencidas() {
+  $.ajax({
+    url: '/empleado/finalizar_reservas_vencidas',
+    method: 'POST',
+    success: function(response) {
+      console.log('Reservas vencidas actualizadas:', response);
+      if (response.reservas_finalizadas > 0) {
+        console.log(`${response.reservas_finalizadas} reservas han sido finalizadas`);
+        // Recargar las listas para mostrar los cambios
+        cargarVehiculosParaReserva();
+        cargarReservas();
+      }
+    },
+    error: function(err) {
+      console.error('Error al finalizar reservas vencidas:', err);
+    }
+  });
+}
+
 // Inicializar al cargar la página
 $(document).ready(function() {
+  // Finalizar reservas vencidas al cargar
+  finalizarReservasVencidas();
+  
+  // Cargar datos
   cargarVehiculosParaReserva();
   cargarReservas();
 
   // Evento del botón guardar en el modal
   $('#btnGuardarReserva').on('click', guardarReserva);
+  
+  // Verificar reservas vencidas cada 5 minutos
+  setInterval(finalizarReservasVencidas, 5 * 60 * 1000);
 });
