@@ -555,4 +555,77 @@ $(document).on('click', '.btn-ver-vehiculos', function() {
     modal.show();
 });
 
+// ============================================
+// FUNCIÓN PARA CARGAR RESERVAS POR CONCESIONARIO
+// Agregar al archivo script_admin.js o crear uno nuevo
+// ============================================
+
+function cargarReservasPorConcesionario() {
+  $.ajax({
+    url: '/empleado/estadisticas/reservas-concesionario',
+    method: 'GET',
+    success: function(response) {
+      const concesionarios = response.concesionarios || [];
+      
+      if (concesionarios.length === 0) {
+        $('#tabla-concesionarios').html('<p class="text-center text-muted">No hay datos disponibles</p>');
+        return;
+      }
+
+      let html = `
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-secondary">
+            <tr>
+              <th>Concesionario</th>
+              <th class="text-center">Total Reservas</th>
+              <th class="text-center">Activas</th>
+              <th class="text-center">Finalizadas</th>
+              <th class="text-center">Canceladas</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      concesionarios.forEach(c => {
+        html += `
+          <tr>
+            <td>
+              <strong>${c.concesionario}</strong>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-primary fs-6">${c.total_reservas || 0}</span>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-success fs-6">${c.activas || 0}</span>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-danger fs-6">${c.finalizadas || 0}</span>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-secondary fs-6">${c.canceladas || 0}</span>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      `;
+
+      $('#tabla-concesionarios').html(html);
+    },
+    error: function(err) {
+      console.error('Error al cargar reservas por concesionario:', err);
+      $('#tabla-concesionarios').html('<p class="text-danger text-center">Error al cargar los datos</p>');
+    }
+  });
+}
+
+// Llamar a la función cuando se cargue la página
+$(document).ready(function() {
+  cargarReservasPorConcesionario();
+});
+
+
 });

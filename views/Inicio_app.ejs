@@ -64,86 +64,25 @@
       </div>
     </div>
 
-    <!-- Tarjetas de resumen -->
-    <div class="row mb-4" id="tarjetas-resumen">
-      <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-          <div class="card-body">
-            <i class="bi bi-calendar-check text-primary"></i>
-            <h6 class="mt-2">Total Reservas</h6>
-            <h3 class="fw-bold text-primary" id="total-reservas">0</h3>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-          <div class="card-body">
-            <i class="bi bi-car-front-fill text-warning"></i>
-            <h6 class="mt-2">Vehículos en Uso</h6>
-            <h3 class="fw-bold text-warning" id="vehiculos-uso">0</h3>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-          <div class="card-body">
-            <i class="bi bi-graph-up text-success"></i>
-            <h6 class="mt-2">KM Totales</h6>
-            <h3 class="fw-bold text-success" id="km-totales">0</h3>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-          <div class="card-body">
-            <i class="bi bi-exclamation-triangle text-danger"></i>
-            <h6 class="mt-2">Incidencias</h6>
-            <h3 class="fw-bold text-danger" id="incidencias">0</h3>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-          <div class="card-body">
-            <i class="bi bi-star-fill text-secondary"></i>
-            <h6 class="mt-2">Vehículo más Usado</h6>
-            <h5 class="fw-bold text-secondary" id="vehiculo-top">-</h5>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfica de Kilómetros -->
+    <!-- TABLA DE RESERVAS POR CONCESIONARIO -->
     <div class="row mb-4">
       <div class="col-12">
         <div class="card shadow-sm border-0">
           <div class="card-header bg-secondary text-white">
             <h5 class="mb-0">
-              <i class="bi bi-graph-up-arrow"></i> Kilómetros Recorridos por Mes
+              <i class="bi bi-building"></i> Reservas por Concesionario
             </h5>
           </div>
           <div class="card-body">
-            <canvas id="grafica-kilometros"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfica de Franjas Horarias -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">
-              <i class="bi bi-clock-history"></i> Reservas por Franjas Horarias
-            </h5>
-          </div>
-          <div class="card-body">
-            <canvas id="grafica-franjas"></canvas>
+            <div id="tabla-concesionarios" class="table-responsive">
+              <!-- Aquí se cargará la tabla dinámicamente -->
+              <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2 text-muted">Cargando estadísticas...</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -152,8 +91,7 @@
 </main>
 </div>
 
-
-
+   
 <!-- Modal de accesibilidad -->
 <div class="modal fade" id="configuradorModal" tabindex="-1" aria-labelledby="configuradorLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">

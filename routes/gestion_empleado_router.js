@@ -325,4 +325,42 @@ router.delete('/cancelar_reserva/:idReserva', (req, res) => {
 });
 
 
+
+// Obtener reservas por concesionario
+router.get('/estadisticas/reservas-concesionario', (req, res) => {
+  // Validar que sea administrador
+  if (!req.session || !req.session.userId || req.session.userRole !== 'administrador') {
+    return res.status(401).json({ 
+      error: 'Acceso no autorizado',
+      redirect: '/login'
+    });
+  }
+
+  const query = `
+    SELECT 
+      c.nombre as concesionario,
+      c.ciudad,
+      COUNT(r.id_reserva) as total_reservas,
+      SUM(CASE WHEN r.estado = 'activa' THEN 1 ELSE 0 END) as activas,
+      SUM(CASE WHEN r.estado = 'finalizada' THEN 1 ELSE 0 END) as finalizadas,
+      SUM(CASE WHEN r.estado = 'cancelada' THEN 1 ELSE 0 END) as canceladas
+    FROM concesionarios c
+    LEFT JOIN vehiculos v ON c.id_concesionario = v.id_concesionario
+    LEFT JOIN reservas r ON v.id_vehiculo = r.id_vehiculo
+    GROUP BY c.id_concesionario, c.nombre, c.ciudad
+    ORDER BY total_reservas DESC
+  `;
+
+  pool.query(query, (err, result) => {
+    if (err) {
+      console.error('Error al obtener reservas por concesionario:', err);
+      return res.status(500).json({ error: 'Error al obtener estadísticas' });
+    }
+
+    console.log('Reservas por concesionario:', result);
+    res.json({ concesionarios: result });
+  });
+});
+
+
 module.exports = router;
