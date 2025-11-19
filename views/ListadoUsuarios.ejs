@@ -45,16 +45,35 @@
 <!-- para lateral con las estadisticas y el usuario abajo-->
 <div class="d-flex">
   <aside class="sidebar p-3">
-    <div class="mt-4">
-      <h6 class="text-muted">Estado de la Flota</h6><br>
-      <div class="status-box available">Disponibles <span>12</span></div>
-      <div class="status-box in-use">En uso <span>4</span></div>
-    </div>
-    <div class="user-info mt-auto">
-      <p class="fw-bold mb-0">Administrador</p>
-      <small class="text-muted">admin@empresa.com</small>
-    </div>
-  </aside>
+       <!-- Estadísticas rápidas -->
+        <div class="mt-4">
+          <h6 class="text-muted">Estado de la Flota</h6><br>
+          <div class="status-box available">Disponibles <span>12</span></div>
+          <div class="status-box in-use">En uso <span>4</span></div>
+        </div>
+
+        <!-- Información del usuario (PERFIL) -->
+        <div class="user-info mt-auto d-flex flex-column align-items-center text-center gap-2">
+          <% if (usuario) { %>
+            <!-- Avatar -->
+            <img id="userAvatar" src="<%= usuario.avatar %>" alt="Avatar" class="rounded-circle">
+            <!-- Nombre + Email -->
+            <div>
+              <p class="mb-0 fw-bold">
+                <%= usuario.nombre_completo %>
+              </p>
+              <small class="text-muted">
+                <%= usuario.email %>
+              </small>
+            </div>
+          <% } else { %>
+            <img id="userAvatar" src="/img/default-avatar.png" alt="Avatar" class="rounded-circle">
+            <div>
+              <p class="text-danger">Usuario no cargado</p>
+            </div>
+          <% } %>
+        </div>
+    </aside>
 
     <main class="flex-grow-1 p-4">
       <div class="d-flex align-items-center mb-4">

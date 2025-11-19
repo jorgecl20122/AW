@@ -362,3 +362,9 @@ table img.vehiculo-img {
 .card-header{
   background-color: #9fcfd3;
 }
+
+#userAvatar {
+    width: 4em;        
+    height:4em;       
+    object-fit: cover;     
+}
