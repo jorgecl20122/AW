@@ -16,8 +16,11 @@
   </div>
 </header>
 
+ <!-- Barra de navegación de administrador -->
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
+
+     <!--  Inicio / vehículos disponibles / Usuarios / Accesibilidad -->
     <div class="d-flex align-items-center">
       <a href="/admin/vista_ini" class="btn-custom mx-2 nav-link" data-route="/admin/vista_ini"><i class="bi bi-house"></i><strong>Inicio</strong> </a>
       <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i><strong>Vehículos</strong> </a>
@@ -25,11 +28,13 @@
       <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i><strong>Accesibilidad</strong></a>
     </div>
 
+     <!-- Administración -->
     <div class="d-flex align-items-center ms-auto">
       <a href="/admin/vista_admin" id="btnAdmin" class="btn-custom mx-2 nav-link">
           <i class="bi bi-gear"></i><strong>Administración</strong>
       </a>
 
+      <!-- Cerrar sesión -->
       <a href="/usuario/logout" class="btn btn-custom mx-2">
         <i class="bi bi-box-arrow-right"></i> <strong>Cerrar sesión</strong>
       </a>
@@ -39,59 +44,120 @@
 
 <!-- para lateral con las estadisticas y el usuario abajo-->
 <div class="d-flex">
-  <aside class="sidebar p-3">
-    <div class="mt-4">
-      <h6 class="text-muted">Estado de la Flota</h6><br>
-      <div class="status-box available">Disponibles <span>12</span></div>
-      <div class="status-box in-use">En uso <span>4</span></div>
-    </div>
-      <div class="user-info mt-auto d-flex align-items-center gap-3">
-        <img id="userAvatar" src="" alt="Avatar" class="rounded-circle">
-      <div>
-    </div>
-</div>
-  </aside>
+    <aside class="sidebar p-3">
+       <!-- Estadísticas rápidas -->
+        <div class="mt-4">
+          <h6 class="text-muted">Estado de la Flota</h6><br>
+          <div class="status-box available">Disponibles <span>12</span></div>
+          <div class="status-box in-use">En uso <span>4</span></div>
+        </div>
 
-<main class="flex-grow-1 p-4">
-  <div class="container-fluid">
+           <!-- Información del usuario (PERFIL) -->
+        <div class="user-info mt-auto d-flex align-items-center gap-3">
+          <% if (usuario) { %>
+            <img id="userAvatar" src="<%= usuario.avatar %>" alt="Avatar" class="rounded-circle">
+            <div>
+              <p class="mb-0 fw-bold">
+                <%= usuario.nombre_completo %>
+              </p>
+              <small class="text-muted">
+                <%= usuario.email %>
+              </small>
+            </div>
+          <% } else { %>
+            <img id="userAvatar" src="/img/default-avatar.png" alt="Avatar" class="rounded-circle">
+            <div>
+              <p class="text-danger">Usuario no cargado</p>
+            </div>
+          <% } %>
+        </div>
+    </aside>
 
-    <!-- Resumen de estadísticas -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <h3 class="fw-bold mb-3">
-          <i class="bi bi-speedometer2"></i> Estadísticas Generales de la Flota
-        </h3>
-      </div>
-    </div>
+      <!-- Contenido principal (MAIN) -->
+    <main class="flex-grow-1 p-4">
 
-    <!-- TABLA DE RESERVAS POR CONCESIONARIO -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">
-              <i class="bi bi-building"></i> Reservas por Concesionario
-            </h5>
+      <div class="container-fluid">
+
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-body card-bienvenida text-center py-4">
+                <h5 class="fw-bold mb-2">
+                  <i class="bi bi-speedometer2 me-2"></i>Panel de Administrador
+                </h5>
+                <p class="mb-0 fs-6">
+                  <em><strong>Bienvenido a la página principal de administrador. Aquí podrá encontrar las estadísticas 
+                  correspondientes a los concesionarios registrados y sus vehículos. Además de la gestión de vehículos 
+                  y concesionarios correspondientes a su rol
+                </strong></em>
+                </p>
+              </div>
+            </div>
           </div>
-          <div class="card-body">
-            <div id="tabla-concesionarios" class="table-responsive">
-              <!-- Aquí se cargará la tabla dinámicamente -->
-              <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Cargando...</span>
+        </div><br>
+
+        <!-- Resumen de estadísticas -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h3 class="fw-bold mb-2">
+              Estadísticas Generales de la Flota        
+            </h3>
+          </div>
+        </div>
+
+            <!-- VEHÍCULOS MÁS USADOS -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-header text-center">
+                <h5 class="mb-0">
+                  <strong><i class="bi bi-star-fill"></i> Vehículo Más Usado por Concesionario</strong>
+                </h5>
+              </div>
+              <div class="card-body">
+                <div id="vehiculos-mas-usados">
+                  <!-- Aquí se cargarán los cards dinámicamente -->
+                  <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando vehículos destacados...</p>
+                  </div>
                 </div>
-                <p class="mt-2 text-muted">Cargando estadísticas...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLA DE RESERVAS POR CONCESIONARIO -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-header text-center">
+                <h5 class="mb-0">
+                  <strong><i class="bi bi-building"></i> Reservas por Concesionario</strong>
+                </h5>
+              </div>
+              <div class="card-body">
+                <div id="tabla-concesionarios" class="table-responsive">
+                  <!-- Aquí se cargará la tabla dinámicamente -->
+                  <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando estadísticas...</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</main>
+    </main>
 </div>
 
-   
+   <!-- MODALES-->
+  
 <!-- Modal de accesibilidad -->
 <div class="modal fade" id="configuradorModal" tabindex="-1" aria-labelledby="configuradorLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -161,33 +227,6 @@
     </div>
   </div>
 </div>
-
-<!-- Modal: Vehículos del Concesionario -->
-<div class="modal fade" id="modalVehiculosConcesionario" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header text-white">
-        <h5 class="modal-title fw-bold">
-          <i class="bi bi-car-front me-2"></i> Vehículos del Concesionario
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-        <div id="listaVehiculosConcesionario" class="table-responsive">
-          <!-- Aquí se insertará la tabla de vehículos -->
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle"></i> Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

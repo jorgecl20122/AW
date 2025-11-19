@@ -55,6 +55,59 @@ function cargarUsuariosTabla() { //CHECK.
         }
     });
 }
+
+// Buscador de usuarios en la tabla
+$('#buscarUsuario').on('keyup', function() {
+    const textoBusqueda = $(this).val().toLowerCase().trim();
+
+    // Si el contenedor no tiene tabla aún, salimos
+    const tabla = $('#usuarios-container').find('table');
+    if (tabla.length === 0) return;
+
+    const tbody = tabla.find('tbody');
+
+    // Mostrar todo si está vacío
+    if (textoBusqueda === '') {
+        tbody.find('tr').show();
+        $('#mensajeNoResultados').remove();
+        return;
+    }
+
+    // Filtrar filas
+    tbody.find('tr').each(function() {
+        const fila = $(this);
+
+        // Ajusta columnas si tu tabla usa otros índices
+        const nombre = fila.find('td:nth-child(1)').text().toLowerCase();
+        const correo = fila.find('td:nth-child(2)').text().toLowerCase();
+
+        if (nombre.includes(textoBusqueda) || correo.includes(textoBusqueda)) {
+            fila.show();
+        } else {
+            fila.hide();
+        }
+    });
+
+    // Verificar si quedan resultados visibles
+    const visibles = tbody.find('tr:visible').length;
+
+    if (visibles === 0) {
+        if ($('#mensajeNoResultados').length === 0) {
+            tbody.append(`
+                <tr id="mensajeNoResultados">
+                    <td colspan="10" class="text-center text-muted py-4">
+                        <i class="bi bi-search"></i> No se encontraron usuarios que coincidan con "${textoBusqueda}"
+                    </td>
+                </tr>
+            `);
+        }
+    } else {
+        $('#mensajeNoResultados').remove();
+    }
+});
+
+
+
 // Cargar concesionarios en el modal de edición
 function cargarConcesionariosSelectEdit(concesionarioIdActual = '') {
     $.ajax({

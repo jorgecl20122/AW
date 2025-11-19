@@ -39,7 +39,7 @@ router.get('/vista_admin', (req, res) => {
 // Vista de administración
 router.get('/vista_ini', (req, res) => {
     const usuario = req.session.usuario;
-    res.render('Inicio_app', { usuario });
+    res.render('Inicio_app_admin', { usuario });
 });
 
 //obtener lista de concesionarios
@@ -323,33 +323,47 @@ router.get('/lista_vehiculos/:id', (req, res) => {
   });
 });
 
-// Obtener datos para gráfica de kilómetros por mes
-router.get('/estadisticas/km-tiempo', (req, res) => {
-    const { periodo = '6' } = req.query; // Por defecto últimos 6 meses
 
+// Obtener vehículo más usado por concesionario
+router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
     const query = `
         SELECT 
-            DATE_FORMAT(r.fecha_fin, '%Y-%m') as mes,
-            DATE_FORMAT(r.fecha_fin, '%M %Y') as mes_nombre,
-            SUM(r.km_recorridos) as km_mes,
-            COUNT(r.id_reserva) as reservas_mes,
-            GROUP_CONCAT(DISTINCT CONCAT(v.marca, ' ', v.modelo) SEPARATOR ', ') as vehiculos
-        FROM reservas r
-        INNER JOIN vehiculos v ON r.id_vehiculo = v.id_vehiculo
-        WHERE r.estado = 'finalizada' 
-            AND r.km_recorridos > 0
-            AND r.fecha_fin >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
-        GROUP BY DATE_FORMAT(r.fecha_fin, '%Y-%m')
-        ORDER BY mes ASC
+            c.nombre as concesionario,
+            v.marca,
+            v.modelo,
+            v.imagen,
+            COUNT(r.id_reserva) as total_reservas
+        FROM concesionarios c
+        INNER JOIN vehiculos v ON v.id_concesionario = c.id_concesionario
+        INNER JOIN reservas r ON r.id_vehiculo = v.id_vehiculo
+        GROUP BY c.id_concesionario, v.id_vehiculo, c.nombre, v.marca, v.modelo, v.imagen
+        HAVING COUNT(r.id_reserva) > 0
+        ORDER BY c.id_concesionario, total_reservas DESC
     `;
 
-    pool.query(query, [periodo], (err, results) => {
+    pool.query(query, (err, results) => {
         if (err) {
-            console.error('Error al obtener datos de kilómetros:', err);
-            return res.status(500).json({ mensaje: 'Error al obtener estadísticas' });
+            console.error('Error al obtener vehículo más usado:', err);
+            return res.status(500).json({ 
+                mensaje: 'Error al obtener estadísticas',
+                error: err.message 
+            });
         }
 
-        res.json(results);
+        // Filtrar para obtener solo el vehículo más usado por concesionario
+        const vehiculosPorConcesionario = {};
+        
+        results.forEach(v => {
+            if (!vehiculosPorConcesionario[v.concesionario] || 
+                v.total_reservas > vehiculosPorConcesionario[v.concesionario].total_reservas) {
+                vehiculosPorConcesionario[v.concesionario] = v;
+            }
+        });
+
+        // Convertir el objeto a array
+        const vehiculosMasUsados = Object.values(vehiculosPorConcesionario);
+        
+        res.json(vehiculosMasUsados);
     });
 });
 

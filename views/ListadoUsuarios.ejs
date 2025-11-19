@@ -16,8 +16,11 @@
   </div>
 </header>
 
+ <!-- Barra de navegación de administrador -->
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
+
+     <!--  Inicio / vehículos disponibles / Usuarios / Accesibilidad -->
     <div class="d-flex align-items-center">
       <a href="/admin/vista_ini" class="btn-custom mx-2 nav-link" data-route="/admin/vista_ini"><i class="bi bi-house"></i><strong>Inicio</strong> </a>
       <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i><strong>Vehículos</strong> </a>
@@ -25,11 +28,13 @@
       <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i><strong>Accesibilidad</strong></a>
     </div>
 
+     <!-- Administración -->
     <div class="d-flex align-items-center ms-auto">
       <a href="/admin/vista_admin" id="btnAdmin" class="btn-custom mx-2 nav-link">
           <i class="bi bi-gear"></i><strong>Administración</strong>
       </a>
 
+      <!-- Cerrar sesión -->
       <a href="/usuario/logout" class="btn btn-custom mx-2">
         <i class="bi bi-box-arrow-right"></i> <strong>Cerrar sesión</strong>
       </a>
@@ -51,24 +56,32 @@
     </div>
   </aside>
 
-<main class="flex-grow-1 p-4">
-  <div class="d-flex align-items-center mb-4">
-    <h2 class="fw-bold">Lista de Usuarios Registrados</h2>
-  </div>
+    <main class="flex-grow-1 p-4">
+      <div class="d-flex align-items-center mb-4">
+        <h2 class="fw-bold">Lista de Usuarios Registrados</h2>
+      </div>
 
-  <!-- Barra de búsqueda -->
-  <div class="mb-3 d-flex justify-content-between align-items-center">
-    <input type="text" id="buscarUsuario" class="form-control w-50" placeholder="Buscar usuario por nombre o correo...">
-  </div>
+      
+        <!-- Buscador -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-primary text-white">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="buscarUsuario" class="form-control" placeholder="Buscar nombre o correo...">
+          </div>
+        </div>
+      </div>
 
-  <!-- Contenedor dinámico de usuarios -->
-  <div id="usuarios-container">
-    <!-- Aquí se insertará la tabla generada por cargarUsuariosTabla() -->
-    
-  </div>
-</main>
-
+      <!-- Contenedor dinámico de usuarios -->
+      <div id="usuarios-container">
+        <!-- Aquí se cargarán los usuarios dinámicamente -->
+      </div>
+    </main>
 </div>
+
+<!--MODALES-->
 
 <!-- Modal para editar usuario -->
 <div class="modal fade" id="modalEditUsuario" tabindex="-1" aria-labelledby="modalEditUsuarioLabel" aria-hidden="true">
@@ -80,6 +93,7 @@
       </div>
       <div class="modal-body">
         <form id="formEditUsuario">
+
           <!-- Información del Usuario -->
           <div class="mb-3">
             <label class="form-label"><strong>Usuario:</strong></label>
@@ -103,7 +117,7 @@
           <div class="mb-3">
             <label for="editUsuarioConcesionario" class="form-label">Concesionario</label>
             <select class="form-select" id="editUsuarioConcesionario">
-             <!--aqui van los concesionarios de forma dinámica-->
+             <!-- Las opciones se cargarán dinámicamente -->
             </select>
             <small class="text-muted">Selecciona "Sin asignar" para quitar el concesionario</small>
           </div>
@@ -186,33 +200,6 @@
     </div>
   </div>
 </div>
-
-<!-- Modal: Vehículos del Concesionario -->
-<div class="modal fade" id="modalVehiculosConcesionario" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header bg-info text-white">
-        <h5 class="modal-title fw-bold">
-          <i class="bi bi-car-front me-2"></i> Vehículos del Concesionario
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-        <div id="listaVehiculosConcesionario" class="table-responsive">
-          <!-- Aquí se insertará la tabla de vehículos -->
-        </div>
-      </div>
-
-      <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle"></i> Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

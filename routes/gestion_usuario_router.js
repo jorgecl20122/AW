@@ -82,7 +82,7 @@ router.get('/login', (req, res) => {
 router.post('/login', (req, res) => {
     const { email, contraseña } = req.body;
 
-    const query = `SELECT id_usuario, rol FROM usuarios WHERE correo = ? AND contraseña = ?`;
+    const query = `SELECT id_usuario, rol, nombre_completo, avatar FROM usuarios WHERE correo = ? AND contraseña = ?`;
     
     pool.query(query, [email, contraseña], (err, results) => {
         if (err) {
@@ -95,24 +95,34 @@ router.post('/login', (req, res) => {
             return res.render('InicioSesion', { success: null, error: 'Correo o contraseña incorrectos.' });
         }
 
-        // Credenciales correctas → guardar sesión
-        const usuario = results[0];
-        req.session.userId = usuario.id_usuario;
-        req.session.userRole = usuario.rol;
 
-        // Redirigir solo si login fue exitoso
-        if (usuario.rol === 'administrador') {
-            return res.redirect(`/admin/vista_ini`);
-        } else if (usuario.rol === 'empleado') {
-            return res.redirect(`/empleado/vista_empleado`);
-        } else {
-            return res.render('InicioSesion', { success: null, error: 'Rol desconocido. Por favor, contacte al administrador.' });
-        }
+    const usuario = results[0];
+
+    req.session.usuario = {
+        id: usuario.id_usuario,
+        rol: usuario.rol,
+        nombre_completo: usuario.nombre_completo,
+        email: email,
+        avatar: usuario.avatar || '/img/default-avatar.png' // si no hay avatar, usar imagen por defecto
+    };
+
+    req.session.userId = usuario.id_usuario;
+    req.session.userRole = usuario.rol;
+
+    // Redirigir según rol
+    if (usuario.rol === 'administrador') {
+        return res.redirect(`/admin/vista_ini`);
+    } else if (usuario.rol === 'empleado') {
+        return res.redirect(`/empleado/vista_empleado`);
+    } else {
+        return res.render('InicioSesion', { success: null, error: 'Rol desconocido. Por favor, contacte al administrador.' });
+    }
+
+        });
     });
-});
 
-router.get('/restablecer_con', (req, res) => {
-  res.render('RestablecerContraseña', { success: null, error: null });
+    router.get('/restablecer_con', (req, res) => {
+    res.render('RestablecerContraseña', { success: null, error: null });
 });
 
 //NO FUNCIONA HAY QUE VER PORQUE.

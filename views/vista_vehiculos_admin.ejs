@@ -15,9 +15,13 @@
     <small class="text-muted fw-bold"><em>Plataforma web de Gestión de Flotas de Vehículos Eléctricos</em></small>
   </div>
 </header>
+ 
 
+ <!-- Barra de navegación de administrador -->
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
+
+     <!--  Inicio / vehículos disponibles / Usuarios / Accesibilidad -->
     <div class="d-flex align-items-center">
       <a href="/admin/vista_ini" class="btn-custom mx-2 nav-link" data-route="/admin/vista_ini"><i class="bi bi-house"></i><strong>Inicio</strong> </a>
       <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i><strong>Vehículos</strong> </a>
@@ -25,11 +29,13 @@
       <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i><strong>Accesibilidad</strong></a>
     </div>
 
+     <!-- Administración -->
     <div class="d-flex align-items-center ms-auto">
       <a href="/admin/vista_admin" id="btnAdmin" class="btn-custom mx-2 nav-link">
           <i class="bi bi-gear"></i><strong>Administración</strong>
       </a>
 
+      <!-- Cerrar sesión -->
       <a href="/usuario/logout" class="btn btn-custom mx-2">
         <i class="bi bi-box-arrow-right"></i> <strong>Cerrar sesión</strong>
       </a>
@@ -51,106 +57,115 @@
     </div>
   </aside>
 
-<main class="flex-grow-1 p-4">
-    <div class="d-flex align-items-center mb-4">
-      <h2 class="fw-bold">Portal de Administrador</h2>
-     <div class="ms-auto d-flex gap-2">
-       <button class="btn" id="btnAddVehiculo">
-        <i class="bi bi-plus-lg"></i><strong> Añadir Vehículo</strong>
-      </button>
-    </div>
-    </div>
-
-    <!-- Buscador -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <input type="text" id="buscarVehiculo" class="form-control w-50" placeholder="Buscar por matrícula o modelo...">
-  </div>
-
-<!-- Formulario para nuevo vehículo (inicialmente oculto) -->
-<div id="formVehiculoContainer" class="card shadow-sm mb-4 p-4 bg-white" style="display: none;">
-  <h5 class="fw-bold mb-3">Nuevo Vehículo</h5>
-  <form id="formNuevoVehiculo" enctype="multipart/form-data">
-    <div class="row g-3">
-      <!-- FILA 1 -->
-      <div class="col-md-4">
-        <label class="form-label">Matrícula *</label>
-        <input type="text" id="nuevaMatricula" class="form-control" required>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Marca *</label>
-        <input type="text" id="nuevaMarca" class="form-control" required>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Modelo *</label>
-        <input type="text" id="nuevoModelo" class="form-control" required>
-      </div>
-
-      <!-- FILA 2 -->
-      <div class="col-md-4">
-        <label class="form-label">Año *</label>
-        <input type="number" id="nuevoAnio" class="form-control" min="1900" max="2025" required>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Plazas *</label>
-        <input type="number" id="nuevasPlazas" class="form-control" min="1" max="50" required>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Autonomía (km) *</label>
-        <input type="number" id="nuevaAutonomia" class="form-control" min="0" required>
-      </div>
-
-      <!-- FILA 3 -->
-      <div class="col-md-4">
-        <label class="form-label">Color *</label>
-        <input type="text" id="nuevoColor" class="form-control" required>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Estado *</label>
-        <select id="nuevoEstado" class="form-select" required>
-          <option value="">Seleccionar estado</option>
-          <option value="disponible" selected>Disponible</option>
-          <option value="reservado">Reservado</option>
-          <option value="mantenimiento">Mantenimiento</option>
-        </select>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Concesionario *</label>
-        <select id="nuevoIdConcesionario" name="id_concesionario" class="form-select" required>
-          <option value="">Selecciona concesionario...</option>
-          <!-- Aquí cargas los concesionarios disponibles -->
-        </select>
-      </div>
-
-      <!-- FILA 4 - Imagen (ocupa todo el ancho) -->
-      <div class="col-md-12">
-        <label class="form-label">Imagen del vehículo *</label>
-        <input type="file" id="nuevaImagen" class="form-control" accept="image/*" required>
-        <small class="text-muted">Formatos: JPG, PNG, WEBP (máx. 5MB)</small>
-      </div>
-
-      <!-- Preview de la imagen -->
-      <div class="col-md-12" id="previewContainer" style="display: none;">
-        <label class="form-label">Vista previa:</label>
-        <div class="mt-2">
-          <img id="previewImagen" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px; max-height: 200px;">
+    <main class="flex-grow-1 p-4">
+        <div class="d-flex align-items-center mb-4">
+          <h2 class="fw-bold">Listado de Vehículos</h2>
+          <div class="ms-auto d-flex gap-2">
+            <button class="btn" id="btnAddVehiculo">
+              <strong><i class="bi bi-plus-lg"></i> Añadir Vehículo</strong>
+            </button>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <div class="mt-3 d-flex gap-2">
-      <button type="submit" class="btn"><strong>Guardar</strong></button>
-      <button type="button" id="cancelarVehiculo" class="btn"><strong>Cancelar</strong></button>
-    </div>
-  </form>
+          <!-- Buscador -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="input-group">
+              <span class="input-group-text bg-primary text-white">
+                <i class="bi bi-search"></i>
+              </span>
+              <input type="text" id="buscarVehiculo" class="form-control" placeholder="Buscar por matrícula, marca, modelo o concesionario...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Formulario para nuevo vehículo (inicialmente oculto) -->
+        <div id="formVehiculoContainer" class="card shadow-sm mb-4 p-4 bg-white" style="display: none;">
+          <h5 class="fw-bold mb-3">Nuevo Vehículo</h5>
+          <form id="formNuevoVehiculo" enctype="multipart/form-data">
+            <div class="row g-3">
+
+              <!-- FILA 1 -->
+              <div class="col-md-4">
+                <label class="form-label">Matrícula *</label>
+                <input type="text" id="nuevaMatricula" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Marca *</label>
+                <input type="text" id="nuevaMarca" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Modelo *</label>
+                <input type="text" id="nuevoModelo" class="form-control" required>
+              </div>
+
+              <!-- FILA 2 -->
+              <div class="col-md-4">
+                <label class="form-label">Año *</label>
+                <input type="number" id="nuevoAnio" class="form-control" min="1900" max="2025" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Plazas *</label>
+                <input type="number" id="nuevasPlazas" class="form-control" min="1" max="50" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Autonomía (km) *</label>
+                <input type="number" id="nuevaAutonomia" class="form-control" min="0" required>
+              </div>
+
+              <!-- FILA 3 -->
+              <div class="col-md-4">
+                <label class="form-label">Color *</label>
+                <input type="text" id="nuevoColor" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Estado *</label>
+                <select id="nuevoEstado" class="form-select" required>
+                  <option value="">Seleccionar estado</option>
+                  <option value="disponible" selected>Disponible</option>
+                  <option value="reservado">Reservado</option>
+                  <option value="mantenimiento">Mantenimiento</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Concesionario *</label>
+                <select id="nuevoIdConcesionario" name="id_concesionario" class="form-select" required>
+                  <option value="">Selecciona concesionario...</option>
+                  <!-- Aquí se cargarán los concesionarios disponibles dinamicamente-->
+                </select>
+              </div>
+
+              <!-- FILA 4 - Imagen -->
+              <div class="col-md-12">
+                <label class="form-label">Imagen del vehículo *</label>
+                <input type="file" id="nuevaImagen" class="form-control" accept="image/*" required>
+                <small class="text-muted">Formatos: JPG, PNG, WEBP (máx. 5MB)</small>
+              </div>
+
+              <!-- Preview de la imagen -->
+              <div class="col-md-12" id="previewContainer" style="display: none;">
+                <label class="form-label">Vista previa:</label>
+                <div class="mt-2">
+                  <img id="previewImagen" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px; max-height: 200px;">
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+              <button type="submit" class="btn"><strong>Guardar</strong></button>
+              <button type="button" id="cancelarVehiculo" class="btn"><strong>Cancelar</strong></button>
+            </div>
+          </form>
+        </div>
+
+      <!-- Contenedor dinámico para la lista de vehículos -->
+        <div id="vehiculos-container">
+          <!-- Aquí se cargará la tabla dinámicamente -->
+        </div>
+    </main>
 </div>
 
- <!-- Contenedor dinámico para la lista de vehículos -->
-  <div id="vehiculos-container">
-    <!-- Aquí se cargará la tabla de vehículos mediante JavaScript -->
-  </div>
-   
-</main>
-</div>
+<!-- MODALES -->
 
 <!-- Modal para editar vehículo -->
 <div class="modal fade" id="modalEditVehiculo" tabindex="-1" aria-labelledby="modalEditVehiculoLabel" aria-hidden="true">
@@ -265,11 +280,12 @@
         <button type="submit" form="form-configurador" class="btn btn-primary">
           <i class="bi bi-check2-circle"></i> Aplicar cambios
         </button>
-        <button type="button" class="btn" id="btnRestaurar">Restaurar valores</button>
+        <button type="button" class="btn btn-primary" id="btnRestaurar">Restaurar valores</button>
       </div>
     </div>
   </div>
 </div>
+
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

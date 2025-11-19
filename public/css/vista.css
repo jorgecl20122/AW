@@ -335,3 +335,30 @@ table img.vehiculo-img {
     font-size: 1.5rem;
   }
 }
+
+.vehiculo-destacado-img {
+    transition: transform 0.3s ease;
+    border-radius: 10px;
+}
+
+.vehiculo-destacado-img:hover {
+    transform: scale(1.05);
+}
+
+/* Card de bienvenida - Panel de Administración */
+.card-bienvenida {
+  background-color: #d1d5db9c;
+}
+
+.card-bienvenida h5 {
+   font-size: 2rem;
+  color: #555;
+}
+
+.card-bienvenida p {
+  color: #444;
+}
+
+.card-header{
+  background-color: #9fcfd3;
+}

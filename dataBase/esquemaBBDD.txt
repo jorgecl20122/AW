@@ -7,6 +7,7 @@ CREATE TABLE  USUARIOS(
     rol ENUM('administrador', 'empleado') NOT NULL,
     telefono VARCHAR(20),
     id_concesionario INT,
+    avatar VARCHAR(255) DEFAULT '/img/default-avatar.png',
      FOREIGN KEY (id_concesionario) REFERENCES CONCESIONARIOS(id_concesionario)
 );
 

@@ -43,6 +43,7 @@ desde la base de datos al entrar en la vista de administración.
     // Cargamos automáticamente al entrar y así aparecen sin recargar la página CHECK.
     cargarConcesionarios();
 
+
 //-------------------------------------------------------------------------------
 // FUNCIONES PARA BOTONES DE CADA CARD (Eliminar y Editar concesionario)
 //-------------------------------------------------------------------------------
@@ -258,6 +259,62 @@ function cargarVehiculosTabla() {
 
 // Cargar vehículos al entrar en la vista
 cargarVehiculosTabla();
+
+// Buscador de vehículos en la tabla
+$('#buscarVehiculo').on('keyup', function() {
+    const textoBusqueda = $(this).val().toLowerCase().trim();
+    
+    // Si está vacío, mostrar todos los vehículos
+    if (textoBusqueda === '') {
+        $('#tabla-vehiculos tbody tr').show();
+        return;
+    }
+    
+    // Filtrar filas de la tabla
+    $('#tabla-vehiculos tbody tr').each(function() {
+        const fila = $(this);
+        
+        // Obtener valores de las columnas relevantes
+        const matricula = fila.find('td:nth-child(1)').text().toLowerCase();
+        const marca = fila.find('td:nth-child(2)').text().toLowerCase();
+        const modelo = fila.find('td:nth-child(3)').text().toLowerCase();
+        const concesionario = fila.find('td:nth-child(9)').text().toLowerCase();
+         const autonomia = fila.find('td:nth-child(6)').text().toLowerCase();
+        const plazas = fila.find('td:nth-child(5)').text().toLowerCase();
+       
+        
+        // Buscar en matrícula, marca, modelo o concesionario
+        if (matricula.includes(textoBusqueda) || 
+            marca.includes(textoBusqueda) || 
+            modelo.includes(textoBusqueda) ||
+            concesionario.includes(textoBusqueda) ||
+            autonomia.includes(textoBusqueda) ||
+            plazas.includes(textoBusqueda)) {
+            fila.show();
+        } else {
+            fila.hide();
+        }
+    });
+    
+    // Mostrar mensaje si no hay resultados
+    const filasVisibles = $('#tabla-vehiculos tbody tr:visible').length;
+    
+    if (filasVisibles === 0) {
+        // Si no existe el mensaje, lo añadimos
+        if ($('#mensajeNoResultados').length === 0) {
+            $('#tabla-vehiculos tbody').append(`
+                <tr id="mensajeNoResultados">
+                    <td colspan="10" class="text-center text-muted py-4">
+                        <i class="bi bi-search"></i> No se encontraron vehículos que coincidan con "${textoBusqueda}"
+                    </td>
+                </tr>
+            `);
+        }
+    } else {
+        // Eliminar mensaje si hay resultados
+        $('#mensajeNoResultados').remove();
+    }
+});
 
     
 // Eliminar vehículo desde la tabla CHECK.
@@ -622,9 +679,59 @@ function cargarReservasPorConcesionario() {
   });
 }
 
-// Llamar a la función cuando se cargue la página
+// Cargar vehículos más usados por concesionario
+function cargarVehiculosMasUsados() {
+    $.ajax({
+        url: '/admin/estadisticas/vehiculo-mas-usado',
+        method: 'GET',
+        success: function(vehiculos) {
+            if (!vehiculos || vehiculos.length === 0) {
+                $('#vehiculos-mas-usados').html('<p class="text-center text-muted">No hay datos disponibles</p>');
+                return;
+            }
+
+            let html = '<div class="row g-3">';
+
+            vehiculos.forEach(v => {
+                html += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <img src="${v.imagen || '/img/default-car.png'}" 
+                                         alt="${v.marca} ${v.modelo}" 
+                                         class="img-fluid rounded vehiculo-destacado-img"
+                                         style="max-height: 200px; object-fit: cover;">
+                                </div>
+                                <h4 class="fw-bold mb-2">${v.marca} ${v.modelo}</h4>
+                                <p class="text-muted mb-3">
+                                    <i class="bi bi-building"></i> ${v.concesionario}
+                                </p>
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <span class="badge bg-primary fs-5 px-3 py-2">
+                                        <i class="bi bi-calendar-check"></i> ${v.total_reservas} reservas
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            $('#vehiculos-mas-usados').html(html);
+        },
+        error: function(err) {
+            console.error('Error al cargar vehículos más usados:', err);
+            $('#vehiculos-mas-usados').html('<p class="text-danger text-center">Error al cargar los datos</p>');
+        }
+    });
+}
+
+// Llamar función cuando se carga la página
 $(document).ready(function() {
-  cargarReservasPorConcesionario();
+    cargarReservasPorConcesionario();
+    cargarVehiculosMasUsados();
 });
 
 

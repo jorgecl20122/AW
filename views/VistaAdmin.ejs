@@ -16,8 +16,12 @@
   </div>
 </header>
 
+
+ <!-- Barra de navegación de administrador -->
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
+
+     <!--  Inicio / vehículos disponibles / Usuarios / Accesibilidad -->
     <div class="d-flex align-items-center">
       <a href="/admin/vista_ini" class="btn-custom mx-2 nav-link" data-route="/admin/vista_ini"><i class="bi bi-house"></i><strong>Inicio</strong> </a>
       <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i><strong>Vehículos</strong> </a>
@@ -25,11 +29,13 @@
       <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i><strong>Accesibilidad</strong></a>
     </div>
 
+     <!-- Administración -->
     <div class="d-flex align-items-center ms-auto">
       <a href="/admin/vista_admin" id="btnAdmin" class="btn-custom mx-2 nav-link">
           <i class="bi bi-gear"></i><strong>Administración</strong>
       </a>
 
+      <!-- Cerrar sesión -->
       <a href="/usuario/logout" class="btn btn-custom mx-2">
         <i class="bi bi-box-arrow-right"></i> <strong>Cerrar sesión</strong>
       </a>
@@ -52,53 +58,55 @@
 </div>
   </aside>
 
-<main class="flex-grow-1 p-4">
-    <div class="d-flex align-items-center mb-4">
-      <h2 class="fw-bold">Portal de Administrador</h2>
-     <div class="ms-auto d-flex gap-2">
-      <button class="btn" id="btnAddConcesionario">
-        <i class="bi bi-plus-lg"></i><strong> Añadir Concesionario</strong>
-      </button>
-    </div>
-    </div>
-
-  <!-- Formulario para nuevo concesionario (inicialmente oculto) -->
-  <div id="formConcesionarioContainer" class="card shadow-sm mb-4 p-4 bg-white">
-    <h5 class="fw-bold mb-3">Nuevo Concesionario</h5>
-    <form id="formNuevoConcesionario">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Nombre *</label>
-          <input type="text" id="nuevoNombre" class="form-control" required>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Ciudad *</label>
-          <input type="text" id="nuevaCiudad" class="form-control" required>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Correo *</label>
-          <input type="email" id="nuevoCorreo" class="form-control" required>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Teléfono</label>
-          <input type="text" id="nuevoTelefono" class="form-control">
+  <main class="flex-grow-1 p-4">
+      <div class="d-flex align-items-center mb-4">
+        <h2 class="fw-bold">Listado de Concesionarios</h2>
+        <div class="ms-auto d-flex gap-2">
+          <button class="btn" id="btnAddConcesionario">
+            <i class="bi bi-plus-lg"></i><strong> Añadir Concesionario</strong>
+          </button>
         </div>
       </div>
 
-      <div class="mt-3 d-flex gap-2">
-        <button type="submit" class="btn"><strong>Guardar</strong></button>
-        <button type="button" id="cancelarConcesionario" class="btn"><strong>Cancelar</strong></button>
-      </div>
-    </form>
-  </div>
+    <!-- Formulario para nuevo concesionario (inicialmente oculto) -->
+    <div id="formConcesionarioContainer" class="card shadow-sm mb-4 p-4 bg-white">
+      <h5 class="fw-bold mb-3">Nuevo Concesionario</h5>
+      <form id="formNuevoConcesionario">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Nombre *</label>
+            <input type="text" id="nuevoNombre" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Ciudad *</label>
+            <input type="text" id="nuevaCiudad" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Correo *</label>
+            <input type="email" id="nuevoCorreo" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Teléfono</label>
+            <input type="text" id="nuevoTelefono" class="form-control">
+          </div>
+        </div>
 
-
-    <!-- Contenedor dinámico de concesionarios -->
-    <div class="row g-3" id="concesionarios-container">
-      <!-- Aquí se insertarán los cards vía AJAX -->
+        <div class="mt-3 d-flex gap-2">
+          <button type="submit" class="btn"><strong>Guardar</strong></button>
+          <button type="button" id="cancelarConcesionario" class="btn"><strong>Cancelar</strong></button>
+        </div>
+      </form>
     </div>
-</main>
+
+      <!-- Contenedor dinámico de concesionarios -->
+      <div class="row g-3" id="concesionarios-container">
+        <!-- Aquí se cargarán los cards dinámicamente -->
+      </div>
+
+  </main>
 </div>
+
+<!--MODALES-->
 
 <!-- Modal de edición -->
 <div class="modal fade" id="modalEdit" tabindex="-1">
@@ -219,7 +227,7 @@
 
       <div class="modal-body">
         <div id="listaVehiculosConcesionario" class="table-responsive">
-          <!-- Aquí se insertará la tabla de vehículos -->
+         <!-- Aquí se cargará la tabla dinámicamente -->
         </div>
       </div>
 
@@ -231,7 +239,6 @@
     </div>
   </div>
 </div>
-
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
