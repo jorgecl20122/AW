@@ -1,9 +1,5 @@
 $(document).ready(function () {
 
-/* FUNCIÓN CARGAR CONCESIONARIOS: para cargar los concesionarios de forma dinámica en cards 
-desde la base de datos al entrar en la vista de administración.
-*/
-
 //CHECK.
     function cargarConcesionarios() {
         $.ajax({
@@ -699,23 +695,22 @@ function cargarVehiculosMasUsados() {
                             <div class="card-body text-center">
                                 <div class="mb-3">
                                     <img src="${v.imagen || '/img/default-car.png'}" 
-                                         alt="${v.marca} ${v.modelo}" 
-                                         class="img-fluid rounded vehiculo-destacado-img"
-                                         style="max-height: 200px; object-fit: cover;">
+                                        alt="${v.marca} ${v.modelo}" 
+                                        class="img-fluid rounded vehiculo-destacado-img">
                                 </div>
                                 <h4 class="fw-bold mb-2">${v.marca} ${v.modelo}</h4>
                                 <p class="text-muted mb-3">
                                     <i class="bi bi-building"></i> ${v.concesionario}
                                 </p>
                                 <div class="d-flex justify-content-center align-items-center gap-2">
-                                    <span class="badge bg-primary fs-5 px-3 py-2">
+                                    <span class="badge btn fs-5 px-3 py-2">
                                         <i class="bi bi-calendar-check"></i> ${v.total_reservas} reservas
                                     </span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                `;
+            `;
             });
 
             html += '</div>';

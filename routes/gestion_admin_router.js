@@ -30,19 +30,19 @@ const upload = multer({
     }
 });
 
-// Vista de administración
+// Vista de administración CHECK
 router.get('/vista_admin', (req, res) => {
     const usuario = req.session.usuario;
     res.render('VistaAdmin', { usuario });
 });
 
-// Vista de administración
+// Vista de administración  CHECK
 router.get('/vista_ini', (req, res) => {
     const usuario = req.session.usuario;
     res.render('Inicio_app_admin', { usuario });
 });
 
-//obtener lista de concesionarios
+//obtener lista de concesionarios  CHECK
 router.get('/lista_concesionarios', (req, res) => {
     const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
     pool.query(query, (error, results) => {
@@ -324,7 +324,7 @@ router.get('/lista_vehiculos/:id', (req, res) => {
 });
 
 
-// Obtener vehículo más usado por concesionario
+// Obtener vehículo más usado por concesionario CHECK.
 router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
     const query = `
         SELECT 
