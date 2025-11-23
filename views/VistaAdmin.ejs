@@ -6,7 +6,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/vista.css">
 </head>
-<body>
+<body data-user-role="<%= usuario ? usuario.rol : 'empleado' %>">
 
 <header class="header d-flex align-items-center p-3">
   <img src="/img/logo.png" alt="Logo Empresa" class="logo_img me-4">
@@ -161,7 +161,7 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- Modal de accesibilidad -->
 <div class="modal fade" id="configuradorModal" tabindex="-1" aria-labelledby="configuradorLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -206,11 +206,11 @@
               <label for="subrayado-enlaces" class="form-check-label fw-semibold">Subrayar enlaces</label>
             </div>
           </div>
-          <!-- Contraste alto -->
+          <!-- Contraste bajo -->
           <div class="col-md-6 d-flex align-items-center">
             <div class="form-check">
               <input type="checkbox" id="modo-contraste" class="form-check-input">
-              <label for="modo-contraste" class="form-check-label fw-semibold">Modo alto contraste</label>
+              <label for="modo-contraste" class="form-check-label fw-semibold">Modo bajo contraste</label>
             </div>
           </div>
           <!-- Paleta daltonismo -->
@@ -223,40 +223,12 @@
         </form>
       </div>
       <div class="modal-footer rounded-bottom-4">
-        <button type="submit" form="form-configurador" class="btn btn-primary">
-          <i class="bi bi-check2-circle"></i> Aplicar cambios
-        </button>
         <button type="button" class="btn btn-primary" id="btnRestaurar">Restaurar valores</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal: Vehículos del Concesionario -->
-<div class="modal fade" id="modalVehiculosConcesionario" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header text-white">
-        <h5 class="modal-title fw-bold">
-          <i class="bi bi-car-front me-2"></i> Vehículos del Concesionario
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-        <div id="listaVehiculosConcesionario" class="table-responsive">
-         <!-- Aquí se cargará la tabla dinámicamente -->
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle"></i> Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

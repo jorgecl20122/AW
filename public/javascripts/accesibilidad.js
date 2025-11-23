@@ -1,104 +1,190 @@
 $(document).ready(function(){
 
-// Comentario de prueba
+  // Valores por defecto
+  const DEFAULTS = {
+    tamanoTitulo: 2.5,
+    tamanoTexto: 1,
+    colorTitulos: "#31a1a9",
+    colorTexto: "#000000",
+    fondoSeccion: "#f4f4f4",
+    subrayadoEnlaces: false,
+    modoContraste: false,
+    modoDaltonismo: false
+  };
 
-  // Cargar preferencias desde sessionStorage si existen
-  if(sessionStorage.getItem('accesibilidad')) {
-      let prefs = JSON.parse(sessionStorage.getItem('accesibilidad'));
-      aplicarPreferencias(prefs);
+  // Cargar preferencias guardadas o usar defaults
+  let prefs = JSON.parse(sessionStorage.getItem('accesibilidad')) || {...DEFAULTS};
+
+  // Solo aplicar si el usuario ya configuró algo antes
+  if (sessionStorage.getItem('accesibilidad')) {
+    aplicarPreferencias(prefs);
   }
 
-  // Capturar submit del formulario
-  $("#form-configurador").on("submit", function(e){
-    e.preventDefault();
+  $('#configuradorModal').on('show.bs.modal', function () {
+    actualizarFormulario(prefs);
+  });
 
-    // Crear objeto de preferencias
-    let prefs = {
-        tamanoTitulo: $("#fuente-titulo").val(),
-        tamanoTexto: $("#fuente-texto").val(),
-        colorTitulos: $("#color-titulos").val(),
-        colorTexto: $("#color-texto").val(),
-        fondoSeccion: $("#fondo-seccion").val(),
-        subrayadoEnlaces: $("#subrayado-enlaces").is(":checked"),
-        modoContraste: $("#modo-contraste").is(":checked"),
-        modoDaltonismo: $("#modo-daltonismo").is(":checked")
-    };
+  // ------------------------------
+  // EVENTOS INDIVIDUALES DEL MODAL
+  // ------------------------------
 
-    // Guardar en sesión
+  // Tamaño títulos
+  $("#fuente-titulo").on("input", function(){
+    let v = parseFloat($(this).val());
+    prefs.tamanoTitulo = v;
     sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
 
-    // Aplicar visualmente
+    $("h2").css("font-size", v + "rem");
+    $("h4").css("font-size", (v * 0.6) + "rem");
+  });
+
+  // Tamaño texto
+  $("#fuente-texto").on("input", function(){
+    let v = parseFloat($(this).val());
+    prefs.tamanoTexto = v;
+    sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
+
+    $("p, .vehicle-card p, .status-box, small, table, table th, table td, input, select, button, a")
+      .css("font-size", v + "rem");
+  });
+
+  // Color de títulos
+  $("#color-titulos").on("change", function(){
+    let v = $(this).val();
+    prefs.colorTitulos = v;
+    sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
+
+    $("h2, h4").css("color", v);
+  });
+
+  // Color del texto
+  $("#color-texto").on("change", function(){
+    let v = $(this).val();
+    prefs.colorTexto = v;
+    sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
+
+    $("p, .vehicle-card p, .status-box, small, table, table th, table td, input, select, button, a")
+      .css("color", v);
+  });
+
+  // Fondo sección
+  $("#fondo-seccion").on("change", function(){
+    let v = $(this).val();
+    prefs.fondoSeccion = v;
+    sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
+
+    $("main").css("background-color", v);
+  });
+
+  // Subrayado enlaces
+  $("#subrayado-enlaces").on("change", function(){
+    let isActive = $(this).is(":checked");
+    prefs.subrayadoEnlaces = isActive;
+    sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
+
+    $("a").css("text-decoration", isActive ? "underline" : "none");
+  });
+
+  // Modo contraste
+  $("#modo-contraste").on("change", function(){
+    let isActive = $(this).is(":checked");
+    prefs.modoContraste = isActive;
+    sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
+
+    $("body").toggleClass("bajo-contraste", isActive);
+  });
+
+  // Modo daltonismo
+  $("#modo-daltonismo").on("change", function(){
+    let isActive = $(this).is(":checked");
+    prefs.modoDaltonismo = isActive;
+    sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
+
+    $("body").toggleClass("daltonismo", isActive);
+  });
+
+  // ------------------------------
+  // BOTÓN RESTAURAR
+  //------------------------------
+  
+  $("#btnRestaurar").on("click", function(){
+    sessionStorage.removeItem('accesibilidad');
+    prefs = {...DEFAULTS};
+
+    actualizarFormulario(prefs);
     aplicarPreferencias(prefs);
 
-    // Cerrar modal
     bootstrap.Modal.getOrCreateInstance($('#configuradorModal')).hide();
   });
 
-  // Restaurar valores por defecto
-  $("#btnRestaurar").on("click", function(){
-    sessionStorage.removeItem('accesibilidad');
-    $("#fuente-titulo").val("1.5");
-    $("#fuente-texto").val("1");
-    $("#color-titulos").val("#000000");
-    $("#color-texto").val("#333333");
-    $("#fondo-seccion").val("#f8f9fa");
-    $("#subrayado-enlaces").prop("checked", false);
-    $("#modo-contraste").prop("checked", false);
-    $("#modo-daltonismo").prop("checked", false);
-
-    aplicarPreferencias({});
+  $("#form-configurador").on("submit", function(e){
+    e.preventDefault();
+    bootstrap.Modal.getOrCreateInstance($('#configuradorModal')).hide();
   });
 
-  // Función que aplica todas las preferencias
-  function aplicarPreferencias(prefs) {
-    // Tamaño de títulos
-    $("h2, h4").css("font-size", (prefs.tamanoTitulo || 1.5) + "rem");
+  // Modo daltonismo
+$("#modo-daltonismo").on("change", function(){
+  let isActive = $(this).is(":checked");
+  prefs.modoDaltonismo = isActive;
+  sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
 
-    // Tamaño de texto (párrafos, status-box, tabla)
-    let tamTexto = (prefs.tamanoTexto || 1) + "rem";
-    $("p, .vehicle-card p, .status-box, small, table, table th, table td, input, select, button, a").css("font-size", tamTexto);
+  $("body").toggleClass("daltonismo", isActive);
 
-    // Color títulos
-    $("h2, h4").css("color", prefs.colorTitulos || "#000000");
+});
 
-    // Color texto (incluye tabla, status-box, small)
-    let colorTexto = prefs.colorTexto || "#333333";
-    $("p, .vehicle-card p, .status-box, small, table, table th, table td, input, select, button, a").css("color", colorTexto);
+// Adicionalmente, asegurar centrado cuando se abra el modal
+$('#configuradorModal').on('show.bs.modal', function () {
+  let $modalDialog = $(this).find('.modal-dialog');
+  $modalDialog.css({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 'calc(100% - 1rem)'
+  });
+});
 
-    // Fondo sección principal
-    $("main").css("background-color", prefs.fondoSeccion || "#f8f9fa");
 
-    // Subrayado enlaces
-    $("a").css("text-decoration", prefs.subrayadoEnlaces ? "underline" : "none");
+  // ------------------------------
+  // FUNCIONES
+  // ------------------------------
 
-    // Contraste alto
-    if(prefs.modoContraste) {
-        $("body").addClass("alto-contraste");
-    } else {
-        $("body").removeClass("alto-contraste");
-    }
-
-    // Paleta daltonismo
-    if(prefs.modoDaltonismo) {
-        $("body").addClass("daltonismo");
-    } else {
-        $("body").removeClass("daltonismo");
-    }
+  function actualizarFormulario(p){
+    $("#fuente-titulo").val(p.tamanoTitulo);
+    $("#fuente-texto").val(p.tamanoTexto);
+    $("#color-titulos").val(p.colorTitulos);
+    $("#color-texto").val(p.colorTexto);
+    $("#fondo-seccion").val(p.fondoSeccion);
+    $("#subrayado-enlaces").prop("checked", p.subrayadoEnlaces);
+    $("#modo-contraste").prop("checked", p.modoContraste);
+    $("#modo-daltonismo").prop("checked", p.modoDaltonismo);
   }
 
-  // Atajos de teclado predefinidos
-  $(document).keydown(function(e){
-    if(e.ctrlKey && e.key.toLowerCase() === 'r'){ // Ctrl+R
-        e.preventDefault();
-        $("#btnReservarVehiculo").click();
+ function aplicarPreferencias(p){
+    if(p.tamanoTitulo){
+      // h2 más grande que h4
+      $("h4").css("font-size", p.tamanoTitulo + "rem");
+      $("h5").css("font-size", (p.tamanoTitulo * 0.5) + "rem");
     }
-    if(e.ctrlKey && e.key.toLowerCase() === 'h'){ // Ctrl+H
-        e.preventDefault();
-        $("#linkMisReservas").click();
+    if(p.tamanoTexto){
+      $("p, .vehicle-card p, .status-box, table, table th, table td, input, select, button, a")
+        .css("font-size", p.tamanoTexto + "rem");
+      $("small").css("font-size", (p.tamanoTexto * 0.9) + "rem");
     }
-  });
+    if(p.colorTitulos){
+      $("h4").css("color", p.colorTitulos); 
+      $("h5").css("color", "#000000");       
+    }
+    if(p.colorTexto){
+      $("p, .vehicle-card p, .status-box, small, table, table th, table td, input, select, button, a")
+        .css("color", p.colorTexto);
+    }
+    if(p.fondoSeccion){
+      $("main").css("background-color", p.fondoSeccion);
+    }
+    $("a").css("text-decoration", p.subrayadoEnlaces ? "underline" : "none");
+    $("body").toggleClass("bajo-contraste", p.modoContraste);
+    $("body").toggleClass("daltonismo", p.modoDaltonismo);
+}
 
-  // Mejora de accesibilidad por teclado
-  $("button, input, a, select, table, table th, table td").attr("tabindex", "0"); 
 
 });

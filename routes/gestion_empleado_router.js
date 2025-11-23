@@ -356,8 +356,6 @@ router.get('/estadisticas/reservas-concesionario', (req, res) => {
       console.error('Error al obtener reservas por concesionario:', err);
       return res.status(500).json({ error: 'Error al obtener estadísticas' });
     }
-
-    console.log('Reservas por concesionario:', result);
     res.json({ concesionarios: result });
   });
 });

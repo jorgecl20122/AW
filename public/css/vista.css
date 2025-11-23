@@ -187,6 +187,11 @@ body {
   border-radius: 0 0 1rem 1rem;
 }
 
+.modal, .modal * {
+    filter: none !important;
+    transform: none !important;
+}
+
 /* ===================================== */
 /* Sliders Personalizados */
 /* ===================================== */
@@ -280,19 +285,193 @@ main {
 /* ===================================== */
 /* Accesibilidad */
 /* ===================================== */
+/* Modo Bajo Contraste / Modo Noche */
+/* ===================================== */
+/* MODO BAJO CONTRASTE - GRIS OSCURO */
+/* ===================================== */
 
-.alto-contraste {
-  background-color: #000 !important;
-  color: #fff !important;
+.bajo-contraste {
+  background-color: #2e2e2e !important; /* fondo general */
+  color: #d0d0d0 !important; /* texto general */
+  transition: all 0.3s ease;
 }
 
-.alto-contraste a {
-  color: #0ff !important;
+/* Header */
+.bajo-contraste .header {
+  background-color: #3a3a3a !important;
+  border-bottom: 1px solid #555555 !important;
 }
 
-.daltonismo {
+.bajo-contraste .header h4,
+.bajo-contraste .header small {
+  color: #e0e0e0 !important;
+}
+
+/* Navbar */
+.bajo-contraste .navbar {
+  background-color: #3a3a3a !important;
+  border-bottom: 1px solid #555555 !important;
+}
+
+.bajo-contraste .btn,
+.bajo-contraste .btn-custom,
+.bajo-contraste .nav-link {
+  background-color: #3a3a3a !important;
+  color: #d0d0d0 !important;
+  border: none !important;
+}
+
+.bajo-contraste .btn:hover,
+.bajo-contraste .btn-custom:hover,
+.bajo-contraste .nav-link:hover {
+  background-color: #3a3a3a !important;
+  color: #ffffff !important;
+}
+
+/* Sidebar */
+.bajo-contraste .sidebar {
+  background-color: #3a3a3a !important;
+  border-right: 1px solid #555555 !important;
+}
+
+.bajo-contraste .sidebar .nav-link {
+  color: #d0d0d0 !important;
+}
+
+.bajo-contraste .sidebar .nav-link.active,
+.bajo-contraste .sidebar .nav-link:hover {
+  background-color: #5a5a5a !important;
+  color: #ffffff !important;
+}
+
+/* Cards y contenedores */
+.bajo-contraste .card,
+.bajo-contraste .card-body,
+.bajo-contraste .card-header,
+.bajo-contraste .vehicle-card,
+.bajo-contraste .card-bienvenida,
+.bajo-contraste .container-fluid,
+.bajo-contraste main {
+  background-color: #3a3a3a !important;
+  color: #d0d0d0 !important;
+  border-color: #555555 !important;
+}
+
+/* Títulos */
+.bajo-contraste h1,
+.bajo-contraste h2,
+.bajo-contraste h3,
+.bajo-contraste h4,
+.bajo-contraste h5,
+.bajo-contraste h6 {
+  color: #e0e0e0 !important;
+}
+
+/* Texto general */
+.bajo-contraste p,
+.bajo-contraste small,
+.bajo-contraste span,
+.bajo-contraste table,
+.bajo-contraste table th,
+.bajo-contraste table td,
+.bajo-contraste input,
+.bajo-contraste select,
+.bajo-contraste textarea,
+.bajo-contraste button,
+.bajo-contraste a {
+  color: #d0d0d0 !important;
+  background-color: transparent !important;
+}
+
+/* Tablas */
+.bajo-contraste table {
+  border-color: #555555 !important;
+}
+
+.bajo-contraste table th,
+.bajo-contraste table td {
+  border-color: #555555 !important;
+}
+
+/* Status boxes */
+.bajo-contraste .status-box {
+  background-color: #4a4a4a !important;
+  color: #d0d0d0 !important;
+  border-left-color: #666666 !important;
+}
+
+/* Botones */
+.bajo-contraste .btn-primary {
+  background-color: #5a5a5a !important;
+  border-color: #5a5a5a !important;
+  color: #ffffff !important;
+}
+
+.bajo-contraste .btn-primary:hover {
+  background-color: #6a6a6a !important;
+}
+
+/* Modal */
+.bajo-contraste .modal-body {
+  background-color: #3c3c3c !important; /* gris oscuro */
+  color: #dcdcdc !important;
+  border-color: #555555 !important;
+}
+
+/* Modal Header un poco más oscuro */
+.bajo-contraste .modal-header {
+  background-color: #2f2f2f !important; /* más oscuro que el modal body */
+  color: #f0f0f0 !important;
+  border-bottom-color: #555555 !important;
+}
+
+/* Modal Footer */
+.bajo-contraste .modal-footer {
+  background-color: #3a3a3a !important;
+  border-top-color: #555555 !important;
+  color: #dcdcdc !important;
+}
+
+/* Inputs y select */
+.bajo-contraste input,
+.bajo-contraste select,
+.bajo-contraste textarea {
+  background-color: #4a4a4a !important;
+  color: #d0d0d0 !important;
+  border-color: #666666 !important;
+}
+
+/* Enlaces */
+.bajo-contraste a {
+  color: #a0c4ff !important;
+  text-decoration: underline !important;
+}
+
+/* Vehículos destacados */
+.bajo-contraste .vehiculo-destacado-img {
+  filter: brightness(0.8) !important;
+}
+
+
+/* Filtro aplicado a todo el body EXCEPTO el modal */
+body.daltonismo > *:not(.modal) {
   filter: grayscale(0.5);
 }
+
+/* Evitar que el modal herede el filtro */
+body.daltonismo .modal,
+body.daltonismo .modal * {
+  filter: none !important;
+}
+
+/* Asegurar centrado vertical y horizontal */
+body.daltonismo .modal-dialog-centered {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+
 
 /* ===================================== */
 /* Imagen de Coches */
