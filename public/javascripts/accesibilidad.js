@@ -143,6 +143,84 @@ $('#configuradorModal').on('show.bs.modal', function () {
   });
 });
 
+// ------------------------------
+  // NAVEGACIÓN POR TECLADO
+  // ------------------------------
+
+  // Obtener el rol del usuario desde el atributo data-role del body
+  const userRole = $('body').data('user-role') || 'empleado';
+
+  // Atajos de teclado predefinidos según el rol
+  $(document).keydown(function(e){
+    
+    // ATAJOS COMUNES PARA TODOS
+    if(e.ctrlKey && e.key.toLowerCase() === 'a'){ // Ctrl+A - Accesibilidad
+        e.preventDefault();
+        bootstrap.Modal.getOrCreateInstance($('#configuradorModal')).show();
+    }
+    
+    if(e.ctrlKey && e.key.toLowerCase() === 'i'){ // Ctrl+I - Inicio
+        if(userRole === 'empleado') {
+          e.preventDefault();
+          window.location.href = '/empleado/vista_ini';
+        }
+        else{
+          e.preventDefault();
+          window.location.href = '/admin/vista_ini';
+        }
+    }
+     if(e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'q'){ // Ctrl+Shift+Q - Cerrar Sesión
+        e.preventDefault();
+        if(confirm('¿Deseas cerrar sesión?')) {
+          window.location.href = '/usuario/logout';
+        }
+    }
+
+    // ATAJOS PARA EMPLEADOS
+    if(userRole === 'empleado') {
+      if(e.ctrlKey && e.key.toLowerCase() === 'r'){ // Ctrl+R - Reservar
+          e.preventDefault();
+          $("#btnReservarVehiculo").click();
+      }
+      
+      if(e.ctrlKey && e.key.toLowerCase() === 'h'){ // Ctrl+H - Mis Reservas (Historial)
+          e.preventDefault();
+          window.location.href = '/empleado/mis_reservas';
+      }
+      
+      if(e.ctrlKey && e.key.toLowerCase() === 'v'){ // Ctrl+V - Ver Vehículos
+          e.preventDefault();
+          window.location.href = '/empleado/vehiculos';
+      }
+    }
+
+    // ATAJOS PARA ADMINISTRADORES
+    if(userRole === 'administrador') {
+      if(e.ctrlKey && e.key.toLowerCase() === 'v'){ // Ctrl+V - Gestión Vehículos
+          e.preventDefault();
+          window.location.href = '/admin/VistaVehiculos';
+      }
+      
+      if(e.ctrlKey && e.key.toLowerCase() === 'u'){ // Ctrl+U - Usuarios
+          e.preventDefault();
+          window.location.href = '/usuario/vistaLista';
+      }
+      
+      if(e.ctrlKey && e.key.toLowerCase() === 'g'){ // Ctrl+G - Gestionar Reservas
+          e.preventDefault();
+          window.location.href = '/admin/reservas';
+      }
+      
+      if(e.ctrlKey && e.key.toLowerCase() === 'n'){ // Ctrl+N - Nuevo Vehículo
+          e.preventDefault();
+          $("#btnNuevoVehiculo").click();
+      }
+    }
+  });
+
+  // Mejora de accesibilidad por teclado
+  $("button, input, a, select, table, table th, table td").attr("tabindex", "0");
+
 
   // ------------------------------
   // FUNCIONES

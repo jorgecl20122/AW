@@ -18,7 +18,7 @@ const {
 // FUNCIÓN AUXILIAR
 // ============================================
 function extraerConcesionarios(callback) {
-    pool.query(`SELECT id_concesionario AS id, nombre FROM concesionarios`, (err, result) => {
+    pool.query(`SELECT id_concesionario AS id, nombre FROM concesionarios`, (err, result) => {     
         if (err) {
             console.error('Error al obtener los concesionarios:', err);
             return callback(err, null); 
@@ -164,11 +164,7 @@ router.get('/restablecer_con', (req, res) => {
 });
 
 // Restablecer contraseña 
-router.post('/restablecerCon', 
-    validarCorreoCorporativo, 
-    validarContraseñaSegura, 
-    validarCoincidenciaContraseñas, 
-    (req, res) => {
+router.post('/restablecerCon', validarCorreoCorporativo, validarContraseñaSegura, validarCoincidenciaContraseñas, (req, res) => {
         const { email, contrasena1 } = req.body;
 
         const query_mail_existente = `SELECT id_usuario FROM usuarios WHERE correo = ?`;
@@ -236,7 +232,7 @@ router.get('/vistaLista', (req, res) => {
     res.render('ListadoUsuarios', { usuario });
 });
 
-// Obtener datos del usuario actual (sesión activa)
+// Obtener datos del usuario actual
 router.get('/actual', (req, res) => {
     const query = `
         SELECT 
