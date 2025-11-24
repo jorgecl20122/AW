@@ -335,29 +335,29 @@ router.get('/estadisticas/reservas-concesionario', (req, res) => {
       redirect: '/login'
     });
   }
+    const query = `
+        SELECT 
+          c.nombre as concesionario,
+          c.ciudad,
+          COUNT(r.id_reserva) as total_reservas,
+          SUM(CASE WHEN r.estado = 'activa' THEN 1 ELSE 0 END) as activas,
+          SUM(CASE WHEN r.estado = 'finalizada' THEN 1 ELSE 0 END) as finalizadas,
+          SUM(CASE WHEN r.estado = 'cancelada' THEN 1 ELSE 0 END) as canceladas
+        FROM concesionarios c
+        LEFT JOIN vehiculos v ON c.id_concesionario = v.id_concesionario
+        LEFT JOIN reservas r ON v.id_vehiculo = r.id_vehiculo
+        GROUP BY c.id_concesionario, c.nombre, c.ciudad
+        ORDER BY total_reservas DESC
+      `;
 
-  const query = `
-    SELECT 
-      c.nombre as concesionario,
-      c.ciudad,
-      COUNT(r.id_reserva) as total_reservas,
-      SUM(CASE WHEN r.estado = 'activa' THEN 1 ELSE 0 END) as activas,
-      SUM(CASE WHEN r.estado = 'finalizada' THEN 1 ELSE 0 END) as finalizadas,
-      SUM(CASE WHEN r.estado = 'cancelada' THEN 1 ELSE 0 END) as canceladas
-    FROM concesionarios c
-    LEFT JOIN vehiculos v ON c.id_concesionario = v.id_concesionario
-    LEFT JOIN reservas r ON v.id_vehiculo = r.id_vehiculo
-    GROUP BY c.id_concesionario, c.nombre, c.ciudad
-    ORDER BY total_reservas DESC
-  `;
+      pool.query(query, (err, result) => {
+        if (err) {
+          console.error('Error al obtener reservas por concesionario:', err);
+          return res.status(500).send('Error al cargar reservas');
+        }
 
-  pool.query(query, (err, result) => {
-    if (err) {
-      console.error('Error al obtener reservas por concesionario:', err);
-      return res.status(500).json({ error: 'Error al obtener estadísticas' });
-    }
-    res.json({ concesionarios: result });
-  });
+        res.render('reservas_concesionario', { concesionarios: result });
+      });
 });
 
 

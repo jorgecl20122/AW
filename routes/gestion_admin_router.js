@@ -35,10 +35,23 @@ const upload = multer({
 // RUTAS DE VISTAS ADMINISTRADOR
 //------------------------------------
 
-// CHECK.
+// CHECK - Renderiza la vista de administración con la lista de concesionarios
 router.get('/vista_admin', (req, res) => {
     const usuario = req.session.usuario;
-    res.render('VistaAdmin', { usuario });
+    
+    // Obtener los concesionarios desde la base de datos
+    const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
+    
+    pool.query(query, (error, concesionarios) => {
+        if (error) {
+            console.error('Error al obtener concesionarios:', error);
+            // Si hay error, renderizamos con array vacío
+            return res.render('VistaAdmin', { usuario, concesionarios: [] });
+        }
+        
+        // Renderizamos la vista con los concesionarios
+        res.render('VistaAdmin', { usuario, concesionarios });
+    });
 });
 
 // CHECK.
@@ -47,10 +60,38 @@ router.get('/vista_ini', (req, res) => {
     res.render('Inicio_app_admin', { usuario });
 });
 
-// CHECK.
+// CHECK - Renderiza la vista de vehículos con la lista completa
 router.get('/VistaVehiculos', (req, res) => {
     const usuario = req.session.usuario;
-    res.render('vista_vehiculos_admin', { usuario });
+    
+    // Obtener todos los vehículos con sus concesionarios
+    const query = `
+        SELECT 
+            v.id_vehiculo AS id,
+            v.matricula,
+            v.marca,
+            v.modelo,
+            v.anio_matriculacion,
+            v.numero_plazas,
+            v.autonomia_km,
+            v.color,
+            v.imagen,
+            v.estado,
+            c.nombre AS concesionario
+        FROM vehiculos v
+        JOIN concesionarios c ON v.id_concesionario = c.id_concesionario
+    `;
+    
+    pool.query(query, (error, vehiculos) => {
+        if (error) {
+            console.error('Error al obtener vehículos:', error);
+            // Si hay error, renderizamos con array vacío
+            return res.render('vista_vehiculos_admin', { usuario, vehiculos: [] });
+        }
+        
+        // Renderizamos la vista con los vehículos
+        res.render('vista_vehiculos_admin', { usuario, vehiculos });
+    });
 });
 
 
@@ -146,15 +187,18 @@ router.post('/api', (req, res) => {
 // Listar los vehiculos por concesionario CHECK.
 router.get('/lista_vehiculos/:id', (req, res) => {
   const id = req.params.id;
-  console.log('ID del concesionario clicado:', id);
 
   pool.query(`SELECT * FROM vehiculos WHERE id_concesionario = ?`, [id], (err, results) => {
-    if (err) {
-      return res.status(500).json({ mensaje: 'Error al obtener vehículos' });
-    }
-    res.json(results);
+    if (err) return res.status(500).send('Error al obtener vehículos');
+
+    // Renderizar a vehiculos_concesionario EJS y lo envia como HTML
+    res.render('vehiculos_concesionario', { vehiculos: results }, (err, html) => {
+      if (err) return res.status(500).send('Error al renderizar vehículos');
+      res.send(html);
+    });
   });
 });
+
 
 //----------------------------
 // RUTAS DE VEHÍCULOS
@@ -333,7 +377,7 @@ router.post('/vehiculos', upload.single('imagen'), (req, res) => {
 // RUTAS DE ESTADÍSTICAS
 //----------------------------
 
-// Obtener vehículo más usado por concesionario CHECK.
+// Obtener vehículos más usados por concesionario
 router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
     const query = `
         SELECT 
@@ -352,16 +396,12 @@ router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
 
     pool.query(query, (err, results) => {
         if (err) {
-            console.error('Error al obtener vehículo más usado:', err);
-            return res.status(500).json({ 
-                mensaje: 'Error al obtener estadísticas',
-                error: err.message 
-            });
+            console.error('Error al obtener vehículos más usados:', err);
+            return res.status(500).send('<p class="text-danger text-center">Error al cargar los vehículos.</p>');
         }
 
-        // Filtrar para obtener solo el vehículo más usado por concesionario:
+        // Filtrar el más usado por concesionario
         const vehiculosPorConcesionario = {};
-        
         results.forEach(v => {
             if (!vehiculosPorConcesionario[v.concesionario] || 
                 v.total_reservas > vehiculosPorConcesionario[v.concesionario].total_reservas) {
@@ -369,11 +409,12 @@ router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
             }
         });
 
-        // Convertir el objeto a array para devolver cada vehiculo más usado por concesionario:
         const vehiculosMasUsados = Object.values(vehiculosPorConcesionario);
-        
-        res.json(vehiculosMasUsados);
+
+        // Renderizamos el partial directamente
+        res.render('vehiculo_mas_usado', { vehiculos: vehiculosMasUsados });
     });
 });
+
 
 module.exports = router;

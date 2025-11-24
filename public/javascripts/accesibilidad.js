@@ -143,7 +143,7 @@ $('#configuradorModal').on('show.bs.modal', function () {
   });
 });
 
-// ------------------------------
+  // ------------------------------
   // NAVEGACIÓN POR TECLADO
   // ------------------------------
 
@@ -159,7 +159,7 @@ $('#configuradorModal').on('show.bs.modal', function () {
         bootstrap.Modal.getOrCreateInstance($('#configuradorModal')).show();
     }
     
-    if(e.ctrlKey && e.key.toLowerCase() === 'i'){ // Ctrl+I - Inicio
+    /*if(e.ctrlKey && e.key.toLowerCase() === 'i'){ // Ctrl+I - Inicio
         if(userRole === 'empleado') {
           e.preventDefault();
           window.location.href = '/empleado/vista_ini';
@@ -168,7 +168,7 @@ $('#configuradorModal').on('show.bs.modal', function () {
           e.preventDefault();
           window.location.href = '/admin/vista_ini';
         }
-    }
+    }*/
      if(e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'q'){ // Ctrl+Shift+Q - Cerrar Sesión
         e.preventDefault();
         if(confirm('¿Deseas cerrar sesión?')) {
@@ -216,6 +216,7 @@ $('#configuradorModal').on('show.bs.modal', function () {
           $("#btnNuevoVehiculo").click();
       }
     }
+    
   });
 
   // Mejora de accesibilidad por teclado

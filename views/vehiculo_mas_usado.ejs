@@ -1,0 +1,28 @@
+<div class="row g-3">
+  <% if (!vehiculos || vehiculos.length === 0) { %>
+    <p class="text-center text-muted">No hay datos disponibles</p>
+  <% } else { %>
+    <% vehiculos.forEach(v => { %>
+      <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body text-center">
+            <div class="mb-3">
+              <img src="<%= v.imagen || '/img/default-car.png' %>" 
+                  alt="<%= v.marca %> <%= v.modelo %>" 
+                  class="img-fluid rounded vehiculo-destacado-img">
+            </div>
+            <h5 class="fw-bold mb-2"><%= v.marca %> <%= v.modelo %></h5>
+            <p class="text-muted mb-3">
+              <i class="bi bi-building"></i> <%= v.concesionario %>
+            </p>
+            <div class="d-flex justify-content-center align-items-center gap-2">
+              <span class="badge btn fs-5 px-3 py-2">
+                <i class="bi bi-calendar-check"></i> <%= v.total_reservas %> reservas
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  <% } %>
+</div>

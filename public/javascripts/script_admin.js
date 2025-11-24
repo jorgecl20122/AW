@@ -3,45 +3,11 @@ $(document).ready(function () {
 // ============================================
 // SECCIÓN: CONCESIONARIOS
 // ============================================
-
-    // Cargar lista de concesionarios CHECK.
-    function cargarConcesionarios() {
-        $.ajax({
-            url: '/admin/lista_concesionarios',
-            method: 'GET',
-            success: function(concesionarios) {
-                let html = '<div class="row g-3">';
-
-                concesionarios.forEach(c => {
-                   html += `
-                    <div class="col-md-6">
-                        <div class="vehicle-card" data-id="${c.id_concesionario}">
-                        <h5><strong>${c.nombre}</strong> <span class="badge bg-success">Activo</span></h5>
-                        <p class="text-muted"><i class="bi bi-geo-alt"></i> Ciudad: ${c.ciudad || 'Sin especificar'}</p>
-                        <p><i class="bi bi-telephone"></i> Teléfono: ${c.telefono || '-'}</p>
-                        <p><i class="bi bi-envelope"></i> Correo: ${c.correo}</p><br>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-ver-vehiculos" data-id="${c.id_concesionario}"><i class="bi bi-car-front"></i><strong> Vehículos</strong></button>
-                            <button class="btn btn-edit"><i class="bi bi-pencil-fill"></i><strong> Editar</strong></button>
-                            <button class="btn btn-delete"><i class="bi bi-trash-fill"></i><strong> Eliminar</strong></button>
-                        </div>
-                        </div>
-                    </div>`;
-                });
-
-                html += '</div>';
-                $('#concesionarios-container').html(html).show();
-            },
-            error: function(err) {
-                console.error('Error al cargar concesionarios:', err);
-                alert('Error al cargar concesionarios');
-            }
-        });
+   
+    // función que sirve para recargar los cards después de crear/editar/eliminar concesionarios
+    function RecargarPágina() {
+        window.location.reload(); //recargamos la página para obtener los datos actualizados
     }
-
-    // Cargamos automáticamente al entrar y así aparecen sin recargar la página CHECK.
-    cargarConcesionarios();
-
 
     // --------------------------------------------
     // BOTONES DE CONCESIONARIOS
@@ -60,6 +26,7 @@ $(document).ready(function () {
                 success: function(data) {
                     alert(data.mensaje || 'Concesionario eliminado correctamente');
                     containerCol.fadeOut(300, function() { $(this).remove(); });
+                     RecargarPágina();
                 },
                 error: function(xhr) {
                     const msg = xhr.responseJSON?.mensaje || xhr.statusText || 'Error al eliminar concesionario';
@@ -119,14 +86,13 @@ $(document).ready(function () {
                 modal.hide();
                 
                 // Recargar concesionarios
-                cargarConcesionarios();
+                 RecargarPágina();
             },
             error: function(xhr) {
                 alert(xhr.responseJSON?.mensaje || 'Error al actualizar concesionario');
             }
         });
     });
-
 
 // --------------------------------------------
 // AÑADIR NUEVO CONCESIONARIO
@@ -168,7 +134,7 @@ $(document).ready(function () {
         success: function(data) {
           $('#formNuevoConcesionario')[0].reset();
           $('#formConcesionarioContainer').slideUp(300);
-          cargarConcesionarios();
+           RecargarPágina();
           alert('Concesionario agregado correctamente');
         },
         error: function(err) {
@@ -176,77 +142,6 @@ $(document).ready(function () {
         }
       });
     });
-
-
-// ============================================
-// SECCIÓN: VEHÍCULOS
-// ============================================
-
-    // Cargar todos los vehículos en la tabla CHECK.
-    function cargarVehiculosTabla() {
-        $.ajax({
-            url: '/admin/lista_vehiculos',
-            method: 'GET',
-            success: function(vehiculos) {
-                console.log('Vehículos recibidos:', vehiculos);
-
-                if (vehiculos.length === 0) {
-                    $('#vehiculos-container').html('<p>No hay vehículos registrados.</p>').show();
-                    return;
-                }
-
-                let html = `
-                <table class="table table-striped table-hover align-middle" id="tabla-vehiculos">
-                    <thead class="table-secondary">
-                        <tr>
-                            <th>Matrícula</th>
-                            <th>Marca</th>
-                            <th>Modelo</th>
-                            <th>Año</th>
-                            <th>Plazas</th>
-                            <th>Autonomía</th>
-                            <th>Color</th>
-                            <th>Imagen</th>
-                            <th>Concesionario</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                `;
-
-                vehiculos.forEach(v => {
-                    html += `
-                        <tr data-id="${v.id}">
-                            <td>${v.matricula}</td>
-                            <td>${v.marca}</td>
-                            <td>${v.modelo}</td>
-                            <td>${v.anio_matriculacion}</td>
-                            <td>${v.numero_plazas}</td>
-                            <td>${v.autonomia_km} km</td>
-                            <td>${v.color}</td>
-                            <td>${v.imagen ? `<img src="${v.imagen}" alt="Imagen" class="vehiculo-img">` : '-'}</td>
-                            <td>${v.concesionario}</td>
-                            <td>
-                                <button class="btn btn-sm btn-edit-vehiculo"><i class="bi bi-pencil-fill"></i><strong> Editar</strong></button>
-                                <button class="btn btn-sm btn-delete-vehiculo"><i class="bi bi-trash-fill"></i></i><strong> Eliminar</strong></button>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                html += `</tbody></table>`;
-                $('#vehiculos-container').html(html).show();
-            },
-            error: function(err) {
-                console.error('Error al cargar todos los vehículos:', err);
-                $('#vehiculos-container').html('<p class="text-danger">Error al cargar vehículos.</p>');
-            }
-        });
-    } 
-
-    // Cargar vehículos al entrar en la vista
-    cargarVehiculosTabla();
-
 
 // --------------------------------------------
 // BUSCADOR DE VEHÍCULOS
@@ -316,7 +211,7 @@ $(document).ready(function () {
                 url: `/admin/vehiculos/${id}`,
                 success: function(respuesta) {
                     alert(respuesta.mensaje || 'Vehículo eliminado correctamente');
-                    cargarVehiculosTabla();
+                    RecargarPágina();
                 },
                 error: function(err) {
                     console.error('Error al eliminar vehículo:', err);
@@ -383,7 +278,7 @@ $(document).ready(function () {
             }),
             success: function(data) {
                 alert(data.mensaje || 'Vehículo actualizado correctamente');
-                cargarVehiculosTabla();
+                RecargarPágina();
                 bootstrap.Modal.getInstance(document.getElementById('modalEditVehiculo')).hide();
             },
             error: function(err) {
@@ -498,12 +393,11 @@ $(document).ready(function () {
         contentType: false,
         success: function(response) {
           alert('Vehículo agregado correctamente');
-          
+           RecargarPágina();
           $('#formNuevoVehiculo')[0].reset();
           $('#previewContainer').hide();
           $('#formVehiculoContainer').hide();
           
-          cargarVehiculosTabla(); 
         },
         error: function(xhr) {
           const error = xhr.responseJSON;
@@ -522,187 +416,79 @@ $(document).ready(function () {
 // VER VEHÍCULOS DE UN CONCESIONARIO
 // --------------------------------------------
 
-    // Cargar vehículos de un concesionario específico CHECK.
-    function cargarVehiculosPorConcesionario(idConcesionario) {
-      $.ajax({
-        url: `/admin/lista_vehiculos/${idConcesionario}`,
-        method: 'GET',
-        success: function(vehiculos) {
-
-          if (!vehiculos || vehiculos.length === 0) {
-            $('#listaVehiculosConcesionario').html('<p class="text-center">Este concesionario no tiene vehículos registrados.</p>');
-            return;
-          }
-
-          let html = `
-            <table class="table table-striped table-hover align-middle">
-              <thead class="table-secondary">
-                <tr>
-                  <th>Matrícula</th>
-                  <th>Marca</th>
-                  <th>Modelo</th>
-                  <th>Año</th>
-                  <th>Plazas</th>
-                  <th>Autonomía</th>
-                  <th>Color</th>
-                  <th>Imagen</th>
-                </tr>
-              </thead>
-              <tbody>
-          `;
-
-          vehiculos.forEach(v => {
-            html += `
-              <tr data-id="${v.id}">
-                <td>${v.matricula}</td>
-                <td>${v.marca}</td>
-                <td>${v.modelo}</td>
-                <td>${v.anio_matriculacion}</td>
-                <td>${v.numero_plazas}</td>
-                <td>${v.autonomia_km} km</td>
-                <td>${v.color}</td>
-                <td>${v.imagen ? `<img src="${v.imagen}" alt="Imagen" class="vehiculo-img">` : '-'}</td>
-              </tr>
-            `;
-          });
-
-          html += `</tbody></table>`;
-          $('#listaVehiculosConcesionario').html(html);
-        },
-        error: function(err) {
-          console.error('Error al cargar vehículos del concesionario:', err);
-          $('#listaVehiculosConcesionario').html('<p class="text-danger">Error al cargar los vehículos.</p>');
-        }
-      });
+   // Botón para ver vehículos de un concesionario CHECK.
+$(document).on('click', '.btn-ver-vehiculos', function() {
+    const id = $(this).data('id'); 
+    
+    if (!id) {
+        alert('No se ha encontrado el ID del concesionario');
+        return;
     }
 
-    // Botón para ver vehículos de un concesionario CHECK.
-    $(document).on('click', '.btn-ver-vehiculos', function() {
-       const id = $(this).data('id'); 
-        
-        if (!id) {
-            alert('No se ha encontrado el ID del concesionario');
-            return;
+    // Mostrar mensaje de carga
+    $('#listaVehiculosConcesionario').html('<p class="text-center"><i class="bi bi-hourglass-split"></i> Cargando vehículos...</p>');
+    
+   $.ajax({
+        url: `/admin/lista_vehiculos/${id}`,
+        method: 'GET',
+        success: function(html) {
+            $('#listaVehiculosConcesionario').html(html);
+        },
+        error: function(err) {
+            console.error(err);
+            $('#listaVehiculosConcesionario').html('<p class="text-danger text-center">Error al cargar los vehículos.</p>');
         }
-
-        $('#modalVehiculosConcesionario').data('id', id);
-        cargarVehiculosPorConcesionario(id);
-        
-        const modal = new bootstrap.Modal(document.getElementById('modalVehiculosConcesionario'));
-        modal.show();
     });
 
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalVehiculosConcesionario'));
+    modal.show();
+});
 
 // ============================================
 // SECCIÓN: ESTADÍSTICAS
 // ============================================
 
-    // Cargar reservas por concesionario CHECK.
-    function cargarReservasPorConcesionario() {
-      $.ajax({
-        url: '/empleado/estadisticas/reservas-concesionario',
+   function cargarReservasPorConcesionario() {
+  $('#tabla-concesionarios').html(`
+    <div class="text-center py-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2 text-muted">Cargando estadísticas...</p>
+    </div>
+  `);
+
+  $.ajax({
+    url: '/empleado/estadisticas/reservas-concesionario',
+    method: 'GET',
+    success: function(html) {
+      $('#tabla-concesionarios').html(html);
+    },
+    error: function(err) {
+      console.error('Error al cargar reservas por concesionario:', err);
+      $('#tabla-concesionarios').html('<p class="text-danger text-center">Error al cargar los datos</p>');
+    }
+  });
+}
+
+
+
+function cargarVehiculosMasUsados() {
+    $('#vehiculos-mas-usados').html('<p class="text-center py-4"><i class="bi bi-hourglass-split"></i> Cargando vehículos destacados...</p>');
+
+    $.ajax({
+        url: '/admin/estadisticas/vehiculo-mas-usado',
         method: 'GET',
-        success: function(response) {
-          const concesionarios = response.concesionarios || [];
-          
-          if (concesionarios.length === 0) {
-            $('#tabla-concesionarios').html('<p class="text-center text-muted">No hay datos disponibles</p>');
-            return;
-          }
-
-          let html = `
-            <table class="table table-striped table-hover align-middle">
-              <thead class="table-secondary">
-                <tr>
-                  <th>Concesionario</th>
-                  <th class="text-center">Total Reservas</th>
-                  <th class="text-center">Activas</th>
-                  <th class="text-center">Finalizadas</th>
-                  <th class="text-center">Canceladas</th>
-                </tr>
-              </thead>
-              <tbody>
-          `;
-
-          concesionarios.forEach(c => {
-            html += `
-              <tr>
-                <td>
-                  <strong>${c.concesionario}</strong>
-                </td>
-                <td class="text-center">
-                  <span class="badge bg-primary fs-6">${c.total_reservas || 0}</span>
-                </td>
-                <td class="text-center">
-                  <span class="badge bg-success fs-6">${c.activas || 0}</span>
-                </td>
-                <td class="text-center">
-                  <span class="badge bg-danger fs-6">${c.finalizadas || 0}</span>
-                </td>
-                <td class="text-center">
-                  <span class="badge bg-secondary fs-6">${c.canceladas || 0}</span>
-                </td>
-              </tr>
-            `;
-          });
-
-          html += `</tbody></table>`;
-          $('#tabla-concesionarios').html(html);
+        success: function(html) {
+            $('#vehiculos-mas-usados').html(html);
         },
         error: function(err) {
-          console.error('Error al cargar reservas por concesionario:', err);
-          $('#tabla-concesionarios').html('<p class="text-danger text-center">Error al cargar los datos</p>');
+            console.error('Error al cargar vehículos más usados:', err);
+            $('#vehiculos-mas-usados').html('<p class="text-danger text-center">Error al cargar los datos</p>');
         }
-      });
-    }
-
-    // Cargar vehículos más usados por concesionario CHECK.
-    function cargarVehiculosMasUsados() {
-        $.ajax({
-            url: '/admin/estadisticas/vehiculo-mas-usado',
-            method: 'GET',
-            success: function(vehiculos) {
-                if (!vehiculos || vehiculos.length === 0) {
-                    $('#vehiculos-mas-usados').html('<p class="text-center text-muted">No hay datos disponibles</p>');
-                    return;
-                }
-
-                let html = '<div class="row g-3">';
-
-                vehiculos.forEach(v => {
-                    html += `
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card shadow-sm border-0 h-100">
-                                <div class="card-body text-center">
-                                    <div class="mb-3">
-                                        <img src="${v.imagen || '/img/default-car.png'}" 
-                                            alt="${v.marca} ${v.modelo}" 
-                                            class="img-fluid rounded vehiculo-destacado-img">
-                                    </div>
-                                    <h5 class="fw-bold mb-2">${v.marca} ${v.modelo}</h4>
-                                    <p class="text-muted mb-3">
-                                        <i class="bi bi-building"></i> ${v.concesionario}
-                                    </p>
-                                    <div class="d-flex justify-content-center align-items-center gap-2">
-                                        <span class="badge btn fs-5 px-3 py-2">
-                                            <i class="bi bi-calendar-check"></i> ${v.total_reservas} reservas
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                `;
-                });
-
-                html += '</div>';
-                $('#vehiculos-mas-usados').html(html);
-            },
-            error: function(err) {
-                console.error('Error al cargar vehículos más usados:', err);
-                $('#vehiculos-mas-usados').html('<p class="text-danger text-center">Error al cargar los datos</p>');
-            }
-        });
-    }
+    });
+}
 
     // Cargar estadísticas al iniciar CHECK.
     $(document).ready(function() {

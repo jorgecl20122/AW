@@ -177,9 +177,57 @@
           </form>
         </div>
 
-      <!-- Contenedor dinámico para la lista de vehículos -->
+     <!-- Contenedor dinámico para la lista de vehículos -->
         <div id="vehiculos-container">
-          <!-- Aquí se cargará la tabla dinámicamente -->
+          <% if (typeof vehiculos !== 'undefined' && vehiculos.length > 0) { %>
+            <table class="table table-striped table-hover align-middle" id="tabla-vehiculos">
+              <thead class="table-secondary">
+                <tr>
+                  <th>Matrícula</th>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>Año</th>
+                  <th>Plazas</th>
+                  <th>Autonomía</th>
+                  <th>Color</th>
+                  <th>Imagen</th>
+                  <th>Concesionario</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% vehiculos.forEach((v) => { %>
+                  <tr data-id="<%= v.id %>">
+                    <td><%= v.matricula %></td>
+                    <td><%= v.marca %></td>
+                    <td><%= v.modelo %></td>
+                    <td><%= v.anio_matriculacion %></td>
+                    <td><%= v.numero_plazas %></td>
+                    <td><%= v.autonomia_km %> km</td>
+                    <td><%= v.color %></td>
+                    <td>
+                      <% if (v.imagen) { %>
+                        <img src="<%= v.imagen %>" alt="Imagen" class="vehiculo-img">
+                      <% } else { %>
+                        -
+                      <% } %>
+                    </td>
+                    <td><%= v.concesionario %></td>
+                    <td>
+                      <button class="btn btn-sm btn-edit-vehiculo" data-id="<%= v.id %>">
+                        <i class="bi bi-pencil-fill"></i><strong> Editar</strong>
+                      </button>
+                      <button class="btn btn-sm btn-delete-vehiculo" data-id="<%= v.id %>">
+                        <i class="bi bi-trash-fill"></i><strong> Eliminar</strong>
+                      </button>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } else { %>
+            <p class="text-center alert alert-info">No hay vehículos registrados.</p>
+          <% } %>
         </div>
     </main>
 </div>
