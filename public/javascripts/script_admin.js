@@ -4,7 +4,7 @@ $(document).ready(function () {
 // SECCIÓN: CONCESIONARIOS
 // ============================================
    
-    // función que sirve para recargar los cards después de crear/editar/eliminar concesionarios
+    // función que sirve para recargar la página después de crear/editar/eliminar concesionarios/vehiculos
     function RecargarPágina() {
         window.location.reload(); //recargamos la página para obtener los datos actualizados
     }
@@ -84,7 +84,7 @@ $(document).ready(function () {
                 // Cerrar modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalEdit'));
                 modal.hide();
-                
+          
                 // Recargar concesionarios
                  RecargarPágina();
             },
@@ -445,11 +445,9 @@ $(document).on('click', '.btn-ver-vehiculos', function() {
     modal.show();
 });
 
-// ============================================
-// SECCIÓN: ESTADÍSTICAS
-// ============================================
+//============== ESTADÍSTICAS ==============
 
-   function cargarReservasPorConcesionario() {
+function cargarReservasPorConcesionario() {
   $('#tabla-concesionarios').html(`
     <div class="text-center py-4">
       <div class="spinner-border text-primary" role="status">
@@ -471,7 +469,6 @@ $(document).on('click', '.btn-ver-vehiculos', function() {
     }
   });
 }
-
 
 
 function cargarVehiculosMasUsados() {

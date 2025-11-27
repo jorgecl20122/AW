@@ -122,29 +122,40 @@ router.post('/login', validarCorreoCorporativo, validarContraseñaSegura, (req, 
             });
         }
 
-        // Crear sesión
-        req.session.usuario = {
-            id: usuario.id_usuario,
-            rol: usuario.rol,
-            nombre_completo: usuario.nombre_completo,
-            email: email,
-            avatar: usuario.avatar || '/img/default-avatar.png'
-        };
+       // Crear sesión
+req.session.usuario = {
+    id: usuario.id_usuario,
+    rol: usuario.rol,
+    nombre_completo: usuario.nombre_completo,
+    email: email,
+    avatar: usuario.avatar || '/img/default-avatar.png'
+};
 
-        req.session.userId = usuario.id_usuario;
-        req.session.userRole = usuario.rol;
+req.session.userId = usuario.id_usuario;
+req.session.userRole = usuario.rol;
 
-        // Redirigir según rol
-        if (usuario.rol === 'administrador') {
-            return res.redirect(`/admin/vista_ini`);
-        } else if (usuario.rol === 'empleado') {
-            return res.redirect(`/empleado/vista_empleado`);
-        } else {
-            return res.render('InicioSesion', { 
-                success: null, 
-                error: 'Rol desconocido. Por favor, contacte al administrador.' 
-            });
-        }
+// Guarda la sesión antes de redirigir
+req.session.save((err) => {
+    if (err) {
+        console.error('Error al guardar sesión:', err);
+        return res.render('InicioSesion', { 
+            success: null, 
+            error: 'Error al iniciar sesión.' 
+        });
+    }
+
+    // Redirigir según rol DESPUÉS de guardar la sesión
+    if (usuario.rol === 'administrador') {
+        return res.redirect(`/admin/vista_ini`);
+    } else if (usuario.rol === 'empleado') {
+        return res.redirect(`/empleado/vista_empleado`);
+    } else {
+        return res.render('InicioSesion', { 
+            success: null, 
+            error: 'Rol desconocido. Por favor, contacte al administrador.' 
+        });
+    }
+});
     });
 });
 

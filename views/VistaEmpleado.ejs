@@ -9,7 +9,7 @@
 </head>
 <body data-user-role="<%= usuario ? usuario.rol : 'empleado' %>">
 
-  <header class="header d-flex align-items-center p-3">
+<header class="header d-flex align-items-center p-3">
   <img src="/img/logo.png" alt="Logo Empresa" class="logo_img me-4">
   <div>
     <h4 class="mb-0 fw-bold">EcoFlota</h4>
@@ -17,13 +17,12 @@
   </div>
 </header>
 
-
   <!-- Barra de navegación superior -->
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
     <div class="d-flex align-items-center">
       <a href="/empleado/vista_empleado" class="btn-custom mx-2 nav-link" data-route="/empleado/vista_empleado"><i class="bi bi-house"></i><strong>Inicio</strong> </a>
-      <a href="/empleado/vistaReservas" class="btn-custom mx-2 nav-link" data-route="/empleado/vistReservas"><i class="bi bi-calendar-check "></i><strong> Reservas</strong> </a>
+      <a href="/empleado/mis_reservas" class="btn-custom mx-2 nav-link" data-route="/empleado/mis_reservas"><i class="bi bi-calendar-check "></i><strong> Reservas</strong> </a>
       <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i><strong>Accesibilidad</strong></a>
     </div>
 
@@ -35,33 +34,108 @@
   </div>
 </nav>
 
-
 <!-- para lateral con las estadisticas y el usuario abajo-->
 <div class="d-flex">
+  <!-- SIDEBAR -->
   <aside class="sidebar p-3">
     <div class="mt-4">
       <h6 class="text-muted">Estado de la Flota</h6><br>
       <div class="status-box available">Disponibles <span>12</span></div>
       <div class="status-box in-use">En uso <span>4</span></div>
     </div>
-      <div class="user-info mt-auto d-flex align-items-center gap-3">
-        <img id="userAvatar" src="" alt="Avatar" class="rounded-circle">
-      <div>
+    
+    <!-- Información del usuario (PERFIL) -->
+    <div class="user-info mt-auto d-flex flex-column align-items-center text-center gap-2">
+      <% if (usuario) { %>
+        <!-- Avatar -->
+        <img id="userAvatar" src="<%= usuario.avatar %>" alt="Avatar" class="rounded-circle">
+        <!-- Nombre + Email -->
+        <div>
+          <p class="mb-0 fw-bold">
+            <%= usuario.nombre_completo %>
+          </p>
+          <small class="text-muted">
+            <%= usuario.email %>
+          </small>
+        </div>
+      <% } else { %>
+        <img id="userAvatar" src="/img/default-avatar.png" alt="Avatar" class="rounded-circle">
+        <div>
+          <p class="text-danger">Usuario no cargado</p>
+        </div>
+      <% } %>
     </div>
-</div>
   </aside>
 
-<main class="flex-grow-1 p-4">
+  <!-- MAIN CONTENT -->
+  <main class="flex-grow-1 p-4">
     <div class="d-flex align-items-center mb-4">
-      <h2 class="fw-bold">Portal de Empleado</h2>
+      <h2 class="fw-bold">Gestión de Reservas</h2>
     </div>
 
-   <div id="listaVehiculosReserva" class="table-responsive">
-          <!-- Aquí se insertará la tabla de vehículos -->
-   </div>
-
-</main>
-</div>
+    <!-- Tabla dinámica de vehículos -->
+    <div id="listaReservas" class="table-responsive">
+      <% if (locals.error) { %>
+        <div class="alert alert-danger text-center" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <%= error %>
+        </div>
+      <% } else if (!vehiculos || vehiculos.length === 0) { %>
+        <div class="alert alert-info text-center" role="alert">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          No hay vehículos disponibles en tu concesionario.
+        </div>
+      <% } else { %>
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-secondary">
+            <tr>
+              <th>Matrícula</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Año</th>
+              <th>Plazas</th>
+              <th>Autonomía</th>
+              <th>Color</th>
+              <th>Imagen</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% vehiculos.forEach(function(v) { %>
+              <tr data-id="<%= v.id %>" id="vehiculo-<%= v.id %>">
+                <td><%= v.matricula %></td>
+                <td><%= v.marca %></td>
+                <td><%= v.modelo %></td>
+                <td><%= v.anio_matriculacion %></td>
+                <td><%= v.numero_plazas %></td>
+                <td><%= v.autonomia_km %> km</td>
+                <td><%= v.color %></td>
+                <td>
+                  <% if (v.imagen) { %>
+                    <img src="<%= v.imagen %>" alt="<%= v.marca %> <%= v.modelo %>" class="vehiculo-img">
+                  <% } else { %>
+                    <span class="text-muted">-</span>
+                  <% } %>
+                </td>
+                <td>
+                 <button class="btn btn-reservar"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalReserva"
+                        data-vehiculo-id="<%= v.id %>"
+                        data-matricula="<%= v.matricula %>"
+                        data-marca="<%= v.marca %>"
+                        data-modelo="<%= v.modelo %>">
+                    <i class="bi bi-calendar-check"></i><strong> Reservar</strong>
+                </button>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </main>
+</div> 
 
 <!-- MODALES -->
  
@@ -169,6 +243,7 @@
 </div>
 
 
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/javascripts/script_empleado.js"></script>

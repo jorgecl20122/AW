@@ -7,7 +7,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/vista.css">
 </head>
-<body data-user-role="<%= usuario ? usuario.rol : 'empleado' %>">
+
+<body data-user-role="<%= usuario ? usuario.rol : 'empleado' %>"> 
 
   <header class="header d-flex align-items-center p-3">
   <img src="/img/logo.png" alt="Logo Empresa" class="logo_img me-4">
@@ -23,7 +24,7 @@
   <div class="container-fluid">
     <div class="d-flex align-items-center">
       <a href="/empleado/vista_empleado" class="btn-custom mx-2 nav-link" data-route="/empleado/vista_empleado"><i class="bi bi-house"></i><strong>Inicio</strong> </a>
-      <a href="/empleado/vistaReservas" class="btn-custom mx-2 nav-link" data-route="/empleado/vistaReservas"><i class="bi bi-calendar-check "></i><strong> Reservas</strong> </a>
+      <a href="/empleado/mis_reservas" class="btn-custom mx-2 nav-link" data-route="/empleado/mis_reservas"><i class="bi bi-calendar-check "></i><strong> Reservas</strong> </a>
       <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i><strong>Accesibilidad</strong></a>
     </div>
 
@@ -38,31 +39,95 @@
 
 <!-- para lateral con las estadisticas y el usuario abajo-->
 <div class="d-flex">
-  <aside class="sidebar p-3">
-    <div class="mt-4">
-      <h6 class="text-muted">Estado de la Flota</h6><br>
-      <div class="status-box available">Disponibles <span>12</span></div>
-      <div class="status-box in-use">En uso <span>4</span></div>
-    </div>
-      <div class="user-info mt-auto d-flex align-items-center gap-3">
-        <img id="userAvatar" src="" alt="Avatar" class="rounded-circle">
-      <div>
-    </div>
+   <aside class="sidebar p-3">
+       <!-- Estadísticas rápidas -->
+        <div class="mt-4">
+          <h6 class="text-muted">Estado de la Flota</h6><br>
+          <div class="status-box available">Disponibles <span>12</span></div>
+          <div class="status-box in-use">En uso <span>4</span></div>
+        </div>
+
+        <!-- Información del usuario (PERFIL) -->
+        <div class="user-info mt-auto d-flex flex-column align-items-center text-center gap-2">
+          <% if (usuario) { %>
+            <!-- Avatar -->
+            <img id="userAvatar" src="<%= usuario.avatar %>" alt="Avatar" class="rounded-circle">
+            <!-- Nombre + Email -->
+            <div>
+              <p class="mb-0 fw-bold">
+                <%= usuario.nombre_completo %>
+              </p>
+              <small class="text-muted">
+                <%= usuario.email %>
+              </small>
+            </div>
+          <% } else { %>
+            <img id="userAvatar" src="/img/default-avatar.png" alt="Avatar" class="rounded-circle">
+            <div>
+              <p class="text-danger">Usuario no cargado</p>
+            </div>
+          <% } %>
+        </div>
+    </aside>
+
+    <main class="flex-grow-1 p-4">
+        <div class="d-flex align-items-center mb-4">
+          <h2 class="fw-bold">Mis Reservas</h2>
+        </div>
+      
+        <!-- Parte dinámica de las reservas -->
+        <div id="listaReservas" class="table-responsive">
+          <% if (!reservas || reservas.length === 0) { %>
+            <p class="text-center">No tienes reservas activas.</p>
+          <% } else { %>
+            <table class="table table-striped table-hover align-middle">
+              <thead class="table-secondary">
+                <tr>
+                  <th>Vehículo</th>
+                  <th>Matrícula</th>
+                  <th>Fecha Inicio</th>
+                  <th>Fecha Fin</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% reservas.forEach(function(r) { 
+                  const fechaInicio = new Date(r.fecha_inicio).toLocaleString('es-ES');
+                  const fechaFin = new Date(r.fecha_fin).toLocaleString('es-ES');
+                  const estadoNormalizado = r.estado.toLowerCase();
+                  const badgeClass = estadoNormalizado === 'activa' ? 'bg-success' : 'bg-danger';
+                  const estadoTexto = r.estado.charAt(0).toUpperCase() + r.estado.slice(1);
+                %>
+                  <tr id="reserva-<%= r.id %>">
+                    <td><%= r.vehiculo_marca %> <%= r.vehiculo_modelo %></td>
+                    <td><%= r.vehiculo_matricula %></td>
+                    <td><%= fechaInicio %></td>
+                    <td><%= fechaFin %></td>
+                    <td>
+                      <span class="badge <%= badgeClass %>">
+                        <%= estadoTexto %>
+                      </span>
+                    </td>
+                    <td>
+                      <% if (estadoNormalizado === 'activa') { %>
+                        <button class="btn btn-cancelar-reserva" data-reserva-id="<%= r.id %>">
+                          <i class="bi bi-x-circle"></i><strong> Cancelar </strong>
+                        </button>
+                      <% } else { %>
+                        <span class="text-muted">-</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+    </main>
 </div>
-  </aside>
 
-<main class="flex-grow-1 p-4">
-    <div class="d-flex align-items-center mb-4">
-      <h2 class="fw-bold">Portal de Empleado</h2>
-    </div>
-
-   <div id="listaReservas" class="table-responsive">
-          <!-- Aquí se insertará la tabla de vehículos -->
-   </div>
-
-</main>
-</div>
-
+<!--MODALES-->
 
 <!-- Modal de accesibilidad -->
 <div class="modal fade" id="configuradorModal" tabindex="-1" aria-labelledby="configuradorLabel" aria-hidden="true">
@@ -131,7 +196,7 @@
   </div>
 </div>
 
-
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/javascripts/script_empleado.js"></script>

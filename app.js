@@ -41,7 +41,6 @@ const gestion_empleado_router = require('./routes/gestion_empleado_router');
 app.use('/empleado', gestion_empleado_router); 
 
 
-
 // Inicializar el servidor
 app.listen(PORT, () => {
     console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
