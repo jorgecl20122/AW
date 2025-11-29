@@ -45,12 +45,26 @@
 
 <!-- para lateral con las estadisticas y el usuario abajo-->
 <div class="d-flex">
-  <aside class="sidebar p-3">
-       <!-- Estadísticas rápidas -->
+      <aside class="sidebar p-3">
+        <!-- Estadísticas rápidas -->
         <div class="mt-4">
           <h6 class="text-muted">Estado de la Flota</h6><br>
-          <div class="status-box available">Disponibles <span>12</span></div>
-          <div class="status-box in-use">En uso <span>4</span></div>
+          
+          <% if (estadoFlota) { %>
+            <div class="status-box available">
+              Disponibles <span><%= estadoFlota.disponibles %></span>
+            </div>
+            <div class="status-box in-use">
+              En uso <span><%= estadoFlota.en_uso %></span>
+            </div>
+          <% } else { %>
+            <div class="status-box available">
+              Disponibles <span>0</span>
+            </div>
+            <div class="status-box in-use">
+              En uso <span>0</span>
+            </div>
+          <% } %>
         </div>
 
         <!-- Información del usuario (PERFIL) -->
@@ -76,36 +90,44 @@
         </div>
     </aside>
 
-  <main class="flex-grow-1 p-4">
-      <div class="d-flex align-items-center mb-4">
-        <h2 class="fw-bold">Listado de Concesionarios</h2>
-        <div class="ms-auto d-flex gap-2">
-          <button class="btn" id="btnAddConcesionario">
-            <i class="bi bi-plus-lg"></i><strong> Añadir Concesionario</strong>
-          </button>
-        </div>
+ <main class="flex-grow-1 p-4">
+    <!-- Mensajes flash -->
+    <% if (typeof mensaje !== 'undefined' && mensaje) { %>
+      <div class="alert alert-<%= mensaje.tipo %> alert-dismissible fade show" role="alert">
+        <%= mensaje.texto %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
+    <% } %>
 
-    <!-- Formulario para nuevo concesionario (inicialmente oculto) -->
+    <div class="d-flex align-items-center mb-4">
+      <h2 class="fw-bold">Listado de Concesionarios</h2>
+      <div class="ms-auto d-flex gap-2">
+        <button class="btn" id="btnAddConcesionario">
+          <i class="bi bi-plus-lg"></i><strong> Añadir Concesionario</strong>
+        </button>
+      </div>
+    </div>
+
+    <!-- Formulario para nuevo concesionario -->
     <div id="formConcesionarioContainer" class="card shadow-sm mb-4 p-4 bg-white">
       <h5 class="fw-bold mb-3">Nuevo Concesionario</h5>
-      <form id="formNuevoConcesionario">
+      <form action="/admin/concesionarios/crear" method="POST">
         <div class="row g-3">
           <div class="col-md-3">
             <label class="form-label">Nombre *</label>
-            <input type="text" id="nuevoNombre" class="form-control" required>
+            <input type="text" name="nombre" class="form-control" required>
           </div>
           <div class="col-md-3">
             <label class="form-label">Ciudad *</label>
-            <input type="text" id="nuevaCiudad" class="form-control" required>
+            <input type="text" name="ciudad" class="form-control" required>
           </div>
           <div class="col-md-3">
             <label class="form-label">Correo *</label>
-            <input type="email" id="nuevoCorreo" class="form-control" required>
+            <input type="email" name="correo" class="form-control" required>
           </div>
           <div class="col-md-3">
             <label class="form-label">Teléfono</label>
-            <input type="text" id="nuevoTelefono" class="form-control">
+            <input type="text" name="telefono" class="form-control">
           </div>
         </div>
 
@@ -116,7 +138,7 @@
       </form>
     </div>
 
-        <!-- Contenedor dinámico de concesionarios -->
+    <!-- Contenedor dinámico de concesionarios -->
     <div class="row g-3" id="concesionarios-container">
       <% if (typeof concesionarios !== 'undefined' && concesionarios.length > 0) { %>
         <% concesionarios.forEach((c) => { %>
@@ -139,12 +161,22 @@
                 <button class="btn btn-ver-vehiculos" data-id="<%= c.id_concesionario %>">
                   <i class="bi bi-car-front"></i><strong> Vehículos</strong>
                 </button>
-                <button class="btn btn-edit">
+                <button class="btn btn-edit" 
+                        data-id="<%= c.id_concesionario %>"
+                        data-nombre="<%= c.nombre %>"
+                        data-ciudad="<%= c.ciudad %>"
+                        data-correo="<%= c.correo %>"
+                        data-telefono="<%= c.telefono || '' %>">
                   <i class="bi bi-pencil-fill"></i><strong> Editar</strong>
                 </button>
-                <button class="btn btn-delete">
-                  <i class="bi bi-trash-fill"></i><strong> Eliminar</strong>
-                </button>
+                <form action="/admin/concesionarios/eliminar/<%= c.id_concesionario %>" 
+                      method="POST" 
+                      style="display: inline;"
+                      onsubmit="return confirm('¿Estás seguro de eliminar este concesionario?');">
+                  <button type="submit" class="btn btn-delete">
+                    <i class="bi bi-trash-fill"></i><strong> Eliminar</strong>
+                  </button>
+                </form>
               </div>
             </div>
           </div>
@@ -153,17 +185,14 @@
         <p class="text-center alert">No hay concesionarios disponibles en este momento.</p>
       <% } %>
     </div>
-
   </main>
 </div>
-
-<!--MODALES-->
 
 <!-- Modal de edición -->
 <div class="modal fade" id="modalEdit" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form id="formEditConcesionario">
+      <form id="formEditConcesionario" method="POST">
         <div class="modal-header">
           <h5 class="modal-title">Editar Concesionario</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -171,23 +200,23 @@
         <div class="modal-body">
           <div class="mb-3">
             <label for="editNombre" class="form-label">Nombre *</label>
-            <input type="text" id="editNombre" class="form-control" required>
+            <input type="text" id="editNombre" name="nombre" class="form-control" required>
           </div>
           <div class="mb-3">
             <label for="editCiudad" class="form-label">Ciudad *</label>
-            <input type="text" id="editCiudad" class="form-control" required>
+            <input type="text" id="editCiudad" name="ciudad" class="form-control" required>
           </div>
           <div class="mb-3">
             <label for="editCorreo" class="form-label">Correo *</label>
-            <input type="email" id="editCorreo" class="form-control" required>
+            <input type="email" id="editCorreo" name="correo" class="form-control" required>
           </div>
           <div class="mb-3">
             <label for="editTelefono" class="form-label">Teléfono</label>
-            <input type="text" id="editTelefono" class="form-control">
+            <input type="text" id="editTelefono" name="telefono" class="form-control">
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="submit" class="btn btn-primary">Guardar cambios</button>
         </div>
       </form>

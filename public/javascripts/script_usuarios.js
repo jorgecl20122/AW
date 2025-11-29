@@ -1,70 +1,68 @@
-function cargarUsuariosTabla() { //CHECK.
+// --------------------------------------------
+// CARGA DE DATOS
+// --------------------------------------------
+
+// Cargar lista de usuarios en la tabla
+function cargarUsuariosTabla() {
     $.ajax({
         url: '/usuario/lista_usuarios',
         method: 'GET',
         success: function(usuarios) {
             console.log('Usuarios recibidos:', usuarios);
-
-            if (usuarios.length === 0) {
-                $('#usuarios-container').html('<p>No hay usuarios registrados.</p>').show();
-                return;
-            }
-
-            let html = `
-            <table class="table table-striped table-hover align-middle" id="tabla-usuarios">
-                <thead class="table-secondary">
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Correo</th>
-                        <th>Rol</th>
-                        <th>Teléfono</th>
-                        <th>Concesionario</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-            `;
-
-            usuarios.forEach(u => {
-                html += `
-                   <tr data-id="${u.id_usuario}">
-                        <td>${u.nombre_completo}</td>
-                        <td>${u.correo}</td>
-                        <td>
-                            <span class="badge ${u.rol === 'administrador' ? 'bg-primary' : 'bg-secondary'}">
-                                ${u.rol === 'administrador' ? 'Administrador' : 'Empleado'}
-                            </span>
-                        </td>
-                        <td>${u.telefono || '-'}</td>
-                        <td>${u.concesionario || '-'}</td>
-                        <td>
-                            <button class="btn btn-sm  btn-edit-usuario" data-concesionario-id="${u.concesionario_id || ''}">
-                                <i class="bi bi-pencil-fill"></i> <strong>Editar</strong>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            html += `</tbody></table>`;
-            $('#usuarios-container').html(html).show();
         },
         error: function(err) {
             console.error('Error al cargar usuarios:', err);
-            $('#usuarios-container').html('<p class="text-danger">Error al cargar usuarios.</p>');
         }
     });
 }
 
+// Cargar datos del usuario actual (sidebar)
+function cargarDatosUsuarioActual() {
+    $.ajax({
+        url: '/usuario/actual',
+        method: 'GET',
+        success: function(usuario) {
+            console.log('Usuario actual:', usuario);
+            
+            // Actualizar rol (si existe en el HTML)
+            const rolTexto = usuario.rol === 'administrador' ? 'Administrador' : 'Empleado';
+            if ($('#userRole').length) {
+                $('#userRole').text(rolTexto);
+            }
+            
+            // Actualizar email (si existe en el HTML)
+            if ($('#userEmail').length) {
+                $('#userEmail').text(usuario.correo);
+            }
+            
+            // Actualizar foto de perfil
+            if (usuario.foto_perfil) {
+                $('#userAvatar').attr('src', usuario.foto_perfil);
+            } else {
+                const iniciales = obtenerIniciales(usuario.nombre_completo);
+                $('#userAvatar').attr('src', generarAvatarIniciales(iniciales));
+            }
+        },
+        error: function(err) {
+            console.error('Error al cargar datos del usuario:', err);
+            if ($('#userRole').length) {
+                $('#userRole').text('Usuario');
+            }
+            if ($('#userEmail').length) {
+                $('#userEmail').text('No disponible');
+            }
+        }
+    });
+}
+
+// --------------------------------------------
+// BUSCADOR
+// --------------------------------------------
+
 // Buscador de usuarios en la tabla
 $('#buscarUsuario').on('keyup', function() {
     const textoBusqueda = $(this).val().toLowerCase().trim();
-
-    // Si el contenedor no tiene tabla aún, salimos
-    const tabla = $('#usuarios-container').find('table');
-    if (tabla.length === 0) return;
-
-    const tbody = tabla.find('tbody');
+    const tbody = $('#tabla-usuarios tbody');
 
     // Mostrar todo si está vacío
     if (textoBusqueda === '') {
@@ -76,8 +74,6 @@ $('#buscarUsuario').on('keyup', function() {
     // Filtrar filas
     tbody.find('tr').each(function() {
         const fila = $(this);
-
-        // Ajusta columnas si tu tabla usa otros índices
         const nombre = fila.find('td:nth-child(1)').text().toLowerCase();
         const correo = fila.find('td:nth-child(2)').text().toLowerCase();
 
@@ -95,7 +91,7 @@ $('#buscarUsuario').on('keyup', function() {
         if ($('#mensajeNoResultados').length === 0) {
             tbody.append(`
                 <tr id="mensajeNoResultados">
-                    <td colspan="10" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         <i class="bi bi-search"></i> No se encontraron usuarios que coincidan con "${textoBusqueda}"
                     </td>
                 </tr>
@@ -106,7 +102,9 @@ $('#buscarUsuario').on('keyup', function() {
     }
 });
 
-
+// --------------------------------------------
+// MODAL DE EDICIÓN
+// --------------------------------------------
 
 // Cargar concesionarios en el modal de edición
 function cargarConcesionariosSelectEdit(concesionarioIdActual = '') {
@@ -117,6 +115,10 @@ function cargarConcesionariosSelectEdit(concesionarioIdActual = '') {
             const select = $('#editUsuarioConcesionario');
             select.empty();
             
+            // Agregar "Sin asignar" primero
+            select.append('<option value="">Sin asignar</option>');
+            
+            // Agregar concesionarios
             concesionarios.forEach(function(concesionario) {
                 const selected = concesionario.id_concesionario == concesionarioIdActual ? 'selected' : '';
                 select.append(
@@ -125,11 +127,8 @@ function cargarConcesionariosSelectEdit(concesionarioIdActual = '') {
                     </option>`
                 );
             });
-
-            // Solo agregar "Sin asignar" como opción, NO como predeterminado
-            select.append('<option value="">Sin asignar</option>');
             
-            // Si no hay concesionario actual, entonces sí seleccionar "Sin asignar"
+            // Si no hay concesionario actual, seleccionar "Sin asignar"
             if (!concesionarioIdActual) {
                 select.val('');
             }
@@ -141,27 +140,21 @@ function cargarConcesionariosSelectEdit(concesionarioIdActual = '') {
     });
 }
 
-// Editar usuario (solo rol y concesionario) CHECK.
+// Abrir modal de edición (carga datos del botón data-attributes)
 $(document).on('click', '.btn-edit-usuario', function() {
-    const fila = $(this).closest('tr');
-    const id = fila.data('id');
+    const id = $(this).data('id');
+    const nombre = $(this).data('nombre');
+    const correo = $(this).data('correo');
+    const rol = $(this).data('rol');
     const concesionarioId = $(this).data('concesionario-id');
 
-
-    // Extraer los valores de la fila
-    const nombre = fila.find('td').eq(0).text().trim();
-    const correo = fila.find('td').eq(1).text().trim();
-    const rolBadge = fila.find('td').eq(2).find('.badge').text().trim().toLowerCase();
-    const rol = rolBadge === 'administrador' ? 'administrador' : 'empleado';
-
+    // Rellenar campos del modal
+    $('#editUsuarioId').val(id);
     $('#editUsuarioNombre').text(nombre);
     $('#editUsuarioCorreo').text(correo);
-    
-    // Rellenar el modal con los datos editables
-    $('#modalEditUsuario').data('id', id);
     $('#editUsuarioRol').val(rol);
     
-    // Cargar concesionarios de forma dinámica y seleccionar el actual por ID
+    // Cargar concesionarios de forma dinámica y seleccionar el actual
     cargarConcesionariosSelectEdit(concesionarioId);
 
     // Mostrar el modal
@@ -169,73 +162,9 @@ $(document).on('click', '.btn-edit-usuario', function() {
     modal.show();
 });
 
-
-// Guardar cambios del usuario (solo rol y concesionario) CHECK.
-$('#guardarEditUsuario').on('click', function() {
-    const id = $('#modalEditUsuario').data('id');
-    const rol = $('#editUsuarioRol').val();
-    const concesionario_id = $('#editUsuarioConcesionario').val();
-
-    // Validación
-    if (!rol) {
-        alert('Por favor, selecciona un rol.');
-        return;
-    }
-
-    $.ajax({
-        method: 'PUT',
-        url: `/usuario/${id}`,
-        contentType: 'application/json',
-        data: JSON.stringify({
-            rol,
-            concesionario_id: concesionario_id || null
-        }),
-        success: function(data) {
-            alert(data.mensaje || 'Usuario actualizado correctamente');
-            cargarUsuariosTabla(); // Recargar la tabla de usuarios
-            bootstrap.Modal.getInstance(document.getElementById('modalEditUsuario')).hide();
-        },
-        error: function(err) {
-            console.error('Error al actualizar usuario:', err);
-            alert(err.responseJSON?.mensaje || 'Error al actualizar usuario');
-        }
-    });
-});
-
-$(document).ready(() => cargarUsuariosTabla());
-
-// Función para cargar los datos del usuario actual
-function cargarDatosUsuarioActual() {
-    $.ajax({
-        url: '/usuario/actual',
-        method: 'GET',
-        success: function(usuario) {
-            console.log('Usuario actual:', usuario);
-            
-            // Actualizar rol
-            const rolTexto = usuario.rol === 'administrador' ? 'Administrador' : 'Empleado';
-            $('#userRole').text(rolTexto);
-            
-            // Actualizar email
-            $('#userEmail').text(usuario.correo);
-            
-            // Actualizar foto de perfil
-            // Si tienes foto en la BD:
-            if (usuario.foto_perfil) {
-                $('#userAvatar').attr('src', usuario.foto_perfil);
-            } else {
-                // Usar avatar por defecto con iniciales
-                const iniciales = obtenerIniciales(usuario.nombre_completo);
-                $('#userAvatar').attr('src', generarAvatarIniciales(iniciales));
-            }
-        },
-        error: function(err) {
-            console.error('Error al cargar datos del usuario:', err);
-            $('#userRole').text('Usuario');
-            $('#userEmail').text('No disponible');
-        }
-    });
-}
+// --------------------------------------------
+// UTILIDADES
+// --------------------------------------------
 
 // Función para obtener iniciales del nombre
 function obtenerIniciales(nombreCompleto) {
@@ -248,11 +177,14 @@ function obtenerIniciales(nombreCompleto) {
     return palabras[0][0].toUpperCase();
 }
 
-// Función para generar avatar con iniciales (usando UI Avatars API)
+// Función para generar avatar con iniciales
 function generarAvatarIniciales(iniciales) {
-    // Puedes personalizar los colores cambiando 'background' y 'color'
     return `https://ui-avatars.com/api/?name=${iniciales}&background=0D8ABC&color=fff&size=128&bold=true`;
 }
+
+// --------------------------------------------
+// INICIALIZACIÓN
+// --------------------------------------------
 
 // Cargar al inicio
 $(document).ready(function() {

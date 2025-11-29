@@ -16,11 +16,8 @@
   </div>
 </header>
 
- <!-- Barra de navegación de administrador -->
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
-
-     <!--  Inicio / vehículos disponibles / Usuarios / Accesibilidad -->
     <div class="d-flex align-items-center">
       <a href="/admin/vista_ini" class="btn-custom mx-2 nav-link" data-route="/admin/vista_ini"><i class="bi bi-house"></i><strong>Inicio</strong> </a>
       <a href="/admin/VistaVehiculos" class="btn-custom mx-2 nav-link" data-route="/admin/VistaVehiculos"><i class="bi bi-car-front"></i><strong>Vehículos</strong> </a>
@@ -28,13 +25,10 @@
       <a href="#" class="btn-custom mx-2 nav-link" data-bs-toggle="modal" data-bs-target="#configuradorModal"><i class="bi bi-person-wheelchair"></i><strong>Accesibilidad</strong></a>
     </div>
 
-     <!-- Administración -->
     <div class="d-flex align-items-center ms-auto">
       <a href="/admin/vista_admin" id="btnAdmin" class="btn-custom mx-2 nav-link">
           <i class="bi bi-gear"></i><strong>Administración</strong>
       </a>
-
-      <!-- Cerrar sesión -->
       <a href="/usuario/logout" class="btn btn-custom mx-2">
         <i class="bi bi-box-arrow-right"></i> <strong>Cerrar sesión</strong>
       </a>
@@ -42,65 +36,124 @@
   </div>
 </nav>
 
-<!-- para lateral con las estadisticas y el usuario abajo-->
 <div class="d-flex">
   <aside class="sidebar p-3">
-       <!-- Estadísticas rápidas -->
+        <!-- Estadísticas rápidas -->
         <div class="mt-4">
           <h6 class="text-muted">Estado de la Flota</h6><br>
-          <div class="status-box available">Disponibles <span>12</span></div>
-          <div class="status-box in-use">En uso <span>4</span></div>
-        </div>
-
-        <!-- Información del usuario (PERFIL) -->
-        <div class="user-info mt-auto d-flex flex-column align-items-center text-center gap-2">
-          <% if (usuario) { %>
-            <!-- Avatar -->
-            <img id="userAvatar" src="<%= usuario.avatar %>" alt="Avatar" class="rounded-circle">
-            <!-- Nombre + Email -->
-            <div>
-              <p class="mb-0 fw-bold">
-                <%= usuario.nombre_completo %>
-              </p>
-              <small class="text-muted">
-                <%= usuario.email %>
-              </small>
+          
+          <% if (estadoFlota) { %>
+            <div class="status-box available">
+              Disponibles <span><%= estadoFlota.disponibles %></span>
+            </div>
+            <div class="status-box in-use">
+              En uso <span><%= estadoFlota.en_uso %></span>
             </div>
           <% } else { %>
-            <img id="userAvatar" src="/img/default-avatar.png" alt="Avatar" class="rounded-circle">
-            <div>
-              <p class="text-danger">Usuario no cargado</p>
+            <div class="status-box available">
+              Disponibles <span>0</span>
+            </div>
+            <div class="status-box in-use">
+              En uso <span>0</span>
             </div>
           <% } %>
         </div>
-    </aside>
 
-    <main class="flex-grow-1 p-4">
-      <div class="d-flex align-items-center mb-4">
-        <h2 class="fw-bold">Lista de Usuarios Registrados</h2>
+    <div class="user-info mt-auto d-flex flex-column align-items-center text-center gap-2">
+      <% if (usuario) { %>
+        <img id="userAvatar" src="<%= usuario.avatar %>" alt="Avatar" class="rounded-circle">
+        <div>
+          <p class="mb-0 fw-bold"><%= usuario.nombre_completo %></p>
+          <small class="text-muted"><%= usuario.email %></small>
+        </div>
+      <% } else { %>
+        <img id="userAvatar" src="/img/default-avatar.png" alt="Avatar" class="rounded-circle">
+        <div>
+          <p class="text-danger">Usuario no cargado</p>
+        </div>
+      <% } %>
+    </div>
+  </aside>
+
+  <main class="flex-grow-1 p-4">
+    <div class="d-flex align-items-center mb-4">
+      <h2 class="fw-bold">Lista de Usuarios Registrados</h2>
+    </div>
+
+    <!-- Mensajes de éxito o error -->
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
 
-      
-        <!-- Buscador -->
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <div class="input-group">
-            <span class="input-group-text bg-primary text-white">
-              <i class="bi bi-search"></i>
-            </span>
-            <input type="text" id="buscarUsuario" class="form-control" placeholder="Buscar nombre o correo...">
-          </div>
+    <!-- Buscador -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <div class="input-group">
+          <span class="input-group-text bg-primary text-white">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="text" id="buscarUsuario" class="form-control" placeholder="Buscar nombre o correo...">
         </div>
       </div>
+    </div>
 
-      <!-- Contenedor dinámico de usuarios -->
-      <div id="usuarios-container">
-        <!-- Aquí se cargarán los usuarios dinámicamente -->
-      </div>
-    </main>
+    <!-- Tabla de usuarios -->
+    <div id="usuarios-container">
+      <table class="table table-striped table-hover align-middle" id="tabla-usuarios">
+        <thead class="table-secondary">
+          <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Teléfono</th>
+            <th>Concesionario</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (usuarios && usuarios.length > 0) { %>
+            <% usuarios.forEach(u => { %>
+              <tr data-id="<%= u.id_usuario %>">
+                <td><%= u.nombre_completo %></td>
+                <td><%= u.correo %></td>
+                <td>
+                  <span class="badge <%= u.rol === 'administrador' ? 'bg-primary' : 'bg-secondary' %>">
+                    <%= u.rol === 'administrador' ? 'Administrador' : 'Empleado' %>
+                  </span>
+                </td>
+                <td><%= u.telefono || '-' %></td>
+                <td><%= u.concesionario || '-' %></td>
+                <td>
+                  <button class="btn btn-sm btn-edit-usuario" 
+                          data-id="<%= u.id_usuario %>"
+                          data-nombre="<%= u.nombre_completo %>"
+                          data-correo="<%= u.correo %>"
+                          data-rol="<%= u.rol %>"
+                          data-concesionario-id="<%= u.concesionario_id || '' %>">
+                    <i class="bi bi-pencil-fill"></i> <strong>Editar</strong>
+                  </button>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">No hay usuarios registrados.</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </main>
 </div>
-
-<!--MODALES-->
 
 <!-- Modal para editar usuario -->
 <div class="modal fade" id="modalEditUsuario" tabindex="-1" aria-labelledby="modalEditUsuarioLabel" aria-hidden="true">
@@ -110,10 +163,10 @@
         <h5 class="modal-title" id="modalEditUsuarioLabel">Editar Usuario</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <form id="formEditUsuario">
-
-          <!-- Información del Usuario -->
+      <form action="/usuario/editar" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="id_usuario" id="editUsuarioId">
+          
           <div class="mb-3">
             <label class="form-label"><strong>Usuario:</strong></label>
             <div class="border rounded p-3 bg-light">
@@ -122,34 +175,37 @@
             </div>
           </div>
           
-          <!-- Rol -->
           <div class="mb-3">
             <label for="editUsuarioRol" class="form-label">Rol <span class="text-danger">*</span></label>
-            <select class="form-select" id="editUsuarioRol" required>
+            <select class="form-select" name="rol" id="editUsuarioRol" required>
               <option value="">Selecciona un rol</option>
               <option value="administrador">Administrador</option>
               <option value="empleado">Empleado</option>
             </select>
           </div>
           
-          <!-- Concesionario -->
           <div class="mb-3">
             <label for="editUsuarioConcesionario" class="form-label">Concesionario</label>
-            <select class="form-select" id="editUsuarioConcesionario">
-             <!-- Las opciones se cargarán dinámicamente -->
+            <select class="form-select" name="concesionario_id" id="editUsuarioConcesionario">
+              <option value="">Sin asignar</option>
+              <% if (concesionarios && concesionarios.length > 0) { %>
+                <% concesionarios.forEach(c => { %>
+                  <option value="<%= c.id_concesionario %>"><%= c.nombre %> - <%= c.ciudad %></option>
+                <% }); %>
+              <% } %>
             </select>
             <small class="text-muted">Selecciona "Sin asignar" para quitar el concesionario</small>
           </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="guardarEditUsuario">Guardar Cambios</button>
-      </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
-  
+
 <!-- Modal de accesibilidad -->
 <div class="modal fade" id="configuradorModal" tabindex="-1" aria-labelledby="configuradorLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -162,46 +218,38 @@
       </div>
       <div class="modal-body p-4">
         <form id="form-configurador" class="row g-3">
-          <!-- Tamaño de títulos -->
           <div class="col-md-6">
             <label for="fuente-titulo" class="form-label fw-semibold">Tamaño de fuente (Títulos)</label>
             <input type="range" id="fuente-titulo" min="1" max="3" step="0.1" value="1.5" class="form-range">
           </div>
-          <!-- Tamaño de texto -->
           <div class="col-md-6">
             <label for="fuente-texto" class="form-label fw-semibold">Tamaño de fuente (Texto)</label>
             <input type="range" id="fuente-texto" min="1" max="2" step="0.1" value="1" class="form-range">
           </div>
-          <!-- Color títulos -->
           <div class="col-md-6">
             <label for="color-titulos" class="form-label fw-semibold">Color de los títulos</label>
             <input type="color" id="color-titulos" class="form-control form-control-color" value="#000000">
           </div>
-          <!-- Color texto -->
           <div class="col-md-6">
             <label for="color-texto" class="form-label fw-semibold">Color del texto</label>
             <input type="color" id="color-texto" class="form-control form-control-color" value="#333333">
           </div>
-          <!-- Fondo sección -->
           <div class="col-md-6">
             <label for="fondo-seccion" class="form-label fw-semibold">Color de fondo</label>
             <input type="color" id="fondo-seccion" class="form-control form-control-color" value="#f8f9fa">
           </div>
-          <!-- Subrayado enlaces -->
           <div class="col-md-6 d-flex align-items-center">
             <div class="form-check">
               <input type="checkbox" id="subrayado-enlaces" class="form-check-input">
               <label for="subrayado-enlaces" class="form-check-label fw-semibold">Subrayar enlaces</label>
             </div>
           </div>
-          <!-- Contraste bajo -->
           <div class="col-md-6 d-flex align-items-center">
             <div class="form-check">
               <input type="checkbox" id="modo-contraste" class="form-check-input">
               <label for="modo-contraste" class="form-check-label fw-semibold">Modo bajo contraste</label>
             </div>
           </div>
-          <!-- Paleta daltonismo -->
           <div class="col-md-6 d-flex align-items-center">
             <div class="form-check">
               <input type="checkbox" id="modo-daltonismo" class="form-check-input">
@@ -216,7 +264,6 @@
     </div>
   </div>
 </div>
-
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

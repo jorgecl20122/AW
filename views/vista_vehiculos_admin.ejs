@@ -45,12 +45,26 @@
 
 <!-- barra lateral con las estadisticas y el usuario abajo-->
 <div class="d-flex">
-  <aside class="sidebar p-3">
-       <!-- Estadísticas rápidas -->
+   <aside class="sidebar p-3">
+        <!-- Estadísticas rápidas -->
         <div class="mt-4">
           <h6 class="text-muted">Estado de la Flota</h6><br>
-          <div class="status-box available">Disponibles <span>12</span></div>
-          <div class="status-box in-use">En uso <span>4</span></div>
+          
+          <% if (estadoFlota) { %>
+            <div class="status-box available">
+              Disponibles <span><%= estadoFlota.disponibles %></span>
+            </div>
+            <div class="status-box in-use">
+              En uso <span><%= estadoFlota.en_uso %></span>
+            </div>
+          <% } else { %>
+            <div class="status-box available">
+              Disponibles <span>0</span>
+            </div>
+            <div class="status-box in-use">
+              En uso <span>0</span>
+            </div>
+          <% } %>
         </div>
 
         <!-- Información del usuario (PERFIL) -->
@@ -76,234 +90,241 @@
         </div>
     </aside>
 
-    <main class="flex-grow-1 p-4">
-        <div class="d-flex align-items-center mb-4">
-          <h2 class="fw-bold">Listado de Vehículos</h2>
-          <div class="ms-auto d-flex gap-2">
-            <button class="btn" id="btnAddVehiculo">
-              <strong><i class="bi bi-plus-lg"></i> Añadir Vehículo</strong>
-            </button>
+   <main class="flex-grow-1 p-4">
+    <!-- Mensajes flash -->
+    <% if (typeof mensaje !== 'undefined' && mensaje) { %>
+      <div class="alert alert-<%= mensaje.tipo %> alert-dismissible fade show" role="alert">
+        <%= mensaje.texto %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+
+    <div class="d-flex align-items-center mb-4">
+      <h2 class="fw-bold">Listado de Vehículos</h2>
+      <div class="ms-auto d-flex gap-2">
+        <button class="btn" id="btnAddVehiculo">
+          <strong><i class="bi bi-plus-lg"></i> Añadir Vehículo</strong>
+        </button>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <div class="input-group">
+          <span class="input-group-text bg-primary text-white">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="text" id="buscarVehiculo" class="form-control" placeholder="Buscar por matrícula, marca, modelo o concesionario...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario para nuevo vehículo -->
+    <div id="formVehiculoContainer" class="card shadow-sm mb-4 p-4 bg-white" style="display: none;">
+      <h5 class="fw-bold mb-3">Nuevo Vehículo</h5>
+      <form action="/admin/vehiculos/crear" method="POST" enctype="multipart/form-data">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Matrícula *</label>
+            <input type="text" name="matricula" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Marca *</label>
+            <input type="text" name="marca" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Modelo *</label>
+            <input type="text" name="modelo" class="form-control" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Año *</label>
+            <input type="number" name="anio" class="form-control" min="1900" max="2025" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Plazas *</label>
+            <input type="number" name="plazas" class="form-control" min="1" max="50" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Autonomía (km) *</label>
+            <input type="number" name="autonomia" class="form-control" min="0" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Color *</label>
+            <input type="text" name="color" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Estado *</label>
+            <select name="estado" class="form-select" required>
+              <option value="">Seleccionar estado</option>
+              <option value="disponible" selected>Disponible</option>
+              <option value="reservado">Reservado</option>
+              <option value="mantenimiento">Mantenimiento</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Concesionario *</label>
+            <select id="nuevoIdConcesionario" name="id_concesionario" class="form-select" required>
+              <option value="">Selecciona concesionario...</option>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Imagen del vehículo *</label>
+            <input type="file" name="imagen" class="form-control" accept="image/*" required>
+            <small class="text-muted">Formatos: JPG, PNG, WEBP (máx. 5MB)</small>
           </div>
         </div>
 
-          <!-- Buscador -->
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <div class="input-group">
-              <span class="input-group-text bg-primary text-white">
-                <i class="bi bi-search"></i>
-              </span>
-              <input type="text" id="buscarVehiculo" class="form-control" placeholder="Buscar por matrícula, marca, modelo o concesionario...">
-            </div>
-          </div>
+        <div class="mt-3 d-flex gap-2">
+          <button type="submit" class="btn"><strong>Guardar</strong></button>
+          <button type="button" id="cancelarVehiculo" class="btn"><strong>Cancelar</strong></button>
         </div>
+      </form>
+    </div>
 
-        <!-- Formulario para nuevo vehículo (inicialmente oculto) -->
-        <div id="formVehiculoContainer" class="card shadow-sm mb-4 p-4 bg-white" style="display: none;">
-          <h5 class="fw-bold mb-3">Nuevo Vehículo</h5>
-          <form id="formNuevoVehiculo" enctype="multipart/form-data">
-            <div class="row g-3">
-
-              <!-- FILA 1 -->
-              <div class="col-md-4">
-                <label class="form-label">Matrícula *</label>
-                <input type="text" id="nuevaMatricula" class="form-control" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Marca *</label>
-                <input type="text" id="nuevaMarca" class="form-control" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Modelo *</label>
-                <input type="text" id="nuevoModelo" class="form-control" required>
-              </div>
-
-              <!-- FILA 2 -->
-              <div class="col-md-4">
-                <label class="form-label">Año *</label>
-                <input type="number" id="nuevoAnio" class="form-control" min="1900" max="2025" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Plazas *</label>
-                <input type="number" id="nuevasPlazas" class="form-control" min="1" max="50" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Autonomía (km) *</label>
-                <input type="number" id="nuevaAutonomia" class="form-control" min="0" required>
-              </div>
-
-              <!-- FILA 3 -->
-              <div class="col-md-4">
-                <label class="form-label">Color *</label>
-                <input type="text" id="nuevoColor" class="form-control" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Estado *</label>
-                <select id="nuevoEstado" class="form-select" required>
-                  <option value="">Seleccionar estado</option>
-                  <option value="disponible" selected>Disponible</option>
-                  <option value="reservado">Reservado</option>
-                  <option value="mantenimiento">Mantenimiento</option>
-                </select>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Concesionario *</label>
-                <select id="nuevoIdConcesionario" name="id_concesionario" class="form-select" required>
-                  <option value="">Selecciona concesionario...</option>
-                  <!-- Aquí se cargarán los concesionarios disponibles dinamicamente-->
-                </select>
-              </div>
-
-              <!-- FILA 4 - Imagen -->
-              <div class="col-md-12">
-                <label class="form-label">Imagen del vehículo *</label>
-                <input type="file" id="nuevaImagen" class="form-control" accept="image/*" required>
-                <small class="text-muted">Formatos: JPG, PNG, WEBP (máx. 5MB)</small>
-              </div>
-
-              <!-- Preview de la imagen -->
-              <div class="col-md-12" id="previewContainer" style="display: none;">
-                <label class="form-label">Vista previa:</label>
-                <div class="mt-2">
-                  <img id="previewImagen" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px; max-height: 200px;">
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-3 d-flex gap-2">
-              <button type="submit" class="btn"><strong>Guardar</strong></button>
-              <button type="button" id="cancelarVehiculo" class="btn"><strong>Cancelar</strong></button>
-            </div>
-          </form>
-        </div>
-
-     <!-- Contenedor dinámico para la lista de vehículos -->
-        <div id="vehiculos-container">
-          <% if (typeof vehiculos !== 'undefined' && vehiculos.length > 0) { %>
-            <table class="table table-striped table-hover align-middle" id="tabla-vehiculos">
-              <thead class="table-secondary">
-                <tr>
-                  <th>Matrícula</th>
-                  <th>Marca</th>
-                  <th>Modelo</th>
-                  <th>Año</th>
-                  <th>Plazas</th>
-                  <th>Autonomía</th>
-                  <th>Color</th>
-                  <th>Imagen</th>
-                  <th>Concesionario</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% vehiculos.forEach((v) => { %>
-                  <tr data-id="<%= v.id %>">
-                    <td><%= v.matricula %></td>
-                    <td><%= v.marca %></td>
-                    <td><%= v.modelo %></td>
-                    <td><%= v.anio_matriculacion %></td>
-                    <td><%= v.numero_plazas %></td>
-                    <td><%= v.autonomia_km %> km</td>
-                    <td><%= v.color %></td>
-                    <td>
-                      <% if (v.imagen) { %>
-                        <img src="<%= v.imagen %>" alt="Imagen" class="vehiculo-img">
-                      <% } else { %>
-                        -
-                      <% } %>
-                    </td>
-                    <td><%= v.concesionario %></td>
-                    <td>
-                      <button class="btn btn-sm btn-edit-vehiculo" data-id="<%= v.id %>">
-                        <i class="bi bi-pencil-fill"></i><strong> Editar</strong>
-                      </button>
-                      <button class="btn btn-sm btn-delete-vehiculo" data-id="<%= v.id %>">
-                        <i class="bi bi-trash-fill"></i><strong> Eliminar</strong>
-                      </button>
-                    </td>
-                  </tr>
-                <% }); %>
-              </tbody>
-            </table>
-          <% } else { %>
-            <p class="text-center alert alert-info">No hay vehículos registrados.</p>
-          <% } %>
-        </div>
-    </main>
+    <!-- Tabla de vehículos -->
+    <div id="vehiculos-container">
+      <% if (typeof vehiculos !== 'undefined' && vehiculos.length > 0) { %>
+        <table class="table table-striped table-hover align-middle" id="tabla-vehiculos">
+          <thead class="table-secondary">
+            <tr>
+              <th>Matrícula</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Año</th>
+              <th>Plazas</th>
+              <th>Autonomía</th>
+              <th>Color</th>
+              <th>Imagen</th>
+              <th>Concesionario</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% vehiculos.forEach((v) => { %>
+              <tr data-id="<%= v.id %>">
+                <td><%= v.matricula %></td>
+                <td><%= v.marca %></td>
+                <td><%= v.modelo %></td>
+                <td><%= v.anio_matriculacion %></td>
+                <td><%= v.numero_plazas %></td>
+                <td><%= v.autonomia_km %> km</td>
+                <td><%= v.color %></td>
+                <td>
+                  <% if (v.imagen) { %>
+                    <img src="<%= v.imagen %>" alt="Imagen" class="vehiculo-img">
+                  <% } else { %>
+                    -
+                  <% } %>
+                </td>
+                <td><%= v.concesionario %></td>
+                <td>
+                  <button class="btn btn-sm btn-edit-vehiculo" 
+                          data-id="<%= v.id %>"
+                          data-matricula="<%= v.matricula %>"
+                          data-marca="<%= v.marca %>"
+                          data-modelo="<%= v.modelo %>"
+                          data-anio="<%= v.anio_matriculacion %>"
+                          data-plazas="<%= v.numero_plazas %>"
+                          data-autonomia="<%= v.autonomia_km %>"
+                          data-color="<%= v.color %>"
+                          data-estado="<%= v.estado %>">
+                    <i class="bi bi-pencil-fill"></i><strong> Editar</strong>
+                  </button>
+                  <form action="/admin/vehiculos/eliminar/<%= v.id %>" 
+                        method="POST" 
+                        style="display: inline;"
+                        onsubmit="return confirm('¿Estás seguro de eliminar este vehículo?');">
+                    <button type="submit" class="btn btn-sm btn-delete-vehiculo">
+                      <i class="bi bi-trash-fill"></i><strong> Eliminar</strong>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <p class="text-center alert alert-info">No hay vehículos registrados.</p>
+      <% } %>
+    </div>
+  </main>
 </div>
-
-<!-- MODALES -->
 
 <!-- Modal para editar vehículo -->
-<div class="modal fade" id="modalEditVehiculo" tabindex="-1" aria-labelledby="modalEditVehiculoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalEditVehiculoLabel">Editar Vehículo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEditVehiculo">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="editMatricula" class="form-label">Matrícula</label>
-                            <input type="text" class="form-control" id="editMatricula" readonly>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="editMarca" class="form-label">Marca <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="editMarca" required>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="editModelo" class="form-label">Modelo <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="editModelo" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="editAnio" class="form-label">Año <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="editAnio" min="1900" max="2025" required>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="editPlazas" class="form-label">Plazas <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="editPlazas" min="1" max="50" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="editAutonomia" class="form-label">Autonomía (km) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="editAutonomia" min="1" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="editColor" class="form-label">Color</label>
-                            <input type="text" class="form-control" id="editColor">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="editEstado" class="form-label">Estado</label>
-                        <select class="form-select" id="editEstado">
-                            <option value="disponible">Disponible</option>
-                            <option value="alquilado">Alquilado</option>
-                            <option value="mantenimiento">Mantenimiento</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="editImagen" class="form-label">Imagen (URL)</label>
-                        <input type="text" class="form-control" id="editImagen" placeholder="https://ejemplo.com/imagen.jpg">
-                        <small class="form-text text-muted">Opcional: URL de la imagen del vehículo</small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="guardarEditVehiculo">Guardar Cambios</button>
-            </div>
+<div class="modal fade" id="modalEditVehiculo" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="formEditVehiculo" method="POST" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Vehículo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="editMatricula" class="form-label">Matrícula</label>
+              <input type="text" class="form-control" id="editMatricula" readonly>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="editMarca" class="form-label">Marca *</label>
+              <input type="text" class="form-control" id="editMarca" name="marca" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="editModelo" class="form-label">Modelo *</label>
+              <input type="text" class="form-control" id="editModelo" name="modelo" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="editAnio" class="form-label">Año *</label>
+              <input type="number" class="form-control" id="editAnio" name="anio_matriculacion" min="1900" max="2025" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="editPlazas" class="form-label">Plazas *</label>
+              <input type="number" class="form-control" id="editPlazas" name="numero_plazas" min="1" max="50" required>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="editAutonomia" class="form-label">Autonomía (km) *</label>
+              <input type="number" class="form-control" id="editAutonomia" name="autonomia_km" min="1" required>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="editColor" class="form-label">Color</label>
+              <input type="text" class="form-control" id="editColor" name="color">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="editEstado" class="form-label">Estado</label>
+            <select class="form-select" id="editEstado" name="estado">
+              <option value="disponible">Disponible</option>
+              <option value="reservado">Reservado</option>
+              <option value="mantenimiento">Mantenimiento</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="editImagen" class="form-label">Nueva imagen (opcional)</label>
+            <input type="file" class="form-control" id="editImagen" name="imagen" accept="image/*">
+            <small class="form-text text-muted">Si no seleccionas ninguna imagen, se mantendrá la actual</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
+
 
 
 <!-- Modal de accesibilidad -->

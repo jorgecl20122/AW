@@ -26,6 +26,34 @@ function extraerConcesionarios(callback) {
         callback(null, result);
     });
 }
+
+function obtenerEstadoFlota(callback) {
+    // Obtener vehículos disponibles (estado NO activo)
+    pool.query(`SELECT COUNT(*) as disponibles FROM vehiculos WHERE estado != 'activo'`, (err, vehiculosDisponibles) => {
+        if (err) {
+            console.error('Error al obtener vehículos disponibles:', err);
+            return callback(null); // Retorna null si hay error
+        }
+        
+        // Obtener vehículos en uso (estado activo)
+        pool.query(`SELECT COUNT(*) as en_uso FROM vehiculos WHERE estado = 'activo'`, (err, vehiculosEnUso) => {
+            if (err) {
+                console.error('Error al obtener vehículos en uso:', err);
+                return callback(null); // Retorna null si hay error
+            }
+            
+            const disponibles = vehiculosDisponibles[0].disponibles || 0;
+            const enUso = vehiculosEnUso[0].en_uso || 0;
+            const total = disponibles + enUso;
+            
+            callback({
+                disponibles: disponibles,
+                en_uso: enUso,
+                total: total
+            });
+        });
+    });
+}
 // ============================================
 
 // Página de registro
@@ -236,14 +264,73 @@ router.get('/lista_usuarios', (req, res) => {
         res.json(results);
     });
 });
-
-// Vista de administración
+// Vista de listado de usuarios (renderiza con datos)
 router.get('/vistaLista', (req, res) => {
     const usuario = req.session.usuario;
-    res.render('ListadoUsuarios', { usuario });
+    
+    // Consulta para obtener usuarios
+    const queryUsuarios = `
+        SELECT 
+            u.id_usuario,
+            u.nombre_completo,
+            u.correo,
+            u.telefono,
+            u.rol,
+            c.nombre AS concesionario,
+            u.id_concesionario AS concesionario_id
+        FROM usuarios u
+        LEFT JOIN concesionarios c ON u.id_concesionario = c.id_concesionario
+        ORDER BY u.nombre_completo ASC
+    `;
+    
+    // Consulta para obtener concesionarios
+    const queryConcesionarios = `
+        SELECT id_concesionario, nombre, ciudad
+        FROM concesionarios
+        ORDER BY nombre ASC
+    `;
+    
+    // Ejecutar ambas consultas
+    pool.query(queryUsuarios, (errorUsuarios, usuarios) => {
+        if (errorUsuarios) {
+            console.error('Error al obtener usuarios:', errorUsuarios);
+            return res.render('ListadoUsuarios', { 
+                usuario, 
+                usuarios: [],
+                concesionarios: [],
+                estadoFlota: null,
+                error: 'Error al cargar usuarios'
+            });
+        }
+        
+        pool.query(queryConcesionarios, (errorConcesionarios, concesionarios) => {
+            if (errorConcesionarios) {
+                console.error('Error al obtener concesionarios:', errorConcesionarios);
+                return res.render('ListadoUsuarios', { 
+                    usuario, 
+                    usuarios: usuarios || [],
+                    concesionarios: [],
+                    estadoFlota: null,
+                    error: 'Error al cargar concesionarios'
+                });
+            }
+            
+            // Obtener estado de la flota
+            obtenerEstadoFlota((estadoFlota) => {
+                res.render('ListadoUsuarios', { 
+                    usuario, 
+                    usuarios: usuarios || [],
+                    concesionarios: concesionarios || [],
+                    estadoFlota: estadoFlota,
+                    success: null,
+                    error: null
+                });
+            });
+        });
+    });
 });
 
-// Obtener datos del usuario actual
+// Obtener datos del usuario actual (AJAX)
 router.get('/actual', (req, res) => {
     const query = `
         SELECT 
@@ -273,27 +360,109 @@ router.get('/actual', (req, res) => {
     });
 });
 
-// Actualizar usuario (solo rol y concesionario)
-router.put('/:id', (req, res) => {
-    const id = req.params.id;
-    const { rol, concesionario_id } = req.body;
+// Actualizar usuario (POST tradicional, sin AJAX)
+router.post('/editar', (req, res) => {
+    const usuario = req.session.usuario;
+    const { id_usuario, rol, concesionario_id } = req.body;
 
-    pool.query(
-        `UPDATE usuarios SET rol = ?, id_concesionario = ? WHERE id_usuario = ?`,
-        [rol, concesionario_id || null, id],
-        (err, results) => {
-            if (err) {
-                console.error('Error al actualizar usuario:', err);
-                return res.status(500).json({ mensaje: 'Error al actualizar usuario' });
-            }
+    if (!id_usuario || !rol) {
+        // Recargar datos para renderizar
+        const queryUsuarios = `
+            SELECT 
+                u.id_usuario,
+                u.nombre_completo,
+                u.correo,
+                u.telefono,
+                u.rol,
+                c.nombre AS concesionario,
+                u.id_concesionario AS concesionario_id
+            FROM usuarios u
+            LEFT JOIN concesionarios c ON u.id_concesionario = c.id_concesionario
+            ORDER BY u.nombre_completo ASC
+        `;
+        
+        const queryConcesionarios = `
+            SELECT id_concesionario, nombre, ciudad
+            FROM concesionarios
+            ORDER BY nombre ASC
+        `;
+        
+        pool.query(queryUsuarios, (errorUsuarios, usuarios) => {
+            pool.query(queryConcesionarios, (errorConcesionarios, concesionarios) => {
+                return res.render('ListadoUsuarios', { 
+                    usuario, 
+                    usuarios: usuarios || [],
+                    concesionarios: concesionarios || [],
+                    error: 'Datos incompletos',
+                    success: null
+                });
+            });
+        });
+        return;
+    }
 
-            if (results.affectedRows === 0) {
-                return res.status(404).json({ mensaje: 'Usuario no encontrado' });
-            }
+    const query = `
+        UPDATE usuarios 
+        SET rol = ?, id_concesionario = ? 
+        WHERE id_usuario = ?
+    `;
 
-            res.json({ mensaje: 'Usuario actualizado correctamente' });
-        }
-    );
+    pool.query(query, [rol, concesionario_id || null, id_usuario], (err, results) => {
+        // Recargar datos para renderizar
+        const queryUsuarios = `
+            SELECT 
+                u.id_usuario,
+                u.nombre_completo,
+                u.correo,
+                u.telefono,
+                u.rol,
+                c.nombre AS concesionario,
+                u.id_concesionario AS concesionario_id
+            FROM usuarios u
+            LEFT JOIN concesionarios c ON u.id_concesionario = c.id_concesionario
+            ORDER BY u.nombre_completo ASC
+        `;
+        
+        const queryConcesionarios = `
+            SELECT id_concesionario, nombre, ciudad
+            FROM concesionarios
+            ORDER BY nombre ASC
+        `;
+        
+        pool.query(queryUsuarios, (errorUsuarios, usuarios) => {
+            pool.query(queryConcesionarios, (errorConcesionarios, concesionarios) => {
+                if (err) {
+                    console.error('Error al actualizar usuario:', err);
+                    return res.render('ListadoUsuarios', { 
+                        usuario, 
+                        usuarios: usuarios || [],
+                        concesionarios: concesionarios || [],
+                        error: 'Error al actualizar usuario',
+                        success: null
+                    });
+                }
+
+                if (results.affectedRows === 0) {
+                    return res.render('ListadoUsuarios', { 
+                        usuario, 
+                        usuarios: usuarios || [],
+                        concesionarios: concesionarios || [],
+                        error: 'Usuario no encontrado',
+                        success: null
+                    });
+                }
+
+                res.render('ListadoUsuarios', { 
+                    usuario, 
+                    usuarios: usuarios || [],
+                    concesionarios: concesionarios || [],
+                    error: null,
+                    success: 'Usuario actualizado correctamente'
+                });
+            });
+        });
+    });
 });
+
 
 module.exports = router;
