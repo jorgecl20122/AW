@@ -25,9 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ruta principal → siempre InicioSesion
 app.get('/', (req, res) => {
-    res.render('InicioSesion', { error: null, success: null });
+  res.render('PaginaInicial', { dbVacia: true }); // o true
 });
 
 // Rutas para los módulos

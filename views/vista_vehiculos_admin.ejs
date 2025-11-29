@@ -69,25 +69,19 @@
 
         <!-- Información del usuario (PERFIL) -->
         <div class="user-info mt-auto d-flex flex-column align-items-center text-center gap-2">
-          <% if (usuario) { %>
-            <!-- Avatar -->
-            <img id="userAvatar" src="<%= usuario.avatar %>" alt="Avatar" class="rounded-circle">
-            <!-- Nombre + Email -->
-            <div>
-              <p class="mb-0 fw-bold">
-                <%= usuario.nombre_completo %>
-              </p>
-              <small class="text-muted">
-                <%= usuario.email %>
-              </small>
-            </div>
-          <% } else { %>
-            <img id="userAvatar" src="/img/default-avatar.png" alt="Avatar" class="rounded-circle">
-            <div>
-              <p class="text-danger">Usuario no cargado</p>
-            </div>
-          <% } %>
+      <% if (usuario) { %>
+        <img id="userAvatar" src="<%= usuario.avatar %>" alt="Avatar" class="rounded-circle">
+        <div>
+          <p class="mb-0 fw-bold"><%= usuario.nombre_completo %></p>
+          <small class="text-muted"><%= usuario.email %></small>
         </div>
+      <% } else { %>
+        <img id="userAvatar" src="/img/default-avatar.png" alt="Avatar" class="rounded-circle">
+        <div>
+          <p class="text-danger">Usuario no cargado</p>
+        </div>
+      <% } %>
+    </div>
     </aside>
 
    <main class="flex-grow-1 p-4">
@@ -325,8 +319,7 @@
   </div>
 </div>
 
-
-<!-- Modal de Configuración de Accesibilidad -->
+    <!-- Modal de Configuración de Accesibilidad -->
 <div class="modal fade" id="configuradorModal" tabindex="-1" aria-labelledby="configuradorLabel">
   <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
     <div class="modal-content shadow-lg rounded-4 border-0">
@@ -530,64 +523,37 @@
                   <small class="d-block mb-2">
                     <strong>Optimizado:</strong> Menú → Botones principales → Formularios → Tablas → Enlaces.
                   </small>
-                  <small class="d-block">
-                    <strong>Personalizado:</strong> Permite saltar a secciones con Alt + Número (ej: Alt+1, Alt+2).
-                  </small>
                 </div>
               </div>
 
               <hr>
 
-              <!-- Saltos Rápidos -->
-              <div class="mb-3">
-                <h6 class="fw-bold">
-                  <i class="bi bi-lightning-fill me-2"></i>Saltos rápidos (modo personalizado)
-                </h6>
-                <p class="text-muted small">
-                  En modo personalizado, usa <kbd>Alt + Número</kbd> para saltar a secciones:
-                </p>
-
-                <ul class="list-unstyled">
-                  <li><kbd>Alt + 1</kbd> → Primera sección principal</li>
-                  <li><kbd>Alt + 2</kbd> → Segunda sección principal</li>
-                  <li><kbd>Alt + 3</kbd> → Tercera sección principal</li>
-                  <li class="text-muted">... y así sucesivamente</li>
-                </ul>
-              </div>
-
-              <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i>
-                Las secciones principales se detectan automáticamente según tu página actual.
-              </div>
-            </div>
-
           </div>
         </form>
       </div>
       
-      <!-- Footer -->
+    </div>
+     <!-- Footer -->
       <div class="modal-footer rounded-bottom-4">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
           <i class="bi bi-x-circle me-1"></i> Cerrar
         </button>
-        <button type="button" class="btn btn-warning" id="btnRestaurar">
+        <button type="button" class="btn btn-primary" id="btnRestaurar">
           <i class="bi bi-arrow-counterclockwise me-1"></i> Restaurar valores
         </button>
       </div>
-      
-    </div>
   </div>
 </div>
 
 <!-- ========================================== -->
-<!-- MODAL PARA AÑADIR/EDITAR ATAJOS -->
+<!-- MODAL PARA AÑADIR/EDITAR ATAJOS (INTUITIVO) -->
 <!-- ========================================== -->
 <div class="modal fade" id="modalAtajo" tabindex="-1" aria-labelledby="modalAtajoLabel">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content shadow-lg rounded-4 border-0">
       
       <!-- Header -->
-      <div class="modal-header bg-primary text-white rounded-top-4">
+      <div class="modal-header text-white rounded-top-4">
         <h5 class="modal-title fw-bold" id="modalAtajoLabel">
           <i class="bi bi-keyboard me-2"></i>
           <span id="tituloModalAtajo">Añadir Atajo de Teclado</span>
@@ -598,84 +564,116 @@
       <!-- Body -->
       <div class="modal-body p-4">
         
-        <!-- Combinación de teclas -->
-        <div class="mb-3">
-          <label for="inputCombinacion" class="form-label fw-semibold">
-            <i class="bi bi-hand-index me-1"></i> Combinación de teclas
-          </label>
+        <!-- PASO 1: Combinación de teclas -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-primary me-2">1</span>
+            <label for="inputCombinacion" class="form-label fw-bold mb-0">
+              Presiona la combinación de teclas que deseas usar
+            </label>
+          </div>
           <input type="text" class="form-control form-control-lg text-center fw-bold" 
                  id="inputCombinacion" 
                  placeholder="Presiona las teclas..." 
                  readonly>
-          <small class="form-text text-muted d-block mt-2">
+          <small class="form-text text-muted d-block mt-2 text-center">
             <i class="bi bi-info-circle me-1"></i>
-            Presiona la combinación deseada (ej: <kbd>Ctrl+Shift+K</kbd>)
+            Ejemplo: mantén <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd>
           </small>
         </div>
 
         <hr>
 
-        <!-- Acción -->
-        <div class="mb-3">
-          <label for="selectAccion" class="form-label fw-semibold">
-            <i class="bi bi-lightning me-1"></i> Acción
-          </label>
-          <select class="form-select" id="selectAccion">
-            <option value="">-- Selecciona una acción --</option>
-            <option value="navegacion_url">🌐 Navegar a URL</option>
-            <option value="click_elemento">🖱️ Hacer clic en elemento</option>
-            <option value="foco_elemento">🎯 Dar foco a elemento</option>
-          </select>
+        <!-- PASO 2: Tipo de acción -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-primary me-2">2</span>
+            <label class="form-label fw-bold mb-0">
+              ¿Qué quieres que haga este atajo?
+            </label>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="card h-100 tipo-accion-card" data-tipo="navegacion">
+                <div class="card-body text-center cursor-pointer">
+                  <i class="bi bi-compass fs-1 text-primary"></i>
+                  <h6 class="mt-2 mb-0">Ir a una página</h6>
+                  <small class="text-muted">Navegar a otra sección</small>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="card h-100 tipo-accion-card" data-tipo="click">
+                <div class="card-body text-center cursor-pointer">
+                  <i class="bi bi-hand-index fs-1 text-success"></i>
+                  <h6 class="mt-2 mb-0">Hacer clic</h6>
+                  <small class="text-muted">Activar un botón</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <input type="hidden" id="tipoAccionSeleccionado">
         </div>
 
-        <!-- Campo Destino (oculto por defecto) -->
-        <div class="mb-3" id="campoDestino" style="display:none;">
-          <label for="inputDestino" class="form-label fw-semibold">
-            <i class="bi bi-bullseye me-1"></i> Destino (URL o selector)
-          </label>
-          <input type="text" class="form-control" id="inputDestino" 
-                 placeholder="Ej: /empleado/vehiculos o #btnReservar">
-          <small class="form-text text-muted d-block mt-2">
-            Para URLs: <code>/ruta/completa</code><br>
-            Para selectores: <code>#idElemento</code> o <code>.claseElemento</code>
-          </small>
+        <hr>
+
+        <!-- PASO 3: Selección del destino (se muestra después de elegir tipo) -->
+        <div class="mb-4" id="paso3Destino" style="display:none;">
+          <div class="d-flex align-items-center mb-3">
+            <span class="badge bg-primary me-2">3</span>
+            <label class="form-label fw-bold mb-0" id="labelPaso3">
+              Selecciona el destino
+            </label>
+          </div>
+
+          <!-- Lista de páginas disponibles (para navegación) -->
+          <div id="listaPaginas" style="display:none;">
+            <div class="list-group" id="grupoEnlaces">
+              <!-- Se llena dinámicamente con JavaScript -->
+            </div>
+          </div>
+
+          <!-- Lista de botones (para click) -->
+          <div id="listaBotones" style="display:none;">
+            <div class="input-group mb-3">
+              <span class="input-group-text">
+                <i class="bi bi-search"></i>
+              </span>
+              <input type="text" class="form-control" id="buscarBoton" 
+                     placeholder="Buscar botón...">
+            </div>
+            <div class="list-group" id="grupoBotones" style="max-height: 300px; overflow-y: auto;">
+              <!-- Se llena dinámicamente con JavaScript -->
+            </div>
+          </div>
+
+          <input type="hidden" id="destinoSeleccionado">
+          <input type="hidden" id="descripcionDestino">
         </div>
 
-        <!-- Descripción -->
-        <div class="mb-3">
-          <label for="inputDescripcion" class="form-label fw-semibold">
-            <i class="bi bi-chat-text me-1"></i> Descripción
-          </label>
-          <input type="text" class="form-control" id="inputDescripcion" 
-                 placeholder="Descripción breve del atajo"
-                 maxlength="100">
-          <small class="form-text text-muted">
-            Máximo 100 caracteres
-          </small>
-        </div>
-
-        <!-- Ayuda adicional -->
-        <div class="alert alert-light border">
-          <strong>💡 Ejemplos de uso:</strong>
-          <ul class="mb-0 mt-2 small">
-            <li><strong>Navegar:</strong> <code>/empleado/mis_reservas</code></li>
-            <li><strong>Clic:</strong> <code>#btnGuardar</code> o <code>.btn-enviar</code></li>
-            <li><strong>Foco:</strong> <code>#inputBuscar</code></li>
-          </ul>
+        <!-- Resumen -->
+        <div id="resumenAtajo" class="alert alert-success" style="display:none;">
+          <strong><i class="bi bi-check-circle me-2"></i>Resumen de tu atajo:</strong>
+          <div class="mt-2">
+            <strong>Combinación:</strong> <span id="resumenCombinacion"></span><br>
+            <strong>Acción:</strong> <span id="resumenAccion"></span>
+          </div>
         </div>
 
       </div>
       
       <!-- Footer -->
       <div class="modal-footer rounded-bottom-4">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
           <i class="bi bi-x-circle me-1"></i> Cancelar
         </button>
-        <button type="button" class="btn btn-primary" id="btnGuardarAtajo">
-          <i class="bi bi-save me-1"></i> Guardar
+        <button type="button" class="btn btn-primary" id="btnGuardarAtajo" disabled>
+          <i class="bi bi-save me-1"></i> Guardar atajo
         </button>
       </div>
-      
     </div>
   </div>
 </div>

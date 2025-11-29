@@ -43,7 +43,7 @@ $(document).ready(function(){
   // Cargar preferencias
   let prefs = JSON.parse(sessionStorage.getItem('accesibilidad')) || {...DEFAULTS};
   let atajosActivos = obtenerAtajosActivos();
-  let combinacionAnterior = null; // Para edición
+  let combinacionAnterior = null;
 
   // Aplicar preferencias si existen
   if (sessionStorage.getItem('accesibilidad')) {
@@ -143,14 +143,11 @@ $(document).ready(function(){
   function aplicarOrdenTabulacion(modo) {
     switch(modo) {
       case 'default':
-        // Orden natural del DOM
         $("button, input, a, select, table, table th, table td").removeAttr("tabindex");
         break;
         
       case 'optimizado':
-        // Orden optimizado: navbar > botones principales > formularios > tablas > enlaces
         let tabIndex = 1;
-        
         $("nav a, nav button").each(function(){ $(this).attr("tabindex", tabIndex++); });
         $("main button.btn-primary, main button.btn-success").each(function(){ 
           $(this).attr("tabindex", tabIndex++); 
@@ -208,10 +205,10 @@ $(document).ready(function(){
           <td>${datos.descripcion}</td>
           <td class="text-center">
             ${!esPredefinido ? 
-              `<button class="btn btn-sm btn-warning btn-editar-atajo" title="Editar atajo">
+              `<button class="btn btn-sm btn-editar-atajo" title="Editar atajo">
                 <i class="bi bi-pencil"></i>
               </button>
-              <button class="btn btn-sm btn-danger btn-eliminar-atajo ms-1" title="Eliminar atajo">
+              <button class="btn btn-sm btn-eliminar-atajo ms-1" title="Eliminar atajo">
                 <i class="bi bi-trash"></i>
               </button>` 
               : 
@@ -227,18 +224,15 @@ $(document).ready(function(){
   // MODAL DE ATAJOS - EVENTOS
   // ============================================
 
-  // Botón añadir nuevo atajo
   $("#btnAnadirAtajo").on("click", function() {
     mostrarModalAtajo();
   });
 
-  // Editar atajo personalizado
   $(document).on("click", ".btn-editar-atajo", function() {
     let combinacion = $(this).closest("tr").data("combinacion");
     mostrarModalAtajo(combinacion);
   });
 
-  // Eliminar atajo personalizado
   $(document).on("click", ".btn-eliminar-atajo", function() {
     let combinacion = $(this).closest("tr").data("combinacion");
     
@@ -251,42 +245,26 @@ $(document).ready(function(){
   });
 
   // ============================================
-  // FUNCIONES DEL MODAL DE ATAJOS
+  // MODAL INTUITIVO - PASO A PASO
   // ============================================
 
   function mostrarModalAtajo(combinacion = null) {
-    // Guardar referencia si es edición
     combinacionAnterior = combinacion;
     
     // Limpiar formulario
     $("#inputCombinacion").val("");
-    $("#selectAccion").val("");
-    $("#inputDestino").val("");
-    $("#inputDescripcion").val("");
-    $("#campoDestino").hide();
+    $("#tipoAccionSeleccionado").val("");
+    $("#destinoSeleccionado").val("");
+    $("#descripcionDestino").val("");
+    $("#paso3Destino").hide();
+    $("#resumenAtajo").hide();
+    $("#btnGuardarAtajo").prop("disabled", true);
+    $(".tipo-accion-card").removeClass("selected");
     
-    // Cambiar título según modo
+    // Cambiar título
     if(combinacion) {
       $("#tituloModalAtajo").text("Editar Atajo de Teclado");
-      
-      // Cargar datos existentes
-      let datos = atajosActivos[combinacion];
-      $("#inputCombinacion").val(combinacion);
-      $("#inputDescripcion").val(datos.descripcion);
-      
-      if(datos.url) {
-        $("#selectAccion").val("navegacion_url");
-        $("#inputDestino").val(datos.url);
-        $("#campoDestino").show();
-      } else if(datos.selector) {
-        if(datos.accion === 'click') {
-          $("#selectAccion").val("click_elemento");
-        } else {
-          $("#selectAccion").val("foco_elemento");
-        }
-        $("#inputDestino").val(datos.selector);
-        $("#campoDestino").show();
-      }
+      cargarDatosEdicion(combinacion);
     } else {
       $("#tituloModalAtajo").text("Añadir Atajo de Teclado");
     }
@@ -296,69 +274,197 @@ $(document).ready(function(){
     modalInstance.show();
   }
 
-  // Capturar combinación de teclas
+  function cargarDatosEdicion(combinacion) {
+    let datos = atajosActivos[combinacion];
+    $("#inputCombinacion").val(combinacion);
+    
+    if(datos.url) {
+      seleccionarTipoAccion('navegacion');
+      setTimeout(() => {
+        $(`#grupoEnlaces .list-group-item[data-url="${datos.url}"]`).click();
+      }, 100);
+    } else if(datos.selector && datos.accion === 'click') {
+      seleccionarTipoAccion('click');
+      setTimeout(() => {
+        $(`#grupoBotones .list-group-item[data-selector="${datos.selector}"]`).click();
+      }, 100);
+    }
+  }
+
+  // PASO 1: Capturar combinación
   $("#inputCombinacion").on("keydown", function(e) {
     e.preventDefault();
-    capturarCombinacion(e);
-  });
-
-  // Mostrar campo destino según acción seleccionada
-  $("#selectAccion").on("change", function() {
-    let accion = $(this).val();
-    if(accion) {
-      $("#campoDestino").show();
-      if(accion === "navegacion_url") {
-        $("#inputDestino").attr("placeholder", "Ej: /empleado/vehiculos");
-      } else {
-        $("#inputDestino").attr("placeholder", "Ej: #btnReservar o .mi-clase");
-      }
-    } else {
-      $("#campoDestino").hide();
-    }
-  });
-
-  // Guardar atajo
-  $("#btnGuardarAtajo").on("click", function() {
-    guardarAtajo();
-  });
-
-  function capturarCombinacion(e) {
-    let teclas = [];
     
+    let teclas = [];
     if(e.ctrlKey) teclas.push("ctrl");
     if(e.shiftKey) teclas.push("shift");
     if(e.altKey) teclas.push("alt");
-    
     if(e.key && !['Control', 'Shift', 'Alt'].includes(e.key)) {
       teclas.push(e.key.toLowerCase());
     }
     
     if(teclas.length > 1) {
       let combinacion = teclas.join("+");
-      $("#inputCombinacion").val(combinacion);
+      $(this).val(combinacion);
       
-      // Verificar si ya existe
+      // Validar
       if(ATAJOS_PREDEFINIDOS[userRole] && ATAJOS_PREDEFINIDOS[userRole][combinacion]) {
+        $(this).addClass("is-invalid");
         alert("⚠️ Esta combinación está reservada para un atajo predefinido.");
       } else if(atajosActivos[combinacion] && combinacion !== combinacionAnterior) {
+        $(this).addClass("is-invalid");
         alert("⚠️ Esta combinación ya está en uso.");
+      } else {
+        $(this).removeClass("is-invalid").addClass("is-valid");
+        actualizarResumen();
       }
+    }
+  });
+
+  // PASO 2: Seleccionar tipo de acción
+  $(".tipo-accion-card").on("click", function() {
+    let tipo = $(this).data("tipo");
+    seleccionarTipoAccion(tipo);
+  });
+
+  function seleccionarTipoAccion(tipo) {
+    $(".tipo-accion-card").removeClass("selected");
+    $(`.tipo-accion-card[data-tipo="${tipo}"]`).addClass("selected");
+    $("#tipoAccionSeleccionado").val(tipo);
+    
+    // Mostrar lista correspondiente
+    $("#listaPaginas, #listaBotones").hide();
+    $("#paso3Destino").show();
+    
+    if(tipo === 'navegacion') {
+      $("#labelPaso3").text("¿A qué página quieres ir?");
+      cargarEnlacesDisponibles();
+      $("#listaPaginas").show();
+    } else if(tipo === 'click') {
+      $("#labelPaso3").text("¿Qué botón quieres activar?");
+      cargarBotonesDisponibles();
+      $("#listaBotones").show();
+    }
+    
+    actualizarResumen();
+  }
+
+  // PASO 3A: Cargar enlaces disponibles
+  function cargarEnlacesDisponibles() {
+    let $grupo = $("#grupoEnlaces");
+    $grupo.empty();
+    
+    // Obtener enlaces del menú de navegación
+    $("nav a, .navbar a").each(function() {
+      let $enlace = $(this);
+      let href = $enlace.attr("href");
+      let texto = $enlace.text().trim();
+      
+      if(href && href !== "#" && href !== "/" && texto) {
+        let icono = $enlace.find("i").attr("class") || "bi bi-link-45deg";
+        
+        $grupo.append(`
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action seleccionable" 
+             data-url="${href}" data-descripcion="${texto}">
+            <i class="${icono} me-2"></i>
+            <strong>${texto}</strong>
+            <small class="text-muted d-block">${href}</small>
+          </a>
+        `);
+      }
+    });
+    
+    if($grupo.children().length === 0) {
+      $grupo.append('<div class="alert alert-warning">No se encontraron enlaces disponibles</div>');
     }
   }
 
-  function guardarAtajo() {
-    let combinacion = $("#inputCombinacion").val().trim();
-    let accion = $("#selectAccion").val();
-    let destino = $("#inputDestino").val().trim();
-    let descripcion = $("#inputDescripcion").val().trim();
+  // PASO 3B: Cargar botones disponibles
+  function cargarBotonesDisponibles() {
+    let $grupo = $("#grupoBotones");
+    $grupo.empty();
     
-    // Validar campos
-    if(!combinacion || !accion || !destino || !descripcion) {
-      alert("Por favor completa todos los campos.");
+    $("button, .btn").each(function() {
+      let $boton = $(this);
+      let texto = $boton.text().trim() || $boton.attr("title") || $boton.attr("aria-label");
+      let id = $boton.attr("id");
+      let clases = $boton.attr("class");
+      
+      if(texto && !$boton.closest(".modal").length) {
+        let selector = id ? `#${id}` : `.${clases.split(' ')[0]}`;
+        let icono = $boton.find("i").attr("class") || "bi bi-hand-index";
+        
+        $grupo.append(`
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action seleccionable" 
+             data-selector="${selector}" data-descripcion="Clic en: ${texto}">
+            <i class="${icono} me-2"></i>
+            <strong>${texto}</strong>
+            <small class="text-muted d-block">Selector: ${selector}</small>
+          </a>
+        `);
+      }
+    });
+    
+    if($grupo.children().length === 0) {
+      $grupo.append('<div class="alert alert-warning">No se encontraron botones disponibles</div>');
+    }
+  }
+
+  // Seleccionar destino de las listas
+  $(document).on("click", ".seleccionable", function() {
+    let $item = $(this);
+    $item.siblings().removeClass("active");
+    $item.addClass("active");
+    
+    let destino = $item.data("url") || $item.data("selector");
+    let descripcion = $item.data("descripcion");
+    
+    $("#destinoSeleccionado").val(destino);
+    $("#descripcionDestino").val(descripcion);
+    
+    actualizarResumen();
+  });
+
+  // Búsqueda en listas
+  $("#buscarBoton").on("input", function() {
+    let busqueda = $(this).val().toLowerCase();
+    $("#grupoBotones .seleccionable").each(function() {
+      let texto = $(this).text().toLowerCase();
+      $(this).toggle(texto.includes(busqueda));
+    });
+  });
+
+  // Actualizar resumen y habilitar botón guardar
+  function actualizarResumen() {
+    let combinacion = $("#inputCombinacion").val();
+    let tipo = $("#tipoAccionSeleccionado").val();
+    let destino = $("#destinoSeleccionado").val();
+    let descripcion = $("#descripcionDestino").val();
+    
+    if(combinacion && tipo && destino) {
+      $("#resumenCombinacion").html(`<kbd>${combinacion.toUpperCase()}</kbd>`);
+      $("#resumenAccion").text(descripcion);
+      $("#resumenAtajo").show();
+      $("#btnGuardarAtajo").prop("disabled", false);
+    } else {
+      $("#resumenAtajo").hide();
+      $("#btnGuardarAtajo").prop("disabled", true);
+    }
+  }
+
+  // Guardar atajo
+  $("#btnGuardarAtajo").on("click", function() {
+    let combinacion = $("#inputCombinacion").val().trim();
+    let tipo = $("#tipoAccionSeleccionado").val();
+    let destino = $("#destinoSeleccionado").val();
+    let descripcion = $("#descripcionDestino").val();
+    
+    if(!combinacion || !tipo || !destino || !descripcion) {
+      alert("Por favor completa todos los pasos.");
       return;
     }
     
-    // Eliminar atajo anterior si se cambió la combinación
+    // Eliminar atajo anterior si se cambió
     if(combinacionAnterior && combinacionAnterior !== combinacion) {
       delete prefs.atajosPersonalizados[combinacionAnterior];
     }
@@ -366,35 +472,24 @@ $(document).ready(function(){
     // Crear nuevo atajo
     let nuevoAtajo = { descripcion };
     
-    switch(accion) {
-      case 'navegacion_url':
-        nuevoAtajo.url = destino;
-        break;
-      case 'click_elemento':
-        nuevoAtajo.selector = destino;
-        nuevoAtajo.accion = 'click';
-        break;
-      case 'foco_elemento':
-        nuevoAtajo.selector = destino;
-        nuevoAtajo.accion = 'focus';
-        break;
+    if(tipo === 'navegacion') {
+      nuevoAtajo.url = destino;
+    } else if(tipo === 'click') {
+      nuevoAtajo.selector = destino;
+      nuevoAtajo.accion = 'click';
     }
     
-    // Guardar
     prefs.atajosPersonalizados[combinacion] = nuevoAtajo;
     sessionStorage.setItem('accesibilidad', JSON.stringify(prefs));
     atajosActivos = obtenerAtajosActivos();
     cargarAtajosEnTabla();
     
-    // Cerrar modal
     bootstrap.Modal.getInstance($("#modalAtajo")[0]).hide();
-    
-    // Resetear variable
     combinacionAnterior = null;
-  }
+  });
 
   // ============================================
-  // MANEJO DE ATAJOS EN TIEMPO REAL
+  // EJECUCIÓN DE ATAJOS
   // ============================================
 
   $(document).keydown(function(e){
@@ -433,12 +528,9 @@ $(document).ready(function(){
       if(elemento.length) {
         if(atajo.accion === 'click') {
           elemento.click();
-        } else if(atajo.accion === 'focus') {
-          elemento.focus();
         }
       }
     }
-    // Atajos predefinidos específicos
     else if(atajo.accion === 'reservar') {
       $("#btnReservarVehiculo").click();
     }
@@ -463,7 +555,7 @@ $(document).ready(function(){
   }
 
   // ============================================
-  // SALTOS RÁPIDOS POR TABULACIÓN
+  // SALTOS RÁPIDOS
   // ============================================
 
   $(document).keydown(function(e) {
@@ -482,7 +574,7 @@ $(document).ready(function(){
   });
 
   // ============================================
-  // BOTÓN RESTAURAR
+  // RESTAURAR
   // ============================================
   
   $("#btnRestaurar").on("click", function(){
@@ -551,7 +643,6 @@ $(document).ready(function(){
     }
   }
 
-  // Aplicar orden de tabulación al cargar
   aplicarOrdenTabulacion(prefs.ordenTabulacion || "default");
 
 });

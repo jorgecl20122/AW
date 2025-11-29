@@ -56,6 +56,41 @@ function obtenerEstadoFlota(callback) {
 }
 // ============================================
 
+// Ruta principal - Verificar BD vacía
+router.get('/', (req, res) => {
+  // Si el usuario ya tiene sesión, redirigir
+  if (req.session && req.session.userId) {
+    if (req.session.userRole === 'administrador') {
+      return res.redirect('/admin/vista_ini');
+    } else if (req.session.userRole === 'empleado') {
+      return res.redirect('/empleado/vista_empleado');
+    }
+  }
+
+  // Verificar si la BD está vacía
+  const query = `
+    SELECT 
+      (SELECT COUNT(*) FROM concesionarios) as total_concesionarios,
+      (SELECT COUNT(*) FROM vehiculos) as total_vehiculos,
+      (SELECT COUNT(*) FROM usuarios) as total_usuarios
+  `;
+
+  pool.query(query, (err, result) => {
+    if (err) {
+      console.error('Error al verificar BD:', err);
+      return res.render('PaginaInicial', { dbVacia: false });
+    }
+
+    const stats = result[0];
+    const dbVacia = stats.total_concesionarios === 0 && 
+                    stats.total_vehiculos === 0 && 
+                    stats.total_usuarios === 0;
+
+                    console.log("Renderizando Inicio con dbVacia =", dbVacia);
+    res.render('PaginaInicial', { dbVacia });
+  });
+});
+
 // Página de registro
 router.get('/registro', (req, res) => {
     extraerConcesionarios((err, concesionarios) => {
@@ -464,5 +499,179 @@ router.post('/editar', (req, res) => {
     });
 });
 
+// ==================== CARGAR DATOS DESDE JSON ====================
+router.post('/cargar-datos-json', (req, res) => {
+  const datos = req.body;
+
+  // Validar estructura del JSON
+  if (!datos || !datos.concesionarios || !Array.isArray(datos.concesionarios)) {
+    return res.status(400).json({ 
+      mensaje: 'Formato de JSON inválido. Debe contener un array de concesionarios' 
+    });
+  }
+
+  // Verificar que la BD esté vacía antes de cargar
+  const checkQuery = `
+    SELECT 
+      (SELECT COUNT(*) FROM concesionarios) as total_concesionarios,
+      (SELECT COUNT(*) FROM vehiculos) as total_vehiculos
+  `;
+
+  pool.query(checkQuery, (errCheck, resultCheck) => {
+    if (errCheck) {
+      console.error('Error al verificar BD:', errCheck);
+      return res.status(500).json({ mensaje: 'Error al verificar la base de datos' });
+    }
+
+    const stats = resultCheck[0];
+    if (stats.total_concesionarios > 0 || stats.total_vehiculos > 0) {
+      return res.status(400).json({ 
+        mensaje: 'La base de datos ya contiene datos. No se puede cargar el JSON' 
+      });
+    }
+
+    // Procesar la carga de datos
+    cargarDatosJSON(datos, (err, resultado) => {
+      if (err) {
+        console.error('Error al cargar JSON:', err);
+        return res.status(500).json({ 
+          mensaje: 'Error al cargar los datos: ' + err.message 
+        });
+      }
+
+      res.json({
+        mensaje: 'Datos cargados exitosamente',
+        concesionarios_cargados: resultado.concesionarios,
+        vehiculos_cargados: resultado.vehiculos
+      });
+    });
+  });
+});
+
+// ==================== FUNCIÓN PARA PROCESAR EL JSON ====================
+function cargarDatosJSON(datos, callback) {
+  let concesionariosCargados = 0;
+  let vehiculosCargados = 0;
+  let erroresEncontrados = [];
+
+  // Iniciar transacción
+  pool.getConnection((err, connection) => {
+    if (err) {
+      return callback(err, null);
+    }
+
+    connection.beginTransaction((errTrans) => {
+      if (errTrans) {
+        connection.release();
+        return callback(errTrans, null);
+      }
+
+      // Procesar cada concesionario
+      let concesionariosProcesados = 0;
+
+      datos.concesionarios.forEach((concesionario, index) => {
+        // Insertar concesionario
+        const queryConcesionario = `
+          INSERT INTO concesionarios (nombre, direccion, ciudad, telefono, email)
+          VALUES (?, ?, ?, ?, ?)
+        `;
+
+        const valuesConcesionario = [
+          concesionario.nombre,
+          concesionario.direccion || null,
+          concesionario.ciudad || null,
+          concesionario.telefono || null,
+          concesionario.email || null
+        ];
+
+        connection.query(queryConcesionario, valuesConcesionario, (errConc, resultConc) => {
+          if (errConc) {
+            erroresEncontrados.push(`Error en concesionario ${concesionario.nombre}: ${errConc.message}`);
+            concesionariosProcesados++;
+            verificarFinalizacion();
+            return;
+          }
+
+          concesionariosCargados++;
+          const idConcesionario = resultConc.insertId;
+
+          // Insertar vehículos de este concesionario
+          if (concesionario.vehiculos && Array.isArray(concesionario.vehiculos)) {
+            let vehiculosProcesados = 0;
+
+            if (concesionario.vehiculos.length === 0) {
+              concesionariosProcesados++;
+              verificarFinalizacion();
+              return;
+            }
+
+            concesionario.vehiculos.forEach((vehiculo) => {
+              const queryVehiculo = `
+                INSERT INTO vehiculos 
+                (id_concesionario, matricula, marca, modelo, anio_matriculacion, 
+                 numero_plazas, autonomia_km, color, imagen)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `;
+
+              const valuesVehiculo = [
+                idConcesionario,
+                vehiculo.matricula,
+                vehiculo.marca,
+                vehiculo.modelo,
+                vehiculo.anio_matriculacion || new Date().getFullYear(),
+                vehiculo.numero_plazas || 5,
+                vehiculo.autonomia_km || 300,
+                vehiculo.color || 'Blanco',
+                vehiculo.imagen || null
+              ];
+
+              connection.query(queryVehiculo, valuesVehiculo, (errVeh) => {
+                if (errVeh) {
+                  erroresEncontrados.push(`Error en vehículo ${vehiculo.matricula}: ${errVeh.message}`);
+                } else {
+                  vehiculosCargados++;
+                }
+
+                vehiculosProcesados++;
+                
+                if (vehiculosProcesados === concesionario.vehiculos.length) {
+                  concesionariosProcesados++;
+                  verificarFinalizacion();
+                }
+              });
+            });
+          } else {
+            concesionariosProcesados++;
+            verificarFinalizacion();
+          }
+        });
+      });
+
+      function verificarFinalizacion() {
+        if (concesionariosProcesados === datos.concesionarios.length) {
+          if (erroresEncontrados.length > 0) {
+            connection.rollback(() => {
+              connection.release();
+              callback(new Error(erroresEncontrados.join('; ')), null);
+            });
+          } else {
+            connection.commit((errCommit) => {
+              connection.release();
+              
+              if (errCommit) {
+                return callback(errCommit, null);
+              }
+
+              callback(null, {
+                concesionarios: concesionariosCargados,
+                vehiculos: vehiculosCargados
+              });
+            });
+          }
+        }
+      }
+    });
+  });
+}
 
 module.exports = router;

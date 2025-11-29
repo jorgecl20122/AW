@@ -182,6 +182,106 @@ function generarAvatarIniciales(iniciales) {
     return `https://ui-avatars.com/api/?name=${iniciales}&background=0D8ABC&color=fff&size=128&bold=true`;
 }
 
+//---------------------------------------------
+// CARGA DE DATOS DESDE JSON
+//---------------------------------------------
+document.addEventListener('DOMContentLoaded', function() {
+    const btnCargarJSON = document.getElementById('btnCargarJSON');
+    const fileInput = document.getElementById('fileInput');
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    if (btnCargarJSON) {
+    btnCargarJSON.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (!file) return;
+
+        if (!file.name.endsWith('.json')) {
+        mostrarEstado('error', 'Por favor, selecciona un archivo JSON válido');
+        return;
+        }
+
+        cargarJSON(file);
+    });
+    }
+
+    function cargarJSON(file) {
+    const reader = new FileReader();
+
+    mostrarEstado('loading', 'Cargando archivo JSON...');
+
+    reader.onload = function(e) {
+        try {
+        const jsonData = JSON.parse(e.target.result);
+        enviarJSON(jsonData);
+        } catch (error) {
+        mostrarEstado('error', 'Error al leer el archivo JSON: formato inválido');
+        }
+    };
+
+    reader.onerror = function() {
+        mostrarEstado('error', 'Error al leer el archivo');
+    };
+
+    reader.readAsText(file);
+    }
+
+    function enviarJSON(data) {
+    $.ajax({
+        url: '/cargar-datos-json',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+        mostrarEstado('success', response.mensaje || 'Datos cargados exitosamente');
+        
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 2000);
+        },
+        error: function(xhr) {
+        let mensaje = 'Error al cargar los datos';
+        
+        if (xhr.responseJSON && xhr.responseJSON.mensaje) {
+            mensaje = xhr.responseJSON.mensaje;
+        }
+        
+        mostrarEstado('error', mensaje);
+        }
+    });
+    }
+
+    function mostrarEstado(tipo, mensaje) {
+    uploadStatus.style.display = 'block';
+
+    if (tipo === 'loading') {
+        uploadStatus.className = 'upload-status alert alert-info d-flex align-items-center';
+        uploadStatus.innerHTML = `
+        <div class="spinner-border spinner-border-sm me-3" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <span>${mensaje}</span>
+        `;
+    } else if (tipo === 'success') {
+        uploadStatus.className = 'upload-status alert alert-success d-flex align-items-center';
+        uploadStatus.innerHTML = `
+        <i class="bi bi-check-circle-fill me-3 fs-4"></i>
+        <span>${mensaje}</span>
+        `;
+    } else if (tipo === 'error') {
+        uploadStatus.className = 'upload-status alert alert-danger d-flex align-items-center';
+        uploadStatus.innerHTML = `
+        <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+        <span>${mensaje}</span>
+        `;
+    }
+    }
+    });
+
 // --------------------------------------------
 // INICIALIZACIÓN
 // --------------------------------------------
