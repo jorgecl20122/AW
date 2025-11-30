@@ -16,7 +16,6 @@ function cargarUsuariosTabla() {
     });
 }
 
-// Cargar datos del usuario actual (sidebar)
 function cargarDatosUsuarioActual() {
     $.ajax({
         url: '/usuario/actual',
@@ -43,8 +42,15 @@ function cargarDatosUsuarioActual() {
                 $('#userAvatar').attr('src', generarAvatarIniciales(iniciales));
             }
         },
-        error: function(err) {
-            console.error('Error al cargar datos del usuario:', err);
+        error: function(xhr) {
+            // SILENCIAR error 401 (sin sesión) - es normal en setup/login
+            if (xhr.status === 401) {
+                console.log('ℹ️ Sin sesión activa');
+                return; // Salir sin mostrar error
+            }
+            
+            // Para otros errores, sí mostrarlos
+            console.error('Error al cargar datos del usuario:', xhr);
             if ($('#userRole').length) {
                 $('#userRole').text('Usuario');
             }
@@ -232,25 +238,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function enviarJSON(data) {
     $.ajax({
-        url: '/cargar-datos-json',
+        url: '/usuario/cargar-datos-json',
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: function(response) {
-        mostrarEstado('success', response.mensaje || 'Datos cargados exitosamente');
-        
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 2000);
+            mostrarEstado('success', response.mensaje || 'Datos cargados exitosamente');
         },
         error: function(xhr) {
-        let mensaje = 'Error al cargar los datos';
-        
-        if (xhr.responseJSON && xhr.responseJSON.mensaje) {
-            mensaje = xhr.responseJSON.mensaje;
-        }
-        
-        mostrarEstado('error', mensaje);
+            
+            let mensaje = 'Error al cargar los datos';
+            
+            if (xhr.responseJSON && xhr.responseJSON.mensaje) {
+                mensaje = xhr.responseJSON.mensaje;
+            } else if (xhr.responseText) {
+                mensaje = xhr.responseText;
+            }
+            
+            mostrarEstado('error', `${mensaje} (Status: ${xhr.status})`);
         }
     });
     }

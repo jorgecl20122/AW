@@ -4,9 +4,6 @@ const router = express.Router();
 const pool = require('../dataBase/conexion_db'); 
 const { validarDatosBBDD } = require('../utils/validarDatosBBDD');
 
-// ============================================
-// IMPORTAR MIDDLEWARES DE VALIDACIÓN
-// ============================================
 const {
     validarCorreoCorporativo,
     validarContraseñaSegura,
@@ -365,8 +362,15 @@ router.get('/vistaLista', (req, res) => {
     });
 });
 
-// Obtener datos del usuario actual (AJAX)
 router.get('/actual', (req, res) => {
+    // Si no hay sesión, devolver respuesta vacía en lugar de error
+    if (!req.session || !req.session.userId) {
+        return res.status(401).json({ 
+            mensaje: 'No hay sesión activa',
+            sinSesion: true 
+        });
+    }
+
     const query = `
         SELECT 
             u.id_usuario,
@@ -510,6 +514,7 @@ router.post('/cargar-datos-json', (req, res) => {
     });
   }
 
+
   // Verificar que la BD esté vacía antes de cargar
   const checkQuery = `
     SELECT 
@@ -519,9 +524,9 @@ router.post('/cargar-datos-json', (req, res) => {
 
   pool.query(checkQuery, (errCheck, resultCheck) => {
     if (errCheck) {
-      console.error('Error al verificar BD:', errCheck);
       return res.status(500).json({ mensaje: 'Error al verificar la base de datos' });
     }
+
 
     const stats = resultCheck[0];
     if (stats.total_concesionarios > 0 || stats.total_vehiculos > 0) {
@@ -533,7 +538,6 @@ router.post('/cargar-datos-json', (req, res) => {
     // Procesar la carga de datos
     cargarDatosJSON(datos, (err, resultado) => {
       if (err) {
-        console.error('Error al cargar JSON:', err);
         return res.status(500).json({ 
           mensaje: 'Error al cargar los datos: ' + err.message 
         });
@@ -572,16 +576,15 @@ function cargarDatosJSON(datos, callback) {
       datos.concesionarios.forEach((concesionario, index) => {
         // Insertar concesionario
         const queryConcesionario = `
-          INSERT INTO concesionarios (nombre, direccion, ciudad, telefono, email)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO concesionarios (nombre, ciudad, telefono, correo)
+          VALUES (?, ?, ?, ?)
         `;
 
         const valuesConcesionario = [
           concesionario.nombre,
-          concesionario.direccion || null,
           concesionario.ciudad || null,
           concesionario.telefono || null,
-          concesionario.email || null
+          concesionario.correo || null
         ];
 
         connection.query(queryConcesionario, valuesConcesionario, (errConc, resultConc) => {

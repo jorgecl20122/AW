@@ -2,6 +2,7 @@ const express = require("express");
 const session = require('express-session');
 const path = require("path");
 const app = express();
+const pool = require('./dataBase/conexion_db'); 
 
 const PORT = 3000;
 
@@ -21,12 +22,24 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views')); 
 
 // Middleware
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 app.get('/', (req, res) => {
-  res.render('PaginaInicial', { dbVacia: true }); // o true
+  const checkQuery = 'SELECT COUNT(*) as total FROM concesionarios';
+
+  pool.query(checkQuery, (err, results) => {
+    if (err) {
+      console.error('Error al verificar BD:', err);
+      return res.render('PaginaInicial', { dbVacia: true });
+    }
+
+    const dbVacia = results[0].total === 0;
+    
+    res.render('PaginaInicial', { dbVacia: dbVacia });
+  });
 });
 
 // Rutas para los módulos
