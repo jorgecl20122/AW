@@ -30,30 +30,28 @@ const upload = multer({
         cb(new Error('Solo se permiten imágenes'));
     }
 });
+
 function obtenerEstadoFlota(callback) {
-    // Obtener vehículos disponibles (estado NO activo)
-    pool.query(`SELECT COUNT(*) as disponibles FROM vehiculos WHERE estado != 'activo'`, (err, vehiculosDisponibles) => {
+    const query = `
+        SELECT 
+            SUM(CASE WHEN estado = 'activo' THEN 1 ELSE 0 END) as enUso,
+            SUM(CASE WHEN estado != 'activo' THEN 1 ELSE 0 END) as disponibles,
+            COUNT(*) as total
+        FROM vehiculos
+    `;
+    
+    pool.query(query, (err, results) => {
         if (err) {
-            console.error('Error al obtener vehículos disponibles:', err);
-            return callback(null); // Retorna null si hay error
+            console.error('Error al obtener estado de flota:', err);
+            return callback(null);
         }
         
-        // Obtener vehículos en uso (estado activo)
-        pool.query(`SELECT COUNT(*) as en_uso FROM vehiculos WHERE estado = 'activo'`, (err, vehiculosEnUso) => {
-            if (err) {
-                console.error('Error al obtener vehículos en uso:', err);
-                return callback(null); // Retorna null si hay error
-            }
-            
-            const disponibles = vehiculosDisponibles[0].disponibles || 0;
-            const enUso = vehiculosEnUso[0].en_uso || 0;
-            const total = disponibles + enUso;
-            
-            callback({
-                disponibles: disponibles,
-                en_uso: enUso,
-                total: total
-            });
+        const result = results[0] || { enUso: 0, disponibles: 0, total: 0 };
+        
+        callback({
+            disponibles: parseInt(result.disponibles) || 0,
+            enUso: parseInt(result.enUso) || 0,
+            total: parseInt(result.total) || 0
         });
     });
 }
@@ -398,10 +396,23 @@ router.get('/VistaVehiculos', (req, res) => {
     pool.query(query, (error, vehiculos) => {
         if (error) {
             console.error('Error al obtener vehículos:', error);
-            return res.render('vista_vehiculos_admin', { usuario, vehiculos: [], mensaje });
+            return res.render('vista_vehiculos_admin', { 
+                usuario, 
+                vehiculos: [], 
+                mensaje,
+                estadoFlota: null
+            });
         }
         
-        res.render('vista_vehiculos_admin', { usuario, vehiculos, mensaje });
+        // Obtener estado de la flota
+        obtenerEstadoFlota((estadoFlota) => {
+            res.render('vista_vehiculos_admin', { 
+                usuario, 
+                vehiculos, 
+                mensaje,
+                estadoFlota: estadoFlota
+            });
+        });
     });
 });
 
@@ -441,10 +452,13 @@ router.post('/vehiculos/crear', upload.single('imagen'), (req, res) => {
         `;
         
         pool.query(query, (error, vehiculos) => {
-            res.render('vista_vehiculos_admin', {
-                usuario,
-                vehiculos: vehiculos || [],
-                mensaje: { tipo, texto }
+            obtenerEstadoFlota((estadoFlota) => {
+                res.render('vista_vehiculos_admin', {
+                    usuario,
+                    vehiculos: vehiculos || [],
+                    mensaje: { tipo, texto },
+                    estadoFlota: estadoFlota
+                });
             });
         });
     };
@@ -538,10 +552,13 @@ router.post('/vehiculos/actualizar/:id', upload.single('imagen'), (req, res) => 
         `;
         
         pool.query(query, (error, vehiculos) => {
-            res.render('vista_vehiculos_admin', {
-                usuario,
-                vehiculos: vehiculos || [],
-                mensaje: { tipo, texto }
+            obtenerEstadoFlota((estadoFlota) => {
+                res.render('vista_vehiculos_admin', {
+                    usuario,
+                    vehiculos: vehiculos || [],
+                    mensaje: { tipo, texto },
+                    estadoFlota: estadoFlota
+                });
             });
         });
     };
@@ -610,10 +627,13 @@ router.post('/vehiculos/eliminar/:id', (req, res) => {
         `;
         
         pool.query(query, (error, vehiculos) => {
-            res.render('vista_vehiculos_admin', {
-                usuario,
-                vehiculos: vehiculos || [],
-                mensaje: { tipo, texto }
+            obtenerEstadoFlota((estadoFlota) => {
+                res.render('vista_vehiculos_admin', {
+                    usuario,
+                    vehiculos: vehiculos || [],
+                    mensaje: { tipo, texto },
+                    estadoFlota: estadoFlota
+                });
             });
         });
     };
@@ -637,7 +657,6 @@ router.post('/vehiculos/eliminar/:id', (req, res) => {
 //----------------------------
 // RUTAS DE ESTADÍSTICAS
 //----------------------------
-
 // Obtener vehículos más usados por concesionario
 router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
     const query = `
