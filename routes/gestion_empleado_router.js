@@ -2,27 +2,47 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../dataBase/conexion_db'); 
 
-// Middleware para finalizar reservas vencidas automáticamente
 function finalizarReservasVencidasAuto(callback) {
-  const query = `
-    UPDATE reservas 
-    SET estado = 'finalizada'
-    WHERE estado = 'activa' AND fecha_fin < NOW()
+  const selectQuery = `
+    SELECT id_reserva 
+    FROM reservas 
+    WHERE estado = 'activa' AND fecha_fin <= NOW()
   `;
 
-  pool.query(query, (err, result) => {
-    if (err) {
-      console.error('Error al finalizar reservas vencidas:', err);
-      return callback(err, null);
+  pool.query(selectQuery, (errSelect, reservasVencidas) => {
+    if (errSelect) {
+      console.error('Error al buscar reservas vencidas:', errSelect);
+      return callback(errSelect, null);
     }
-    
-    if (result.affectedRows > 0) {
-      console.log(` ${result.affectedRows} reservas finalizadas automáticamente`);
+
+    if (reservasVencidas.length === 0) {
+      return callback(null, { affectedRows: 0, ids: [] });
     }
-    
-    callback(null, result.affectedRows);
+
+    const idsFinalizados = reservasVencidas.map(r => r.id_reserva);
+
+    const updateQuery = `
+      UPDATE reservas 
+      SET estado = 'finalizada'
+      WHERE id_reserva IN (${idsFinalizados.join(',')})
+    `;
+
+    pool.query(updateQuery, (errUpdate, result) => {
+      if (errUpdate) {
+        console.error('Error al finalizar reservas vencidas:', errUpdate);
+        return callback(errUpdate, null);
+      }
+
+      console.log(`${result.affectedRows} reservas finalizadas automáticamente`);
+
+      callback(null, {
+        affectedRows: result.affectedRows,
+        ids: idsFinalizados
+      });
+    });
   });
 }
+
 
 
 // ========== CREAR RESERVA ==========
@@ -168,7 +188,6 @@ router.get('/vista_empleado', (req, res) => {
 });
 
 
-// ========== MIS RESERVAS ==========
 router.get('/mis_reservas', (req, res) => {
 
   if (!req.session || !req.session.userId || req.session.userRole !== 'empleado') {
@@ -178,41 +197,48 @@ router.get('/mis_reservas', (req, res) => {
   const id_usuario = req.session.userId;
   const usuario = req.session.usuario;
 
-  const query = `
-    SELECT 
-      r.id_reserva AS id,
-      r.fecha_inicio,
-      r.fecha_fin,
-      r.estado,
-      v.marca AS vehiculo_marca,
-      v.modelo AS vehiculo_modelo,
-      v.matricula AS vehiculo_matricula
-    FROM reservas r
-    INNER JOIN vehiculos v ON r.id_vehiculo = v.id_vehiculo
-    WHERE r.id_usuario = ? 
-      AND r.estado IN ('activa', 'finalizada')
-    ORDER BY 
-      CASE WHEN r.estado = 'activa' THEN 1 ELSE 2 END,
-      r.fecha_inicio DESC
-  `;
-
-  pool.query(query, [id_usuario], (err, reservas) => {
-
+  // Primero, finalizar reservas vencidas
+  finalizarReservasVencidasAuto((err) => {
     if (err) {
-      console.error("Error al obtener reservas:", err);
-      return res.render('Reservas', { 
-        usuario,
-        reservas: [],
-        error: 'Error al obtener reservas'
-      });
+      console.error("Error al finalizar reservas vencidas:", err);
     }
 
-    res.render('Reservas', { 
-      usuario,
-      reservas: reservas || [],
-      error: null
-    });
-  }); 
+    // Después, traer las reservas
+    const query = `
+      SELECT 
+        r.id_reserva AS id,
+        r.fecha_inicio,
+        r.fecha_fin,
+        r.estado,
+        v.marca AS vehiculo_marca,
+        v.modelo AS vehiculo_modelo,
+        v.matricula AS vehiculo_matricula
+      FROM reservas r
+      INNER JOIN vehiculos v ON r.id_vehiculo = v.id_vehiculo
+      WHERE r.id_usuario = ? 
+        AND r.estado IN ('activa', 'finalizada')
+      ORDER BY 
+        CASE WHEN r.estado = 'activa' THEN 1 ELSE 2 END,
+        r.fecha_inicio DESC
+    `;
+
+    pool.query(query, [id_usuario], (err, reservas) => {
+      if (err) {
+        console.error("Error al obtener reservas:", err);
+        return res.render('Reservas', { 
+          usuario,
+          reservas: [],
+          error: 'Error al obtener reservas'
+        });
+      }
+
+      res.render('Reservas', { 
+        usuario,
+        reservas: reservas || [],
+        error: null
+      });
+    }); 
+  });
 });
 
 
@@ -225,14 +251,15 @@ router.post('/finalizar_reservas_vencidas', (req, res) => {
     });
   }
 
-  finalizarReservasVencidasAuto((err, affectedRows) => {
+  finalizarReservasVencidasAuto((err, resultado) => {
     if (err) {
       return res.status(500).json({ mensaje: 'Error al actualizar reservas' });
     }
 
     res.json({ 
       mensaje: 'Reservas actualizadas',
-      reservas_finalizadas: affectedRows 
+      reservas_finalizadas: resultado.affectedRows,
+      ids_finalizados: resultado.ids  // <-- Ahora devuelve los IDs
     });
   });
 });

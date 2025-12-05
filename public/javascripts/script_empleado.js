@@ -130,12 +130,14 @@ $(document).ready(function() {
         // Mostrar mensaje de éxito
         mostrarAlerta(response.mensaje || 'Reserva creada exitosamente', 'success');
 
-        // Eliminar el vehículo de la lista
+        // Eliminar solo el card del vehículo reservado
         $(`#vehiculo-${vehiculoId}`).fadeOut(400, function() {
           $(this).remove();
 
-          // Si no quedan vehículos, mostrar mensaje
-          if ($('#listaReservas tbody tr:visible').length === 0) {
+          // Verificar si quedan cards de vehículos (buscar por la clase col)
+          const cardsRestantes = $('#listaReservas .row .col-12').length;
+          
+          if (cardsRestantes === 0) {
             $('#listaReservas').html(
               '<div class="alert alert-info text-center">' +
               '<i class="bi bi-info-circle-fill me-2"></i>' +
@@ -186,8 +188,10 @@ function cancelarReserva(reservaId) {
       $(`#reserva-${reservaId}`).fadeOut(400, function() {
         $(this).remove();
 
-        // Si no quedan reservas visibles, mostrar mensaje
-        if ($('#listaReservas tbody tr:visible').length === 0) {
+        // Verificar si quedan reservas (ajustar selector según tu estructura)
+        const reservasRestantes = $('#listaReservas .card').length;
+        
+        if (reservasRestantes === 0) {
           $('#listaReservas').html('<div class="alert alert-info text-center">No tienes reservas activas.</div>');
         }
       });
@@ -235,19 +239,35 @@ function mostrarAlerta(mensaje, tipo) {
   }, 5000);
 }
 
-// Función para finalizar reservas vencidas automáticamente
 function finalizarReservasVencidas() {
   $.ajax({
     url: '/empleado/finalizar_reservas_vencidas',
     method: 'POST',
     success: function(response) {
-      if (response.reservas_finalizadas > 0) {
-        console.log(`${response.reservas_finalizadas} reservas finalizadas automáticamente`);
-        
-        // Recargar las listas para mostrar los cambios
-        cargarVehiculosParaReserva();
-        cargarReservas();
-      }
+
+      if (!response.ids_finalizados || response.ids_finalizados.length === 0) return;
+
+      response.ids_finalizados.forEach(id => {
+        const fila = $(`#reserva-${id}`);
+        const estadoBadge = fila.find('td span.badge').first();
+
+        estadoBadge
+          .removeClass('bg-success')
+          .addClass('bg-danger')
+          .text('Finalizada');
+
+        fila.find('.btn-cancelar-reserva').fadeOut(200, function() {
+          $(this).remove();
+          fila.find('td:last').html('<span class="text-muted">-</span>');
+        });
+
+        fila.addClass('table-secondary').fadeOut(200).fadeIn(200);
+      });
+
+      mostrarAlerta(
+        `${response.reservas_finalizadas} reserva${response.reservas_finalizadas > 1 ? 's' : ''} finalizada${response.reservas_finalizadas > 1 ? 's' : ''} automáticamente`,
+        'info'
+      );
     },
     error: function(err) {
       console.error('Error al finalizar reservas vencidas:', err);

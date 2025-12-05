@@ -137,39 +137,45 @@ $(document).ready(function () {
     // VER VEHÍCULOS DE UN CONCESIONARIO
     // --------------------------------------------
 
-    $(document).on('click', '.btn-ver-vehiculos', function() {
-        const id = $(this).data('id'); 
-        
-        if (!id) {
-            alert('No se ha encontrado el ID del concesionario');
-            return;
+   $(document).on('click', '.btn-ver-vehiculos', function(e) {
+    e.preventDefault(); // Prevenir comportamiento por defecto
+    
+    const id = $(this).data('id'); 
+    
+    if (!id) {
+        alert('No se ha encontrado el ID del concesionario');
+        return;
+    }
+
+    // Mostrar mensaje de carga
+    $('#listaVehiculosConcesionario').html('<p class="text-center"><i class="bi bi-hourglass-split"></i> Cargando vehículos...</p>');
+    
+    // Mostrar el modal PRIMERO (usando jQuery/Bootstrap)
+    $('#modalVehiculosConcesionario').modal('show');
+    
+    // Luego cargar los datos
+    $.ajax({
+        url: `/admin/lista_vehiculos/${id}`,
+        method: 'GET',
+        success: function(html) {
+            $('#listaVehiculosConcesionario').html(html);
+        },
+        error: function(err) {
+            console.error(err);
+            $('#listaVehiculosConcesionario').html('<p class="text-danger text-center">Error al cargar los vehículos.</p>');
         }
-
-        // Mostrar mensaje de carga
-        $('#listaVehiculosConcesionario').html('<p class="text-center"><i class="bi bi-hourglass-split"></i> Cargando vehículos...</p>');
-        
-        $.ajax({
-            url: `/admin/lista_vehiculos/${id}`,
-            method: 'GET',
-            success: function(html) {
-                $('#listaVehiculosConcesionario').html(html);
-            },
-            error: function(err) {
-                console.error(err);
-                $('#listaVehiculosConcesionario').html('<p class="text-danger text-center">Error al cargar los vehículos.</p>');
-            }
-        });
-
-        // Mostrar el modal
-        const modal = new bootstrap.Modal(document.getElementById('modalVehiculosConcesionario'));
-        modal.show();
     });
+});
 
 // ============================================
 // SECCIÓN: ESTADÍSTICAS (CARGAR CON AJAX)
 // ============================================
 
     function cargarReservasPorConcesionario() {
+        if ($('#vehiculos-mas-usados').length === 0) {
+        console.log('Sección de vehículos más usados no encontrada en esta página');
+        return;
+    }
         $('#tabla-concesionarios').html(`
             <div class="text-center py-4">
                 <div class="spinner-border text-primary" role="status">
@@ -193,6 +199,10 @@ $(document).ready(function () {
     }
 
     function cargarVehiculosMasUsados() {
+        if ($('#tabla-concesionarios').length === 0) {
+        console.log('Tabla de concesionarios no encontrada en esta página');
+        return;
+    }
         $('#vehiculos-mas-usados').html('<p class="text-center py-4"><i class="bi bi-hourglass-split"></i> Cargando vehículos destacados...</p>');
 
         $.ajax({
@@ -210,6 +220,11 @@ $(document).ready(function () {
 
     // Cargar estadísticas de la flota
     function cargarEstadoFlota() {
+        // Verificar si los elementos existen
+    if ($('#disponibles-count').length === 0 || $('#enuso-count').length === 0) {
+        console.log('Elementos de estado de flota no encontrados en esta página');
+        return;
+    }
         $.ajax({
             url: '/vehiculo/estado_flota',
             method: 'GET',
@@ -232,11 +247,123 @@ $(document).ready(function () {
         });
     }
 
+    
+function cargarReservasFranjas() {
+     // Verificar si el canvas existe en la página
+    const canvasElement = document.getElementById('graficoFranjas');
+    if (!canvasElement) {
+        console.log('Canvas graficoFranjas no encontrado en esta página');
+        return; // Salir si no existe
+    }
+
+    $.ajax({
+        url: '/admin/estadisticas/reservas-franjas',
+        method: 'GET',
+        success: function(franjas) {
+            console.log('Datos recibidos:', franjas); // Para debug
+
+            // Ocultar spinner y mostrar canvas
+            $('#spinner-franjas').hide();
+            $('#graficoFranjas').show();
+
+            // Agrupar datos en franjas de 2 horas
+            const franjasAgrupadas = {};
+            for (let i = 0; i < 24; i += 2) {
+                franjasAgrupadas[i] = 0;
+            }
+
+            // Sumar reservas de cada hora a su franja correspondiente
+            franjas.forEach(f => {
+                const hora = parseInt(f.label.split(':')[0]);
+                const franjaInicio = Math.floor(hora / 2) * 2;
+                if (franjasAgrupadas[franjaInicio] !== undefined) {
+                    franjasAgrupadas[franjaInicio] += f.total;
+                }
+            });
+
+            // Preparar etiquetas y datos
+            const labels = [];
+            const data = [];
+            for (let i = 0; i < 24; i += 2) {
+                labels.push(`${i.toString().padStart(2,'0')}:00-${(i+2).toString().padStart(2,'0')}:00`);
+                data.push(franjasAgrupadas[i]);
+            }
+
+            console.log('Labels:', labels); // Para debug
+            console.log('Data:', data); // Para debug
+
+            // Destruir gráfico anterior si existe
+            const canvasElement = document.getElementById('graficoFranjas');
+            if (window.chartFranjas) {
+                window.chartFranjas.destroy();
+            }
+
+            // Crear gráfico
+            const ctx = canvasElement.getContext('2d');
+            window.chartFranjas = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Reservas',
+                        data: data,
+                        backgroundColor: '#66a2fcff',
+                        borderColor: '#66a2fcff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Reservas: ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Franjas Horarias'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Número de Reservas'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        },
+        error: function(err) {
+            console.error('Error al cargar reservas por franjas:', err);
+            $('#spinner-franjas').html('<p class="text-danger">Error al cargar estadísticas.</p>');
+        }
+    });
+}
+
 
     // Cargar estadísticas al iniciar la página
     cargarReservasPorConcesionario();
     cargarVehiculosMasUsados();
     cargarEstadoFlota();
+    cargarReservasFranjas();
 
 // ============================================
 // SECCIÓN: BUSCADOR DE VEHÍCULOS (FILTRO CLIENTE)
@@ -289,5 +416,4 @@ $(document).ready(function () {
             $('#mensajeNoResultados').remove();
         }
     });
-
 });

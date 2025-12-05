@@ -398,7 +398,6 @@ router.get('/actual', (req, res) => {
         res.json(results[0]);
     });
 });
-
 // Actualizar usuario (POST tradicional, sin AJAX)
 router.post('/editar', (req, res) => {
     const usuario = req.session.usuario;
@@ -428,12 +427,15 @@ router.post('/editar', (req, res) => {
         
         pool.query(queryUsuarios, (errorUsuarios, usuarios) => {
             pool.query(queryConcesionarios, (errorConcesionarios, concesionarios) => {
-                return res.render('ListadoUsuarios', { 
-                    usuario, 
-                    usuarios: usuarios || [],
-                    concesionarios: concesionarios || [],
-                    error: 'Datos incompletos',
-                    success: null
+                obtenerEstadoFlota((estadoFlota) => {
+                    return res.render('ListadoUsuarios', { 
+                        usuario, 
+                        usuarios: usuarios || [],
+                        concesionarios: concesionarios || [],
+                        estadoFlota: estadoFlota,
+                        error: 'Datos incompletos',
+                        success: null
+                    });
                 });
             });
         });
@@ -470,33 +472,38 @@ router.post('/editar', (req, res) => {
         
         pool.query(queryUsuarios, (errorUsuarios, usuarios) => {
             pool.query(queryConcesionarios, (errorConcesionarios, concesionarios) => {
-                if (err) {
-                    console.error('Error al actualizar usuario:', err);
-                    return res.render('ListadoUsuarios', { 
+                obtenerEstadoFlota((estadoFlota) => {
+                    if (err) {
+                        console.error('Error al actualizar usuario:', err);
+                        return res.render('ListadoUsuarios', { 
+                            usuario, 
+                            usuarios: usuarios || [],
+                            concesionarios: concesionarios || [],
+                            estadoFlota: estadoFlota,
+                            error: 'Error al actualizar usuario',
+                            success: null
+                        });
+                    }
+
+                    if (results.affectedRows === 0) {
+                        return res.render('ListadoUsuarios', { 
+                            usuario, 
+                            usuarios: usuarios || [],
+                            concesionarios: concesionarios || [],
+                            estadoFlota: estadoFlota,
+                            error: 'Usuario no encontrado',
+                            success: null
+                        });
+                    }
+
+                    res.render('ListadoUsuarios', { 
                         usuario, 
                         usuarios: usuarios || [],
                         concesionarios: concesionarios || [],
-                        error: 'Error al actualizar usuario',
-                        success: null
+                        estadoFlota: estadoFlota,
+                        error: null,
+                        success: 'Usuario actualizado correctamente'
                     });
-                }
-
-                if (results.affectedRows === 0) {
-                    return res.render('ListadoUsuarios', { 
-                        usuario, 
-                        usuarios: usuarios || [],
-                        concesionarios: concesionarios || [],
-                        error: 'Usuario no encontrado',
-                        success: null
-                    });
-                }
-
-                res.render('ListadoUsuarios', { 
-                    usuario, 
-                    usuarios: usuarios || [],
-                    concesionarios: concesionarios || [],
-                    error: null,
-                    success: 'Usuario actualizado correctamente'
                 });
             });
         });

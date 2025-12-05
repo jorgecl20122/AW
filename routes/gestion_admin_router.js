@@ -32,26 +32,29 @@ const upload = multer({
 });
 
 function obtenerEstadoFlota(callback) {
-    const query = `
-        SELECT 
-            SUM(CASE WHEN estado = 'activo' THEN 1 ELSE 0 END) as enUso,
-            SUM(CASE WHEN estado != 'activo' THEN 1 ELSE 0 END) as disponibles,
-            COUNT(*) as total
-        FROM vehiculos
-    `;
-    
-    pool.query(query, (err, results) => {
+    // Obtener vehículos disponibles (estado NO activo)
+    pool.query(`SELECT COUNT(*) as disponibles FROM vehiculos WHERE estado != 'activo'`, (err, vehiculosDisponibles) => {
         if (err) {
-            console.error('Error al obtener estado de flota:', err);
-            return callback(null);
+            console.error('Error al obtener vehículos disponibles:', err);
+            return callback(null); // Retorna null si hay error
         }
         
-        const result = results[0] || { enUso: 0, disponibles: 0, total: 0 };
-        
-        callback({
-            disponibles: parseInt(result.disponibles) || 0,
-            enUso: parseInt(result.enUso) || 0,
-            total: parseInt(result.total) || 0
+        // Obtener vehículos en uso (estado activo)
+        pool.query(`SELECT COUNT(*) as en_uso FROM vehiculos WHERE estado = 'activo'`, (err, vehiculosEnUso) => {
+            if (err) {
+                console.error('Error al obtener vehículos en uso:', err);
+                return callback(null); // Retorna null si hay error
+            }
+            
+            const disponibles = vehiculosDisponibles[0].disponibles || 0;
+            const enUso = vehiculosEnUso[0].en_uso || 0;
+            const total = disponibles + enUso;
+            
+            callback({
+                disponibles: disponibles,
+                en_uso: enUso,
+                total: total
+            });
         });
     });
 }
@@ -268,7 +271,7 @@ router.post('/concesionarios/actualizar/:id', (req, res) => {
     });
 });
 
-// ✅ SIN AJAX - Eliminar concesionario
+// SIN AJAX - Eliminar concesionario
 router.post('/concesionarios/eliminar/:id', (req, res) => {
     const usuario = req.session.usuario;
     const id = req.params.id;
@@ -416,7 +419,7 @@ router.get('/VistaVehiculos', (req, res) => {
     });
 });
 
-// ✅ CREAR vehículo (POST tradicional con multer)
+// CREAR vehículo (POST tradicional con multer)
 router.post('/vehiculos/crear', upload.single('imagen'), (req, res) => {
     const usuario = req.session.usuario;
     
@@ -729,5 +732,36 @@ router.get('/estado_flota', function(req, res) {
     });
 });
 
+// Obtener reservas por franjas horarias
+router.get('/estadisticas/reservas-franjas', (req, res) => {
+  if (!req.session || !req.session.userId || req.session.userRole !== 'administrador') {
+    return res.status(401).json({ mensaje: 'Sesión no iniciada' });
+  }
+
+  const query = `
+    SELECT 
+      HOUR(fecha_inicio) AS hora,
+      COUNT(*) AS total
+    FROM reservas
+    GROUP BY HOUR(fecha_inicio)
+    ORDER BY hora
+  `;
+
+  pool.query(query, (err, result) => {
+    if (err) {
+      console.error('Error al obtener reservas por franjas:', err);
+      return res.status(500).json([]);
+    }
+
+    // Transformar a franjas legibles
+    const franjas = result.map(r => {
+      const start = r.hora.toString().padStart(2, '0') + ':00';
+      const end = r.hora.toString().padStart(2, '0') + ':59';
+      return { label: `${start}-${end}`, total: r.total };
+    });
+
+    res.json(franjas);
+  });
+});
 
 module.exports = router;
