@@ -34,9 +34,15 @@ function cargarDatosUsuarioActual() {
                 $('#userEmail').text(usuario.correo);
             }
             
+            // Actualizar nombre completo
+            if ($('#userName').length) {
+                $('#userName').text(usuario.nombre_completo);
+            }
+            
             // Actualizar foto de perfil
-            if (usuario.foto_perfil) {
+            if (usuario.foto_perfil && usuario.foto_perfil !== '/img/default-avatar.png') {
                 $('#userAvatar').attr('src', usuario.foto_perfil);
+                $('.user-avatar').attr('src', usuario.foto_perfil);
             } else {
                 const iniciales = obtenerIniciales(usuario.nombre_completo);
                 $('#userAvatar').attr('src', generarAvatarIniciales(iniciales));
@@ -59,6 +65,109 @@ function cargarDatosUsuarioActual() {
             }
         }
     });
+}
+
+// --------------------------------------------
+// CAMBIAR FOTO DE PERFIL
+// --------------------------------------------
+
+// Guardar nueva foto
+$(document).on('click', '#btnGuardarFoto', function() {
+    console.log('🔵 Botón clickeado');
+    
+    const formData = new FormData($('#formCambiarFoto')[0]);
+    
+    if (!$('#inputFoto')[0].files.length) {
+        console.log('🔴 No hay archivo seleccionado');
+        mostrarErrorFoto('Por favor selecciona una imagen');
+        return;
+    }
+    
+    console.log('🟢 Archivo seleccionado:', $('#inputFoto')[0].files[0].name);
+    console.log('🟢 Enviando petición a /usuario/cambiar-foto');
+    
+    // Mostrar spinner
+    $('#btnTexto').addClass('d-none');
+    $('#btnSpinner').removeClass('d-none');
+    $(this).prop('disabled', true);
+    
+    $.ajax({
+        url: '/usuario/cambiar-foto',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            console.log('✅ Respuesta exitosa:', response);
+            mostrarExitoFoto('Foto de perfil actualizada correctamente');
+            
+            $('#userAvatar').attr('src', response.avatar);
+            $('.user-avatar').attr('src', response.avatar);
+            
+            setTimeout(function() {
+                $('#modalCambiarFoto').modal('hide');
+                resetearModalFoto();
+            }, 1500);
+        },
+        error: function(xhr) {
+            console.error('❌ Error en la petición:', xhr);
+            console.error('❌ Status:', xhr.status);
+            console.error('❌ Response:', xhr.responseText);
+            
+            let mensaje = 'Error al actualizar la foto de perfil';
+            
+            if (xhr.responseJSON && xhr.responseJSON.mensaje) {
+                mensaje = xhr.responseJSON.mensaje;
+            } else if (xhr.status === 413) {
+                mensaje = 'El archivo es demasiado grande';
+            } else if (xhr.status === 401) {
+                mensaje = 'Sesión expirada. Por favor inicia sesión nuevamente';
+                setTimeout(function() {
+                    window.location.href = '/usuario/login';
+                }, 2000);
+            }
+            
+            mostrarErrorFoto(mensaje);
+        },
+        complete: function() {
+            $('#btnTexto').removeClass('d-none');
+            $('#btnSpinner').addClass('d-none');
+            $('#btnGuardarFoto').prop('disabled', false);
+        }
+    });
+});
+
+// Resetear modal al cerrarlo
+$(document).on('hidden.bs.modal', '#modalCambiarFoto', function() {
+    resetearModalFoto();
+});
+
+// Al abrir el modal, cargar el avatar actual en el preview
+$(document).on('show.bs.modal', '#modalCambiarFoto', function() {
+    const avatarActual = $('#userAvatar').attr('src');
+    $('#previewAvatar').attr('src', avatarActual);
+});
+
+// Funciones auxiliares para el modal de foto
+function mostrarErrorFoto(mensaje) {
+    $('#mensajeError').text(mensaje).removeClass('d-none');
+    $('#mensajeExito').addClass('d-none');
+}
+
+function mostrarExitoFoto(mensaje) {
+    $('#mensajeExito').text(mensaje).removeClass('d-none');
+    $('#mensajeError').addClass('d-none');
+}
+
+function ocultarMensajesFoto() {
+    $('#mensajeError').addClass('d-none');
+    $('#mensajeExito').addClass('d-none');
+}
+
+function resetearModalFoto() {
+    $('#formCambiarFoto')[0].reset();
+    $('#previewAvatar').attr('src', $('#userAvatar').attr('src'));
+    ocultarMensajesFoto();
 }
 
 // --------------------------------------------

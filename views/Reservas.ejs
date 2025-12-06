@@ -115,7 +115,63 @@
     </main>
 </div>
 
+<footer class="footer mt-auto">
+  <div class="footer-content d-flex align-items-center justify-content-between p-3 flex-wrap">
+    <!-- nombre -->
+    <div class="footer-brand d-flex align-items-center mb-2 mb-md-0">
+      <div>
+        <h6 class="mb-0 fw-bold footer-title">EcoFlota</h6>
+        <small class="text-muted fw-bold footer-subtitle"><em>Gestión Sostenible de Flotas</em></small>
+      </div>
+    </div>
+    
+    <!-- Copyright -->
+    <div class="footer-center text-center mb-2 mb-md-0">
+      <small class="text-muted"><strong>© 2024 EcoFlota. Todos los derechos reservados.</strong></small>
+    </div>
+    
+    <!-- Enlaces -->
+    <div class="footer-links text-end">
+      <small>
+        <a href="#" class="footer-link me-3"><strong>Privacidad</strong></a>
+        <a href="#" class="footer-link me-3"><strong>Términos</strong></a>
+        <a href="#" class="footer-link"><strong>Contacto</strong></a>
+      </small>
+    </div>
+  </div>
+</footer>
+
+
 <!--MODALES-->
+
+  <!-- Modal para cambiar foto de perfil -->
+<div class="modal fade" id="modalCambiarFoto" tabindex="-1" aria-labelledby="modalCambiarFotoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCambiarFotoLabel">Cambiar Foto de Perfil</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formCambiarFoto" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="inputFoto" class="form-label">Seleccionar nueva foto</label>
+            <input type="file" class="form-control" id="inputFoto" name="foto_perfil" accept="image/*" required>
+            <div class="form-text">Formatos permitidos: JPG, PNG, GIF (máx. 5MB)</div>
+          </div>
+          
+          <div id="mensajeError" class="alert alert-danger d-none" role="alert"></div>
+          <div id="mensajeExito" class="alert alert-success d-none" role="alert"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarFoto">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
     <!-- Modal de Configuración de Accesibilidad -->
 <div class="modal fade" id="configuradorModal" tabindex="-1" aria-labelledby="configuradorLabel">
   <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">

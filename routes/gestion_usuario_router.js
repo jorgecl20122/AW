@@ -12,6 +12,64 @@ const {
 } = require('../public/javascripts/validaciones');
 
 // ============================================
+// CONFIGURACIÓN DE MULTER PARA SUBIDA DE FOTOS
+// ============================================
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configuración de almacenamiento
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        const uploadPath = path.join(__dirname, '../public/img/usuarios');
+        
+        // Crear directorio si no existe
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        
+        cb(null, uploadPath);
+    },
+    filename: function(req, file, cb) {
+        // Generar nombre único: userId_timestamp.ext
+        const uniqueName = `user_${req.session.userId}_${Date.now()}${path.extname(file.originalname)}`;
+        cb(null, uniqueName);
+    }
+});
+
+// Filtro para validar tipos de archivo
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (extname && mimetype) {
+        cb(null, true);
+    } else {
+        cb(new Error('Solo se permiten imágenes (JPG, PNG, GIF, WEBP)'));
+    }
+};
+
+// Configuración de multer
+const upload = multer({
+    storage: storage,
+    limits: { 
+        fileSize: 5 * 1024 * 1024 // 5MB máximo
+    },
+    fileFilter: fileFilter
+});
+
+// ============================================
+// MIDDLEWARE DE AUTENTICACIÓN
+// ============================================
+function verificarAutenticacion(req, res, next) {
+    if (!req.session || !req.session.userId) {
+        return res.status(401).json({ mensaje: 'No autorizado. Por favor inicia sesión.' });
+    }
+    next();
+}
+
+// ============================================
 // FUNCIÓN AUXILIAR
 // ============================================
 function extraerConcesionarios(callback) {
@@ -296,6 +354,7 @@ router.get('/lista_usuarios', (req, res) => {
         res.json(results);
     });
 });
+
 // Vista de listado de usuarios (renderiza con datos)
 router.get('/vistaLista', (req, res) => {
     const usuario = req.session.usuario;
@@ -362,8 +421,8 @@ router.get('/vistaLista', (req, res) => {
     });
 });
 
+// Obtener usuario actual
 router.get('/actual', (req, res) => {
-    // Si no hay sesión, devolver respuesta vacía en lugar de error
     if (!req.session || !req.session.userId) {
         return res.status(401).json({ 
             mensaje: 'No hay sesión activa',
@@ -378,6 +437,7 @@ router.get('/actual', (req, res) => {
             u.correo,
             u.telefono,
             u.rol,
+            u.avatar,
             c.nombre AS concesionario,
             u.id_concesionario AS concesionario_id
         FROM usuarios u
@@ -398,6 +458,45 @@ router.get('/actual', (req, res) => {
         res.json(results[0]);
     });
 });
+
+// ============================================
+// RUTA: CAMBIAR FOTO DE PERFIL
+// ============================================
+router.post('/cambiar-foto', verificarAutenticacion, upload.single('foto_perfil'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ mensaje: 'No se subió ninguna imagen' });
+    }
+    
+    const userId = req.session.userId;
+    const fotoPath = `/img/usuarios/${req.file.filename}`;
+    
+    // Primero obtener la foto anterior para actualizarla
+    const queryGetOldPhoto = 'SELECT avatar FROM usuarios WHERE id_usuario = ?';
+    
+    pool.query(queryGetOldPhoto, [userId], (error, results) => {
+        if (error) {
+            console.error('Error al obtener foto anterior:', error);
+            return res.status(500).json({ mensaje: 'Error al procesar la solicitud' });
+        }
+        
+        // Actualizar la nueva foto en la base de datos
+        const queryUpdate = 'UPDATE usuarios SET avatar = ? WHERE id_usuario = ?';
+        
+        pool.query(queryUpdate, [fotoPath, userId], (error, results) => {
+            if (error) {
+                console.error(' Error al actualizar foto de perfil:', error);
+                
+                return res.status(500).json({ mensaje: 'Error al actualizar la foto de perfil en la base de datos' });
+            }
+            
+            res.json({
+                mensaje: 'Foto de perfil actualizada correctamente',
+                avatar: fotoPath
+            });
+        });
+    });
+});
+
 // Actualizar usuario (POST tradicional, sin AJAX)
 router.post('/editar', (req, res) => {
     const usuario = req.session.usuario;

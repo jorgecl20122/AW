@@ -226,7 +226,7 @@ $(document).ready(function () {
         return;
     }
         $.ajax({
-            url: '/vehiculo/estado_flota',
+            url: '/admin/estado_flota',
             method: 'GET',
             success: function(data) {
                 console.log('Estado de la flota:', data);
