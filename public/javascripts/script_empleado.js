@@ -2,8 +2,15 @@
 //          CONFIGURACIÓN INICIAL DEL MODAL DE RESERVA 
 // ===============================================================
 
+// Configuración del modal de reserva
 document.addEventListener('DOMContentLoaded', function() {
   const modalReserva = document.getElementById('modalReserva');
+  
+  // Solo configurar el modal si existe en la página
+  if (!modalReserva) {
+    console.log('Modal de reserva no encontrado - probablemente estás en otra página');
+    return;
+  }
 
   modalReserva.addEventListener('show.bs.modal', function(event) {
     const button = event.relatedTarget;
@@ -36,24 +43,29 @@ document.addEventListener('DOMContentLoaded', function() {
     calcularDuracion();
   });
 
-  //para recalcular duración cuando cambia 
+  // Recalcular duración cuando cambian los campos
   ['fechaInicioReserva', 'horaInicioReserva', 'fechaFinReserva', 'horaFinReserva']
-    .forEach(id => document.getElementById(id).addEventListener('change', calcularDuracion));
+    .forEach(id => {
+      const elemento = document.getElementById(id);
+      if (elemento) {
+        elemento.addEventListener('change', calcularDuracion);
+      }
+    });
 });
 
-
-// ==================================================================
-//              CÁLCULO DE LA DURACIÓN DE LA RESERVA 
-// ==================================================================
+// Cálculo de duración
 function calcularDuracion() {
-  const fechaInicio = document.getElementById('fechaInicioReserva').value;
-  const horaInicio = document.getElementById('horaInicioReserva').value;
-  const fechaFin = document.getElementById('fechaFinReserva').value;
-  const horaFin = document.getElementById('horaFinReserva').value;
+  const fechaInicio = document.getElementById('fechaInicioReserva')?.value;
+  const horaInicio = document.getElementById('horaInicioReserva')?.value;
+  const fechaFin = document.getElementById('fechaFinReserva')?.value;
+  const horaFin = document.getElementById('horaFinReserva')?.value;
 
-  // Si falta algún valor → no mostrar
+  const resumenDuracion = document.getElementById('resumenDuracion');
+  if (!resumenDuracion) return;
+
+  // Si falta algún valor, no mostrar
   if (!fechaInicio || !horaInicio || !fechaFin || !horaFin) {
-    document.getElementById('resumenDuracion').style.display = 'none';
+    resumenDuracion.style.display = 'none';
     return;
   }
 
@@ -64,8 +76,8 @@ function calcularDuracion() {
 
   if (diferencia <= 0) {
     document.getElementById('textoDuracion').textContent = 'La fecha de fin debe ser posterior al inicio';
-    document.getElementById('resumenDuracion').className = 'alert alert-danger';
-    document.getElementById('resumenDuracion').style.display = 'block';
+    resumenDuracion.className = 'alert alert-danger';
+    resumenDuracion.style.display = 'block';
     return;
   }
 
@@ -79,8 +91,8 @@ function calcularDuracion() {
   if (minutos) textoDuracion += `${minutos} minuto${minutos > 1 ? 's' : ''}`;
 
   document.getElementById('textoDuracion').textContent = textoDuracion.trim();
-  document.getElementById('resumenDuracion').className = 'alert alert-secondary';
-  document.getElementById('resumenDuracion').style.display = 'block';
+  resumenDuracion.className = 'alert alert-secondary';
+  resumenDuracion.style.display = 'block';
 }
 
 
@@ -160,20 +172,30 @@ function cancelarReserva(reservaId) {
     url: `/empleado/cancelar_reserva/${reservaId}`,
     method: 'DELETE',
     success: function(response) {
-      // Animación al eliminar la fila
-      $(`#reserva-${reservaId}`).fadeOut(400, function() {
+      // Buscar específicamente la fila/card de esta reserva
+      const $reservaElemento = $(`[data-reserva-id="${reservaId}"]`).closest('.card, tr');
+      
+      // Animación al eliminar
+      $reservaElemento.fadeOut(400, function() {
         $(this).remove();
 
-        if ($('#listaReservas .card').length === 0) {
-          $('#listaReservas').html('<div class="alert alert-info text-center">No tienes reservas activas.</div>');
+        // Verificar si quedan reservas en toda la lista
+        const reservasRestantes = $('.btn-cancelar-reserva').length;
+        
+        if (reservasRestantes === 0) {
+          $('#listaReservas').html(`
+            <div class="alert alert-info text-center">
+              <i class="bi bi-info-circle-fill me-2"></i>No tienes reservas activas.
+            </div>
+          `);
         }
       });
 
-      mostrarAlerta(response.mensaje || 'Reserva cancelada exitosamente', 'success');
-      cargarVehiculosParaReserva(); 
+      mostrarAlerta(response.mensaje || 'Reserva cancelada correctamente', 'success');
     },
-    error: xhr =>
-      mostrarAlerta(xhr.responseJSON?.mensaje || 'Error al cancelar la reserva', 'danger')
+    error: xhr => {
+      mostrarAlerta(xhr.responseJSON?.mensaje || 'Error al cancelar la reserva', 'danger');
+    }
   });
 }
 

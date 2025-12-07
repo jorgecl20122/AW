@@ -293,7 +293,6 @@ function cargarReservasFranjas() {
             console.log('Data:', data); // Para debug
 
             // Destruir gráfico anterior si existe
-            const canvasElement = document.getElementById('graficoFranjas');
             if (window.chartFranjas) {
                 window.chartFranjas.destroy();
             }

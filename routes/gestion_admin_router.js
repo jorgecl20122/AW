@@ -4,9 +4,7 @@ const path = require('path');
 const router = express.Router();
 const pool = require('../dataBase/conexion_db');
 
-// ============================================
-// CONFIGURACIÓN DE MULTER PARA SUBIDA DE FOTOS
-// ============================================
+// Configuración de Multer para subida de fotos
 const multer = require('multer');
 const fs = require('fs');
 
@@ -15,7 +13,6 @@ const storage = multer.diskStorage({
     destination: function(req, file, cb) {
         const uploadPath = path.join(__dirname, '../public/img/vehiculos');
         
-        // Crear directorio si no existe
         if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
         }
@@ -23,13 +20,12 @@ const storage = multer.diskStorage({
         cb(null, uploadPath);
     },
     filename: function(req, file, cb) {
-        // Generar nombre único
         const uniqueName = `user_${req.session.userId}_${Date.now()}${path.extname(file.originalname)}`;
         cb(null, uniqueName);
     }
 });
 
-// Filtro para validar tipos de archivo
+// Validar tipos de archivo permitidos
 const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -51,11 +47,9 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
-//=============================
-// FUNCIONES AUXILIARES
-//=============================
+// Funciones auxiliares
 function obtenerEstadoFlota(callback) {
-    // Query mejorada que cuenta vehículos basándose en reservas activas
+    // Query que cuenta vehículos basándose en reservas activas
     const query = `
         SELECT 
             COUNT(DISTINCT CASE WHEN r.estado = 'activa' THEN v.id_vehiculo END) as en_uso,
@@ -85,8 +79,54 @@ function obtenerEstadoFlota(callback) {
     });
 }
 
+// Helper para renderizar vista de vehículos con mensaje
+function renderVistaVehiculos(res, usuario, tipo, texto) {
+    const query = `
+        SELECT 
+            v.id_vehiculo AS id,
+            v.matricula,
+            v.marca,
+            v.modelo,
+            v.anio_matriculacion,
+            v.numero_plazas,
+            v.autonomia_km,
+            v.color,
+            v.imagen,
+            v.estado,
+            c.nombre AS concesionario
+        FROM vehiculos v
+        JOIN concesionarios c ON v.id_concesionario = c.id_concesionario
+    `;
+    
+    pool.query(query, (error, vehiculos) => {
+        obtenerEstadoFlota((estadoFlota) => {
+            res.render('vista_vehiculos_admin', {
+                usuario,
+                vehiculos: vehiculos || [],
+                mensaje: { tipo, texto },
+                estadoFlota: estadoFlota
+            });
+        });
+    });
+}
 
-//============ VISTA ADMININISTRADOR ==============
+// Helper para renderizar vista admin con mensaje
+function renderVistaAdmin(res, usuario, tipo, texto) {
+    const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
+    
+    pool.query(query, (error, concesionarios) => {
+        obtenerEstadoFlota((estadoFlota) => {
+            res.render('VistaAdmin', {
+                usuario,
+                concesionarios: concesionarios || [],
+                estadoFlota: estadoFlota,
+                mensaje: { tipo, texto }
+            });
+        });
+    });
+}
+
+// Vista principal administrador
 router.get('/vista_admin', (req, res) => {
     const usuario = req.session.usuario;
     
@@ -102,7 +142,6 @@ router.get('/vista_admin', (req, res) => {
             });
         }
         
-        // Obtener estado de la flota
         obtenerEstadoFlota((estadoFlota) => {
             res.render('VistaAdmin', { 
                 usuario, 
@@ -113,7 +152,7 @@ router.get('/vista_admin', (req, res) => {
     });
 });
 
-//============= VISTA INICIO ================
+// Vista inicio
 router.get('/vista_ini', (req, res) => {
     const usuario = req.session.usuario;
     obtenerEstadoFlota((estadoFlota) => {
@@ -124,7 +163,7 @@ router.get('/vista_ini', (req, res) => {
     });
 });
 
-//============ VISTA VEHÍCULOS =================
+// Vista vehículos
 router.get('/VistaVehiculos', (req, res) => {
     const usuario = req.session.usuario;
     const mensaje = req.session.mensaje;
@@ -158,7 +197,6 @@ router.get('/VistaVehiculos', (req, res) => {
             });
         }
         
-        // Obtener estado de la flota
         obtenerEstadoFlota((estadoFlota) => {
             res.render('vista_vehiculos_admin', { 
                 usuario, 
@@ -170,12 +208,9 @@ router.get('/VistaVehiculos', (req, res) => {
     });
 });
 
+// --- Rutas de Concesionarios ---
 
-//------------------------------------
-// RUTAS DE CONCESIONARIOS
-//------------------------------------
-
-// Ruta para cargar el select de concesionarios (necesario para el formulario de vehículos)
+// Cargar select de concesionarios
 router.get('/lista_concesionarios', (req, res) => {
     const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
     pool.query(query, (error, results) => {
@@ -190,58 +225,22 @@ router.post('/concesionarios/crear', (req, res) => {
     const { nombre, ciudad, correo, telefono } = req.body;
 
     if (!nombre || !ciudad || !correo) {
-        const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
-        pool.query(query, (error, concesionarios) => {
-            obtenerEstadoFlota((estadoFlota) => {
-                return res.render('VistaAdmin', {
-                    usuario,
-                    concesionarios: concesionarios || [],
-                    estadoFlota: estadoFlota,
-                    mensaje: {
-                        tipo: 'danger',
-                        texto: 'Faltan datos obligatorios (nombre, ciudad, correo)'
-                    }
-                });
-            });
-        });
-        return;
+        return renderVistaAdmin(res, usuario, 'danger', 'Faltan datos obligatorios (nombre, ciudad, correo)');
     }
 
-        const queryInsert = `
-            INSERT INTO concesionarios (nombre, ciudad, correo, telefono)
-            VALUES (?, ?, ?, ?)
-        `;
+    const queryInsert = `
+        INSERT INTO concesionarios (nombre, ciudad, correo, telefono)
+        VALUES (?, ?, ?, ?)
+    `;
 
-        pool.query(queryInsert, [nombre, ciudad, correo, telefono || null], (error, results) => {
-            const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
-            
-            pool.query(query, (error2, concesionarios) => {
-                obtenerEstadoFlota((estadoFlota) => {
-                    if (error) {
-                        console.error('Error al crear concesionario:', error);
-                        return res.render('VistaAdmin', {
-                            usuario,
-                            concesionarios: concesionarios || [],
-                            estadoFlota: estadoFlota,
-                            mensaje: {
-                                tipo: 'danger',
-                                texto: 'Error al agregar concesionario'
-                            }
-                        });
-                    }
-                    
-                    res.render('VistaAdmin', {
-                        usuario,
-                        concesionarios,
-                        estadoFlota: estadoFlota,
-                        mensaje: {
-                            tipo: 'success',
-                            texto: 'Concesionario agregado correctamente'
-                        }
-                    });
-                });
-            });
-        });
+    pool.query(queryInsert, [nombre, ciudad, correo, telefono || null], (error, results) => {
+        if (error) {
+            console.error('Error al crear concesionario:', error);
+            return renderVistaAdmin(res, usuario, 'danger', 'Error al agregar concesionario');
+        }
+        
+        renderVistaAdmin(res, usuario, 'success', 'Concesionario agregado correctamente');
+    });
 });
 
 // Actualizar concesionario
@@ -251,21 +250,7 @@ router.post('/concesionarios/actualizar/:id', (req, res) => {
     const { nombre, ciudad, correo, telefono } = req.body; 
 
     if (!nombre || !ciudad || !correo) {
-        const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
-        pool.query(query, (error, concesionarios) => {
-            obtenerEstadoFlota((estadoFlota) => {
-                return res.render('VistaAdmin', {
-                    usuario,
-                    concesionarios: concesionarios || [],
-                    estadoFlota: estadoFlota,
-                    mensaje: {
-                        tipo: 'danger',
-                        texto: 'Faltan datos obligatorios'
-                    }
-                });
-            });
-        });
-        return;
+        return renderVistaAdmin(res, usuario, 'danger', 'Faltan datos obligatorios');
     }
 
     const queryUpdate = `
@@ -275,34 +260,12 @@ router.post('/concesionarios/actualizar/:id', (req, res) => {
     `;
     
     pool.query(queryUpdate, [nombre, ciudad, correo, telefono || null, id], (error, results) => {
-        const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
+        if (error) {
+            console.error('Error al actualizar concesionario:', error);
+            return renderVistaAdmin(res, usuario, 'danger', 'Error al actualizar concesionario');
+        }
         
-        pool.query(query, (error2, concesionarios) => {
-            obtenerEstadoFlota((estadoFlota) => {
-                if (error) {
-                    console.error('Error al actualizar concesionario:', error);
-                    return res.render('VistaAdmin', {
-                        usuario,
-                        concesionarios: concesionarios || [],
-                        estadoFlota: estadoFlota,
-                        mensaje: {
-                            tipo: 'danger',
-                            texto: 'Error al actualizar concesionario'
-                        }
-                    });
-                }
-                
-                res.render('VistaAdmin', {
-                    usuario,
-                    concesionarios,
-                    estadoFlota: estadoFlota,
-                    mensaje: {
-                        tipo: 'success',
-                        texto: 'Concesionario actualizado correctamente'
-                    }
-                });
-            });
-        });
+        renderVistaAdmin(res, usuario, 'success', 'Concesionario actualizado correctamente');
     });
 });
 
@@ -316,156 +279,49 @@ router.post('/concesionarios/eliminar/:id', (req, res) => {
     pool.query(checkVehiculos, [id], (error, results) => {
         if (error) {
             console.error('Error verificando vehículos:', error);
-            const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
-            pool.query(query, (error2, concesionarios) => {
-                obtenerEstadoFlota((estadoFlota) => {
-                    return res.render('VistaAdmin', {
-                        usuario,
-                        concesionarios: concesionarios || [],
-                        estadoFlota: estadoFlota,
-                        mensaje: {
-                            tipo: 'danger',
-                            texto: 'Error al verificar vehículos asociados'
-                        }
-                    });
-                });
-            });
-            return;
+            return renderVistaAdmin(res, usuario, 'danger', 'Error al verificar vehículos asociados');
         }
         
         const totalVehiculos = results[0].total;
         
         if (totalVehiculos > 0) {
-            const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
-            pool.query(query, (error, concesionarios) => {
-                obtenerEstadoFlota((estadoFlota) => {
-                    return res.render('VistaAdmin', {
-                        usuario,
-                        concesionarios: concesionarios || [],
-                        estadoFlota: estadoFlota,
-                        mensaje: {
-                            tipo: 'warning',
-                            texto: `Este concesionario tiene ${totalVehiculos} vehículo(s) asociado(s). Debes redirigir los vehículos a otros concesionarios antes de eliminarlo.`
-                        }
-                    });
-                });
-            });
-            return;
+            return renderVistaAdmin(res, usuario, 'warning', `Este concesionario tiene ${totalVehiculos} vehículo(s) asociado(s). Debes redirigir los vehículos a otros concesionarios antes de eliminarlo.`);
         }
         
         const queryDelete = `DELETE FROM concesionarios WHERE id_concesionario = ?`;
         
         pool.query(queryDelete, [id], (error, results) => {
-            const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
+            if (error) {
+                console.error('Error eliminando concesionario:', error);
+                return renderVistaAdmin(res, usuario, 'danger', 'Error al eliminar concesionario');
+            }
             
-            pool.query(query, (error2, concesionarios) => {
-                obtenerEstadoFlota((estadoFlota) => {
-                    if (error) {
-                        console.error('Error eliminando concesionario:', error);
-                        return res.render('VistaAdmin', {
-                            usuario,
-                            concesionarios: concesionarios || [],
-                            estadoFlota: estadoFlota,
-                            mensaje: {
-                                tipo: 'danger',
-                                texto: 'Error al eliminar concesionario'
-                            }
-                        });
-                    }
-                    
-                    if (results.affectedRows === 0) {
-                        return res.render('VistaAdmin', {
-                            usuario,
-                            concesionarios: concesionarios || [],
-                            estadoFlota: estadoFlota,
-                            mensaje: {
-                                tipo: 'warning',
-                                texto: 'Concesionario no encontrado'
-                            }
-                        });
-                    }
-                    
-                    res.render('VistaAdmin', {
-                        usuario,
-                        concesionarios,
-                        estadoFlota: estadoFlota,
-                        mensaje: {
-                            tipo: 'success',
-                            texto: 'Concesionario eliminado correctamente'
-                        }
-                    });
-                });
-            });
+            if (results.affectedRows === 0) {
+                return renderVistaAdmin(res, usuario, 'warning', 'Concesionario no encontrado');
+            }
+            
+            renderVistaAdmin(res, usuario, 'success', 'Concesionario eliminado correctamente');
         });
     });
 });
 
-// Listar los vehiculos por concesionario CHECK.
+// Listar vehículos por concesionario
 router.get('/lista_vehiculos/:id', (req, res) => {
-  const id = req.params.id;
+    const id = req.params.id;
 
-  pool.query(`SELECT * FROM vehiculos WHERE id_concesionario = ?`, [id], (err, results) => {
-    if (err) return res.status(500).send('Error al obtener vehículos');
+    pool.query(`SELECT * FROM vehiculos WHERE id_concesionario = ?`, [id], (err, results) => {
+        if (err) return res.status(500).send('Error al obtener vehículos');
 
-    // Renderizar a vehiculos_concesionario EJS y lo envia como HTML
-    res.render('vehiculos_concesionario', { vehiculos: results }, (err, html) => {
-      if (err) return res.status(500).send('Error al renderizar vehículos');
-      res.send(html);
-    });
-  });
-});
-
-//----------------------------
-// RUTAS DE VEHÍCULOS
-//----------------------------
-
-// Vista principal de vehículos
-router.get('/VistaVehiculos', (req, res) => {
-    const usuario = req.session.usuario;
-    const mensaje = req.session.mensaje;
-    delete req.session.mensaje;
-    
-    const query = `
-        SELECT 
-            v.id_vehiculo AS id,
-            v.matricula,
-            v.marca,
-            v.modelo,
-            v.anio_matriculacion,
-            v.numero_plazas,
-            v.autonomia_km,
-            v.color,
-            v.imagen,
-            v.estado,
-            c.nombre AS concesionario
-        FROM vehiculos v
-        JOIN concesionarios c ON v.id_concesionario = c.id_concesionario
-    `;
-    
-    pool.query(query, (error, vehiculos) => {
-        if (error) {
-            console.error('Error al obtener vehículos:', error);
-            return res.render('vista_vehiculos_admin', { 
-                usuario, 
-                vehiculos: [], 
-                mensaje,
-                estadoFlota: null
-            });
-        }
-        
-        // Obtener estado de la flota
-        obtenerEstadoFlota((estadoFlota) => {
-            res.render('vista_vehiculos_admin', { 
-                usuario, 
-                vehiculos, 
-                mensaje,
-                estadoFlota: estadoFlota
-            });
+        res.render('vehiculos_concesionario', { vehiculos: results }, (err, html) => {
+            if (err) return res.status(500).send('Error al renderizar vehículos');
+            res.send(html);
         });
     });
 });
 
-// CREAR vehículo 
+// --- Rutas de Vehículos ---
+
+// Crear vehículo
 router.post('/vehiculos/crear', upload.single('imagen'), (req, res) => {
     const usuario = req.session.usuario;
     
@@ -481,44 +337,13 @@ router.post('/vehiculos/crear', upload.single('imagen'), (req, res) => {
         id_concesionario 
     } = req.body;
 
-    // Función helper para recargar vehículos y renderizar
-    const renderConMensaje = (tipo, texto) => {
-        const query = `
-            SELECT 
-                v.id_vehiculo AS id,
-                v.matricula,
-                v.marca,
-                v.modelo,
-                v.anio_matriculacion,
-                v.numero_plazas,
-                v.autonomia_km,
-                v.color,
-                v.imagen,
-                v.estado,
-                c.nombre AS concesionario
-            FROM vehiculos v
-            JOIN concesionarios c ON v.id_concesionario = c.id_concesionario
-        `;
-        
-        pool.query(query, (error, vehiculos) => {
-            obtenerEstadoFlota((estadoFlota) => {
-                res.render('vista_vehiculos_admin', {
-                    usuario,
-                    vehiculos: vehiculos || [],
-                    mensaje: { tipo, texto },
-                    estadoFlota: estadoFlota
-                });
-            });
-        });
-    };
-
-    // Validaciones
+    // Validar campos obligatorios
     if (!matricula || !marca || !modelo || !anio || !plazas || !autonomia || !color || !estado || !id_concesionario) {
-        return renderConMensaje('danger', 'Todos los campos son obligatorios');
+        return renderVistaVehiculos(res, usuario, 'danger', 'Todos los campos son obligatorios');
     }
 
     if (!req.file) {
-        return renderConMensaje('danger', 'La imagen del vehículo es obligatoria');
+        return renderVistaVehiculos(res, usuario, 'danger', 'La imagen del vehículo es obligatoria');
     }
 
     const anioNum = parseInt(anio);
@@ -526,15 +351,15 @@ router.post('/vehiculos/crear', upload.single('imagen'), (req, res) => {
     const autonomiaNum = parseInt(autonomia);
 
     if (anioNum < 1900 || anioNum > 2025) {
-        return renderConMensaje('danger', 'El año debe estar entre 1900 y 2025');
+        return renderVistaVehiculos(res, usuario, 'danger', 'El año debe estar entre 1900 y 2025');
     }
 
     if (plazasNum < 1 || plazasNum > 50) {
-        return renderConMensaje('danger', 'Las plazas deben estar entre 1 y 50');
+        return renderVistaVehiculos(res, usuario, 'danger', 'Las plazas deben estar entre 1 y 50');
     }
 
     if (autonomiaNum < 0) {
-        return renderConMensaje('danger', 'La autonomía no puede ser negativa');
+        return renderVistaVehiculos(res, usuario, 'danger', 'La autonomía no puede ser negativa');
     }
 
     const imagenUrl = `/img/vehiculos/${req.file.filename}`;
@@ -559,14 +384,14 @@ router.post('/vehiculos/crear', upload.single('imagen'), (req, res) => {
     ], (error, results) => {
         if (error) {
             console.error('Error al crear vehículo:', error);
-            return renderConMensaje('danger', 'Error al agregar el vehículo');
+            return renderVistaVehiculos(res, usuario, 'danger', 'Error al agregar el vehículo');
         }
         
-        renderConMensaje('success', 'Vehículo agregado correctamente');
+        renderVistaVehiculos(res, usuario, 'success', 'Vehículo agregado correctamente');
     });
 });
 
-// ACTUALIZAR vehículo 
+// Actualizar vehículo
 router.post('/vehiculos/actualizar/:id', upload.single('imagen'), (req, res) => {
     const usuario = req.session.usuario;
     const id = req.params.id;
@@ -581,43 +406,12 @@ router.post('/vehiculos/actualizar/:id', upload.single('imagen'), (req, res) => 
         estado
     } = req.body;
 
-    // Función helper para recargar vehículos y renderizar
-    const renderConMensaje = (tipo, texto) => {
-        const query = `
-            SELECT 
-                v.id_vehiculo AS id,
-                v.matricula,
-                v.marca,
-                v.modelo,
-                v.anio_matriculacion,
-                v.numero_plazas,
-                v.autonomia_km,
-                v.color,
-                v.imagen,
-                v.estado,
-                c.nombre AS concesionario
-            FROM vehiculos v
-            JOIN concesionarios c ON v.id_concesionario = c.id_concesionario
-        `;
-        
-        pool.query(query, (error, vehiculos) => {
-            obtenerEstadoFlota((estadoFlota) => {
-                res.render('vista_vehiculos_admin', {
-                    usuario,
-                    vehiculos: vehiculos || [],
-                    mensaje: { tipo, texto },
-                    estadoFlota: estadoFlota
-                });
-            });
-        });
-    };
-
-    // Validaciones
+    // Validar campos obligatorios
     if (!marca || !modelo || !anio_matriculacion || !numero_plazas || !autonomia_km) {
-        return renderConMensaje('danger', 'Por favor, completa todos los campos obligatorios');
+        return renderVistaVehiculos(res, usuario, 'danger', 'Por favor, completa todos los campos obligatorios');
     }
 
-    // Si se subió una imagen nueva, obtenemos su ruta
+    // Si hay nueva imagen, usamos su ruta
     const imagen = req.file ? `/img/vehiculos/${req.file.filename}` : null;
 
     let query;
@@ -644,70 +438,37 @@ router.post('/vehiculos/actualizar/:id', upload.single('imagen'), (req, res) => 
     pool.query(query, params, (error, results) => {
         if (error) {
             console.error('Error al actualizar vehículo:', error);
-            return renderConMensaje('danger', 'Error al actualizar vehículo');
+            return renderVistaVehiculos(res, usuario, 'danger', 'Error al actualizar vehículo');
         }
         
-        renderConMensaje('success', 'Vehículo actualizado correctamente');
+        renderVistaVehiculos(res, usuario, 'success', 'Vehículo actualizado correctamente');
     });
 });
 
-// ELIMINAR vehículo 
+// Eliminar vehículo
 router.post('/vehiculos/eliminar/:id', (req, res) => {
     const usuario = req.session.usuario;
     const id = req.params.id;
-
-    // Función helper para recargar vehículos y renderizar
-    const renderConMensaje = (tipo, texto) => {
-        const query = `
-            SELECT 
-                v.id_vehiculo AS id,
-                v.matricula,
-                v.marca,
-                v.modelo,
-                v.anio_matriculacion,
-                v.numero_plazas,
-                v.autonomia_km,
-                v.color,
-                v.imagen,
-                v.estado,
-                c.nombre AS concesionario
-            FROM vehiculos v
-            JOIN concesionarios c ON v.id_concesionario = c.id_concesionario
-        `;
-        
-        pool.query(query, (error, vehiculos) => {
-            obtenerEstadoFlota((estadoFlota) => {
-                res.render('vista_vehiculos_admin', {
-                    usuario,
-                    vehiculos: vehiculos || [],
-                    mensaje: { tipo, texto },
-                    estadoFlota: estadoFlota
-                });
-            });
-        });
-    };
 
     const query = `DELETE FROM vehiculos WHERE id_vehiculo = ?`;
     
     pool.query(query, [id], (error, results) => {
         if (error) {
             console.error('Error al eliminar vehículo:', error);
-            return renderConMensaje('danger', 'Error al eliminar vehículo');
+            return renderVistaVehiculos(res, usuario, 'danger', 'Error al eliminar vehículo');
         }
         
         if (results.affectedRows === 0) {
-            return renderConMensaje('warning', 'Vehículo no encontrado');
+            return renderVistaVehiculos(res, usuario, 'warning', 'Vehículo no encontrado');
         }
         
-        renderConMensaje('success', 'Vehículo eliminado correctamente');
+        renderVistaVehiculos(res, usuario, 'success', 'Vehículo eliminado correctamente');
     });
 });
 
-//============================
-// RUTAS DE ESTADÍSTICAS
-//============================
+// --- Rutas de Estadísticas ---
 
-// Obtener vehículos más usados por concesionario
+// Vehículos más usados por concesionario
 router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
     const query = `
         SELECT 
@@ -730,7 +491,7 @@ router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
             return res.status(500).send('<p class="text-danger text-center">Error al cargar los vehículos.</p>');
         }
 
-        // Filtrar el más usado por concesionario
+        // Filtrar el vehículo más usado por cada concesionario
         const vehiculosPorConcesionario = {};
         results.forEach(v => {
             if (!vehiculosPorConcesionario[v.concesionario] || 
@@ -741,21 +502,18 @@ router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
 
         const vehiculosMasUsados = Object.values(vehiculosPorConcesionario);
 
-        // Renderizamos el partial directamente
         res.render('vehiculo_mas_usado', { vehiculos: vehiculosMasUsados });
     });
 });
 
-// Obtener estado de la flota
+// Estado de la flota
 router.get('/estado_flota', function(req, res) {
-    // Total de vehículos
     pool.query('SELECT COUNT(*) as total FROM vehiculos', function(err, totalVehiculos) {
         if (err) {
             console.error('Error al obtener total de vehículos:', err);
             return res.status(500).json({ error: 'Error al obtener estado de la flota' });
         }
         
-        // Vehículos en uso (con reservas activas)
         pool.query(`
             SELECT COUNT(DISTINCT id_vehiculo) as en_uso 
             FROM reservas 
@@ -779,36 +537,32 @@ router.get('/estado_flota', function(req, res) {
     });
 });
 
-// Obtener reservas por franjas horarias
+// Reservas por franjas horarias
 router.get('/estadisticas/reservas-franjas', (req, res) => {
-  if (!req.session || !req.session.userId || req.session.userRole !== 'administrador') {
-    return res.status(401).json({ mensaje: 'Sesión no iniciada' });
-  }
+    const query = `
+        SELECT 
+            HOUR(fecha_inicio) AS hora,
+            COUNT(*) AS total
+        FROM reservas
+        GROUP BY HOUR(fecha_inicio)
+        ORDER BY hora
+    `;
 
-  const query = `
-    SELECT 
-      HOUR(fecha_inicio) AS hora,
-      COUNT(*) AS total
-    FROM reservas
-    GROUP BY HOUR(fecha_inicio)
-    ORDER BY hora
-  `;
+    pool.query(query, (err, result) => {
+        if (err) {
+            console.error('Error al obtener reservas por franjas:', err);
+            return res.status(500).json([]);
+        }
 
-  pool.query(query, (err, result) => {
-    if (err) {
-      console.error('Error al obtener reservas por franjas:', err);
-      return res.status(500).json([]);
-    }
+        // Convertir a formato legible
+        const franjas = result.map(r => {
+            const start = r.hora.toString().padStart(2, '0') + ':00';
+            const end = r.hora.toString().padStart(2, '0') + ':59';
+            return { label: `${start}-${end}`, total: r.total };
+        });
 
-    // Transformar a franjas legibles
-    const franjas = result.map(r => {
-      const start = r.hora.toString().padStart(2, '0') + ':00';
-      const end = r.hora.toString().padStart(2, '0') + ':59';
-      return { label: `${start}-${end}`, total: r.total };
+        res.json(franjas);
     });
-
-    res.json(franjas);
-  });
 });
 
 module.exports = router;

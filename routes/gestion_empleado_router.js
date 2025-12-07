@@ -2,10 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../dataBase/conexion_db'); 
 
-
-// ============================================
-// FUNCIONES AUXILIARES
-// ============================================
+// Funciones auxiliares
 
 function finalizarReservasVencidasAuto(callback) {
   const selectQuery = `
@@ -48,7 +45,7 @@ function finalizarReservasVencidasAuto(callback) {
   });
 }
 
-// ========== CREAR RESERVA ==========
+// Crear nueva reserva
 router.post('/crear_reserva', (req, res) => {
 
   if (!req.session || !req.session.userId || req.session.userRole !== 'empleado') {
@@ -82,6 +79,7 @@ router.post('/crear_reserva', (req, res) => {
     return res.status(400).json({ mensaje: 'La fecha fin debe ser mayor a la fecha inicio' });
   }
 
+  // Verificar que el vehículo pertenece al concesionario del empleado
   const validarVehiculo = `
     SELECT v.id_vehiculo, v.marca, v.modelo, v.matricula
     FROM vehiculos v
@@ -98,6 +96,7 @@ router.post('/crear_reserva', (req, res) => {
       return res.status(403).json({ mensaje: 'Vehículo no autorizado o no existe' });
     }
 
+    // Verificar si hay conflictos con otras reservas
     const queryConflicto = `
       SELECT id_reserva, fecha_inicio, fecha_fin 
       FROM reservas
@@ -121,7 +120,6 @@ router.post('/crear_reserva', (req, res) => {
         });
       }
 
-
       const insertReserva = `
         INSERT INTO reservas (id_usuario, id_vehiculo, fecha_inicio, fecha_fin, estado)
         VALUES (?, ?, ?, ?, 'activa')
@@ -142,8 +140,7 @@ router.post('/crear_reserva', (req, res) => {
   });
 });
 
-
-// ========== VISTA PRINCIPAL DE EMPLEADO ==========
+// Vista principal del empleado
 router.get('/vista_empleado', (req, res) => {
 
   if (!req.session || !req.session.userId || req.session.userRole !== 'empleado') {
@@ -153,7 +150,7 @@ router.get('/vista_empleado', (req, res) => {
   const idUsuario = req.session.userId;
   const usuario = req.session.usuario;
 
-  // Obtener vehículos disponibles
+  // Traer solo los vehículos disponibles (sin reservas activas)
   const query = `
     SELECT 
       v.id_vehiculo AS id,
@@ -190,7 +187,7 @@ router.get('/vista_empleado', (req, res) => {
   });
 });
 
-// ========== VISTA DE LAS RESERVAS DEL EMPLEADO REALIZADAS ==========
+// Ver mis reservas
 router.get('/mis_reservas', (req, res) => {
 
   if (!req.session || !req.session.userId || req.session.userRole !== 'empleado') {
@@ -200,13 +197,12 @@ router.get('/mis_reservas', (req, res) => {
   const id_usuario = req.session.userId;
   const usuario = req.session.usuario;
 
-  // Primero, finalizar reservas vencidas
+  // Primero actualizar las que ya pasaron
   finalizarReservasVencidasAuto((err) => {
     if (err) {
       console.error("Error al finalizar reservas vencidas:", err);
     }
 
-    // Después, traer las reservas
     const query = `
       SELECT 
         r.id_reserva AS id,
@@ -244,8 +240,7 @@ router.get('/mis_reservas', (req, res) => {
   });
 });
 
-
-// ========== FINALIZAR RESERVAS VENCIDAS ==========
+// Finalizar reservas que ya pasaron de fecha
 router.post('/finalizar_reservas_vencidas', (req, res) => {
   if (!req.session || !req.session.userId || req.session.userRole !== 'empleado') {
     return res.status(401).json({ 
@@ -262,13 +257,12 @@ router.post('/finalizar_reservas_vencidas', (req, res) => {
     res.json({ 
       mensaje: 'Reservas actualizadas',
       reservas_finalizadas: resultado.affectedRows,
-      ids_finalizados: resultado.ids  // <-- Ahora devuelve los IDs
+      ids_finalizados: resultado.ids
     });
   });
 });
 
-
-// ========== CANCELAR RESERVA ==========
+// Cancelar una reserva activa
 router.delete('/cancelar_reserva/:idReserva', (req, res) => {
 
   if (!req.session || !req.session.userId || req.session.userRole !== 'empleado') {
@@ -308,16 +302,15 @@ router.delete('/cancelar_reserva/:idReserva', (req, res) => {
         return res.status(500).json({ mensaje: 'Error al cancelar la reserva' });
       }
 
-      res.json({ mensaje: 'Reserva cancelada correctamente' });
+      res.json({ 
+        mensaje: 'Reserva cancelada correctamente',
+        id_reserva: idReserva 
+      });
     });
   });
 });
 
-//====================================
-// ESTADÍSTICAS DE LA VISTA PRINCIPAL
-//====================================
-
-//Ruta de reservas por concesionario 
+// Estadísticas - Reservas por concesionario
 router.get('/estadisticas/reservas-concesionario', (req, res) => {
 
   if (!req.session || !req.session.userId || req.session.userRole !== 'administrador') {
@@ -352,7 +345,7 @@ router.get('/estadisticas/reservas-concesionario', (req, res) => {
   });
 });
 
-// ========== INCREMENTAR INCIDENCIAS DE UNA RESERVA (VERSIÓN SIMPLE) ==========
+// Reportar incidencia en una reserva
 router.post('/estadisticas/reportar_incidencia/:idReserva', (req, res) => {
   
   if (!req.session || !req.session.userId || req.session.userRole !== 'empleado') {
@@ -372,7 +365,7 @@ router.post('/estadisticas/reportar_incidencia/:idReserva', (req, res) => {
 
   pool.query(query, [idReserva, id_usuario], (err, result) => {
     if (err) {
-     ç
+      console.error('Error al reportar incidencia:', err);
       return res.status(500).json({ 
         error: 'Error al reportar',
         detalles: err.message
@@ -380,7 +373,6 @@ router.post('/estadisticas/reportar_incidencia/:idReserva', (req, res) => {
     }
 
     if (result.affectedRows === 0) {
-     ç
       return res.status(404).json({ 
         error: 'No tienes una reserva activa con ese ID' 
       });
@@ -393,7 +385,5 @@ router.post('/estadisticas/reportar_incidencia/:idReserva', (req, res) => {
     });
   });
 });
-
-
 
 module.exports = router;

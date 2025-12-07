@@ -280,26 +280,6 @@ $(document).on('click', '.btn-edit-usuario', function() {
     modal.show();
 });
 
-// --------------------------------------------
-// UTILIDADES
-// --------------------------------------------
-
-// Función para obtener iniciales del nombre
-function obtenerIniciales(nombreCompleto) {
-    if (!nombreCompleto) return 'U';
-    
-    const palabras = nombreCompleto.trim().split(' ');
-    if (palabras.length >= 2) {
-        return (palabras[0][0] + palabras[1][0]).toUpperCase();
-    }
-    return palabras[0][0].toUpperCase();
-}
-
-// Función para generar avatar con iniciales
-function generarAvatarIniciales(iniciales) {
-    return `https://ui-avatars.com/api/?name=${iniciales}&background=0D8ABC&color=fff&size=128&bold=true`;
-}
-
 //---------------------------------------------
 // CARGA DE DATOS DESDE JSON
 //---------------------------------------------
