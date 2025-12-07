@@ -1,39 +1,32 @@
- /* Fondo pastel en tonos morado, naranja, azul y verde */
-    body {
-      background: linear-gradient(135deg, #dcfafc, #b2d5d9);
-      background-size: 300% 300%;
+body {
+  background: linear-gradient(135deg, #dcfafc, #b2d5d9);
+  background-size: 300% 300%;
+  font-family: 'Quicksand', sans-serif;
+}
 
-      font-family: 'Quicksand', sans-serif;
-    }
+.card {
+  background: #ffffff;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(254, 254, 254, 0.551);
+  border-radius: 8px; 
+}
+.card-header {
+  background:#8bb8bc;
+  color: #ffffff;
+  font-weight: 600;
+  border-bottom: 1px solid #8bb8bc;
 
-    /* Tarjeta con fondo translúcido y bordes rectos */
-    .card {
-      background: #ffffff;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(254, 254, 254, 0.551);
-      border-radius: 8px; /* borde normal, apenas redondeado */
-    }
+}
 
-    /* Encabezado con un degradado pastel */
-    .card-header {
-      background:#8bb8bc;
-      color: #ffffff;
-      font-weight: 600;
-      border-bottom: 1px solid #8bb8bc;
+.btn-primary {
+  background: #8bb8bc;
+  border: none;
+  color: #ffffff;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-    }
-
-    /* Botón con colores pasteles */
-    .btn-primary {
-      background: #8bb8bc;
-      border: none;
-      color: #ffffff;
-      font-weight: 600;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    /* Inputs con bordes suaves */
-    .form-control, .form-select {
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
+.form-control, .form-select {
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}

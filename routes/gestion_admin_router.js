@@ -3,67 +3,90 @@ const express = require('express');
 const path = require('path');
 const router = express.Router();
 const pool = require('../dataBase/conexion_db');
+
+// ============================================
+// CONFIGURACIÓN DE MULTER PARA SUBIDA DE FOTOS
+// ============================================
 const multer = require('multer');
+const fs = require('fs');
 
-// Configuración de multer para guardar imágenes:
-
+// Configuración de almacenamiento
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/img/vehiculos/') // Asegúrate que esta carpeta existe
+    destination: function(req, file, cb) {
+        const uploadPath = path.join(__dirname, '../public/img/vehiculos');
+        
+        // Crear directorio si no existe
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        
+        cb(null, uploadPath);
     },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+    filename: function(req, file, cb) {
+        // Generar nombre único
+        const uniqueName = `user_${req.session.userId}_${Date.now()}${path.extname(file.originalname)}`;
+        cb(null, uniqueName);
     }
 });
 
-const upload = multer({ 
+// Filtro para validar tipos de archivo
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (extname && mimetype) {
+        cb(null, true);
+    } else {
+        cb(new Error('Solo se permiten imágenes (JPG, PNG, GIF, WEBP)'));
+    }
+};
+
+// Configuración de multer
+const upload = multer({
     storage: storage,
-    fileFilter: function (req, file, cb) {
-        const filetypes = /jpeg|jpg|png|gif/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-        
-        if (mimetype && extname) {
-            return cb(null, true);
-        }
-        cb(new Error('Solo se permiten imágenes'));
-    }
+    limits: { 
+        fileSize: 5 * 1024 * 1024 // 5MB máximo
+    },
+    fileFilter: fileFilter
 });
 
+//=============================
+// FUNCIONES AUXILIARES
+//=============================
 function obtenerEstadoFlota(callback) {
-    // Obtener vehículos disponibles (estado NO activo)
-    pool.query(`SELECT COUNT(*) as disponibles FROM vehiculos WHERE estado != 'activo'`, (err, vehiculosDisponibles) => {
+    // Query mejorada que cuenta vehículos basándose en reservas activas
+    const query = `
+        SELECT 
+            COUNT(DISTINCT CASE WHEN r.estado = 'activa' THEN v.id_vehiculo END) as en_uso,
+            COUNT(DISTINCT CASE WHEN r.id_vehiculo IS NULL OR r.estado != 'activa' THEN v.id_vehiculo END) as disponibles,
+            COALESCE(SUM(CASE WHEN r.estado = 'activa' THEN r.incidencias_reportadas ELSE 0 END), 0) as incidencias_totales
+        FROM vehiculos v
+        LEFT JOIN reservas r ON v.id_vehiculo = r.id_vehiculo AND r.estado = 'activa'
+    `;
+    
+    pool.query(query, (err, result) => {
         if (err) {
-            console.error('Error al obtener vehículos disponibles:', err);
-            return callback(null); // Retorna null si hay error
+            console.error('Error al obtener estado de la flota:', err);
+            return callback(null);
         }
         
-        // Obtener vehículos en uso (estado activo)
-        pool.query(`SELECT COUNT(*) as en_uso FROM vehiculos WHERE estado = 'activo'`, (err, vehiculosEnUso) => {
-            if (err) {
-                console.error('Error al obtener vehículos en uso:', err);
-                return callback(null); // Retorna null si hay error
-            }
-            
-            const disponibles = vehiculosDisponibles[0].disponibles || 0;
-            const enUso = vehiculosEnUso[0].en_uso || 0;
-            const total = disponibles + enUso;
-            
-            callback({
-                disponibles: disponibles,
-                en_uso: enUso,
-                total: total
-            });
+        const datos = result[0] || {
+            disponibles: 0,
+            en_uso: 0,
+            incidencias_totales: 0
+        };
+        
+        callback({
+            disponibles: datos.disponibles || 0,
+            en_uso: datos.en_uso || 0,
+            incidencias_totales: datos.incidencias_totales || 0
         });
     });
 }
 
-// ============================================
-// RUTAS ACTUALIZADAS CON ESTADO DE FLOTA
-// ============================================
 
-// 1. VISTA ADMIN
+//============ VISTA ADMININISTRADOR ==============
 router.get('/vista_admin', (req, res) => {
     const usuario = req.session.usuario;
     
@@ -90,11 +113,9 @@ router.get('/vista_admin', (req, res) => {
     });
 });
 
-// 2. VISTA INICIO
+//============= VISTA INICIO ================
 router.get('/vista_ini', (req, res) => {
     const usuario = req.session.usuario;
-    
-    // Obtener estado de la flota
     obtenerEstadoFlota((estadoFlota) => {
         res.render('Inicio_app_admin', { 
             usuario,
@@ -103,7 +124,7 @@ router.get('/vista_ini', (req, res) => {
     });
 });
 
-// 3. VISTA VEHÍCULOS
+//============ VISTA VEHÍCULOS =================
 router.get('/VistaVehiculos', (req, res) => {
     const usuario = req.session.usuario;
     const mensaje = req.session.mensaje;
@@ -154,7 +175,7 @@ router.get('/VistaVehiculos', (req, res) => {
 // RUTAS DE CONCESIONARIOS
 //------------------------------------
 
-// ✅ AJAX - Para cargar select de concesionarios (necesario para el formulario de vehículos)
+// Ruta para cargar el select de concesionarios (necesario para el formulario de vehículos)
 router.get('/lista_concesionarios', (req, res) => {
     const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
     pool.query(query, (error, results) => {
@@ -163,7 +184,7 @@ router.get('/lista_concesionarios', (req, res) => {
     });
 });
 
-// ✅ SIN AJAX - Crear concesionario
+// Crear concesionario
 router.post('/concesionarios/crear', (req, res) => {
     const usuario = req.session.usuario;
     const { nombre, ciudad, correo, telefono } = req.body;
@@ -171,52 +192,59 @@ router.post('/concesionarios/crear', (req, res) => {
     if (!nombre || !ciudad || !correo) {
         const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
         pool.query(query, (error, concesionarios) => {
-            return res.render('VistaAdmin', {
-                usuario,
-                concesionarios: concesionarios || [],
-                mensaje: {
-                    tipo: 'danger',
-                    texto: 'Faltan datos obligatorios (nombre, ciudad, correo)'
-                }
+            obtenerEstadoFlota((estadoFlota) => {
+                return res.render('VistaAdmin', {
+                    usuario,
+                    concesionarios: concesionarios || [],
+                    estadoFlota: estadoFlota,
+                    mensaje: {
+                        tipo: 'danger',
+                        texto: 'Faltan datos obligatorios (nombre, ciudad, correo)'
+                    }
+                });
             });
         });
         return;
     }
-    
-    const queryInsert = `
-        INSERT INTO concesionarios (nombre, ciudad, correo, telefono)
-        VALUES (?, ?, ?, ?)
-    `;
 
-    pool.query(queryInsert, [nombre, ciudad, correo, telefono || null], (error, results) => {
-        const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
-        
-        pool.query(query, (error2, concesionarios) => {
-            if (error) {
-                console.error('Error al crear concesionario:', error);
-                return res.render('VistaAdmin', {
-                    usuario,
-                    concesionarios: concesionarios || [],
-                    mensaje: {
-                        tipo: 'danger',
-                        texto: 'Error al agregar concesionario'
-                    }
-                });
-            }
+        const queryInsert = `
+            INSERT INTO concesionarios (nombre, ciudad, correo, telefono)
+            VALUES (?, ?, ?, ?)
+        `;
+
+        pool.query(queryInsert, [nombre, ciudad, correo, telefono || null], (error, results) => {
+            const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
             
-            res.render('VistaAdmin', {
-                usuario,
-                concesionarios,
-                mensaje: {
-                    tipo: 'success',
-                    texto: 'Concesionario agregado correctamente'
-                }
+            pool.query(query, (error2, concesionarios) => {
+                obtenerEstadoFlota((estadoFlota) => {
+                    if (error) {
+                        console.error('Error al crear concesionario:', error);
+                        return res.render('VistaAdmin', {
+                            usuario,
+                            concesionarios: concesionarios || [],
+                            estadoFlota: estadoFlota,
+                            mensaje: {
+                                tipo: 'danger',
+                                texto: 'Error al agregar concesionario'
+                            }
+                        });
+                    }
+                    
+                    res.render('VistaAdmin', {
+                        usuario,
+                        concesionarios,
+                        estadoFlota: estadoFlota,
+                        mensaje: {
+                            tipo: 'success',
+                            texto: 'Concesionario agregado correctamente'
+                        }
+                    });
+                });
             });
         });
-    });
 });
 
-// ✅ SIN AJAX - Actualizar concesionario
+// Actualizar concesionario
 router.post('/concesionarios/actualizar/:id', (req, res) => {
     const usuario = req.session.usuario;
     const id = req.params.id;
@@ -225,13 +253,16 @@ router.post('/concesionarios/actualizar/:id', (req, res) => {
     if (!nombre || !ciudad || !correo) {
         const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
         pool.query(query, (error, concesionarios) => {
-            return res.render('VistaAdmin', {
-                usuario,
-                concesionarios: concesionarios || [],
-                mensaje: {
-                    tipo: 'danger',
-                    texto: 'Faltan datos obligatorios'
-                }
+            obtenerEstadoFlota((estadoFlota) => {
+                return res.render('VistaAdmin', {
+                    usuario,
+                    concesionarios: concesionarios || [],
+                    estadoFlota: estadoFlota,
+                    mensaje: {
+                        tipo: 'danger',
+                        texto: 'Faltan datos obligatorios'
+                    }
+                });
             });
         });
         return;
@@ -247,31 +278,35 @@ router.post('/concesionarios/actualizar/:id', (req, res) => {
         const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
         
         pool.query(query, (error2, concesionarios) => {
-            if (error) {
-                console.error('Error al actualizar concesionario:', error);
-                return res.render('VistaAdmin', {
+            obtenerEstadoFlota((estadoFlota) => {
+                if (error) {
+                    console.error('Error al actualizar concesionario:', error);
+                    return res.render('VistaAdmin', {
+                        usuario,
+                        concesionarios: concesionarios || [],
+                        estadoFlota: estadoFlota,
+                        mensaje: {
+                            tipo: 'danger',
+                            texto: 'Error al actualizar concesionario'
+                        }
+                    });
+                }
+                
+                res.render('VistaAdmin', {
                     usuario,
-                    concesionarios: concesionarios || [],
+                    concesionarios,
+                    estadoFlota: estadoFlota,
                     mensaje: {
-                        tipo: 'danger',
-                        texto: 'Error al actualizar concesionario'
+                        tipo: 'success',
+                        texto: 'Concesionario actualizado correctamente'
                     }
                 });
-            }
-            
-            res.render('VistaAdmin', {
-                usuario,
-                concesionarios,
-                mensaje: {
-                    tipo: 'success',
-                    texto: 'Concesionario actualizado correctamente'
-                }
             });
         });
     });
 });
 
-// SIN AJAX - Eliminar concesionario
+// Eliminar concesionario
 router.post('/concesionarios/eliminar/:id', (req, res) => {
     const usuario = req.session.usuario;
     const id = req.params.id;
@@ -283,13 +318,16 @@ router.post('/concesionarios/eliminar/:id', (req, res) => {
             console.error('Error verificando vehículos:', error);
             const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
             pool.query(query, (error2, concesionarios) => {
-                return res.render('VistaAdmin', {
-                    usuario,
-                    concesionarios: concesionarios || [],
-                    mensaje: {
-                        tipo: 'danger',
-                        texto: 'Error al verificar vehículos asociados'
-                    }
+                obtenerEstadoFlota((estadoFlota) => {
+                    return res.render('VistaAdmin', {
+                        usuario,
+                        concesionarios: concesionarios || [],
+                        estadoFlota: estadoFlota,
+                        mensaje: {
+                            tipo: 'danger',
+                            texto: 'Error al verificar vehículos asociados'
+                        }
+                    });
                 });
             });
             return;
@@ -300,13 +338,16 @@ router.post('/concesionarios/eliminar/:id', (req, res) => {
         if (totalVehiculos > 0) {
             const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
             pool.query(query, (error, concesionarios) => {
-                return res.render('VistaAdmin', {
-                    usuario,
-                    concesionarios: concesionarios || [],
-                    mensaje: {
-                        tipo: 'warning',
-                        texto: `Este concesionario tiene ${totalVehiculos} vehículo(s) asociado(s). Debes redirigir los vehículos a otros concesionarios antes de eliminarlo.`
-                    }
+                obtenerEstadoFlota((estadoFlota) => {
+                    return res.render('VistaAdmin', {
+                        usuario,
+                        concesionarios: concesionarios || [],
+                        estadoFlota: estadoFlota,
+                        mensaje: {
+                            tipo: 'warning',
+                            texto: `Este concesionario tiene ${totalVehiculos} vehículo(s) asociado(s). Debes redirigir los vehículos a otros concesionarios antes de eliminarlo.`
+                        }
+                    });
                 });
             });
             return;
@@ -318,36 +359,41 @@ router.post('/concesionarios/eliminar/:id', (req, res) => {
             const query = `SELECT id_concesionario, nombre, ciudad, correo, telefono FROM concesionarios`;
             
             pool.query(query, (error2, concesionarios) => {
-                if (error) {
-                    console.error('Error eliminando concesionario:', error);
-                    return res.render('VistaAdmin', {
-                        usuario,
-                        concesionarios: concesionarios || [],
-                        mensaje: {
-                            tipo: 'danger',
-                            texto: 'Error al eliminar concesionario'
-                        }
-                    });
-                }
-                
-                if (results.affectedRows === 0) {
-                    return res.render('VistaAdmin', {
-                        usuario,
-                        concesionarios: concesionarios || [],
-                        mensaje: {
-                            tipo: 'warning',
-                            texto: 'Concesionario no encontrado'
-                        }
-                    });
-                }
-                
-                res.render('VistaAdmin', {
-                    usuario,
-                    concesionarios,
-                    mensaje: {
-                        tipo: 'success',
-                        texto: 'Concesionario eliminado correctamente'
+                obtenerEstadoFlota((estadoFlota) => {
+                    if (error) {
+                        console.error('Error eliminando concesionario:', error);
+                        return res.render('VistaAdmin', {
+                            usuario,
+                            concesionarios: concesionarios || [],
+                            estadoFlota: estadoFlota,
+                            mensaje: {
+                                tipo: 'danger',
+                                texto: 'Error al eliminar concesionario'
+                            }
+                        });
                     }
+                    
+                    if (results.affectedRows === 0) {
+                        return res.render('VistaAdmin', {
+                            usuario,
+                            concesionarios: concesionarios || [],
+                            estadoFlota: estadoFlota,
+                            mensaje: {
+                                tipo: 'warning',
+                                texto: 'Concesionario no encontrado'
+                            }
+                        });
+                    }
+                    
+                    res.render('VistaAdmin', {
+                        usuario,
+                        concesionarios,
+                        estadoFlota: estadoFlota,
+                        mensaje: {
+                            tipo: 'success',
+                            texto: 'Concesionario eliminado correctamente'
+                        }
+                    });
                 });
             });
         });
@@ -373,7 +419,7 @@ router.get('/lista_vehiculos/:id', (req, res) => {
 // RUTAS DE VEHÍCULOS
 //----------------------------
 
-// ✅ MANTENER - Vista principal de vehículos
+// Vista principal de vehículos
 router.get('/VistaVehiculos', (req, res) => {
     const usuario = req.session.usuario;
     const mensaje = req.session.mensaje;
@@ -419,7 +465,7 @@ router.get('/VistaVehiculos', (req, res) => {
     });
 });
 
-// CREAR vehículo (POST tradicional con multer)
+// CREAR vehículo 
 router.post('/vehiculos/crear', upload.single('imagen'), (req, res) => {
     const usuario = req.session.usuario;
     
@@ -520,7 +566,7 @@ router.post('/vehiculos/crear', upload.single('imagen'), (req, res) => {
     });
 });
 
-// ACTUALIZAR vehículo (POST tradicional con multer)
+// ACTUALIZAR vehículo 
 router.post('/vehiculos/actualizar/:id', upload.single('imagen'), (req, res) => {
     const usuario = req.session.usuario;
     const id = req.params.id;
@@ -605,7 +651,7 @@ router.post('/vehiculos/actualizar/:id', upload.single('imagen'), (req, res) => 
     });
 });
 
-// ELIMINAR vehículo (POST tradicional)
+// ELIMINAR vehículo 
 router.post('/vehiculos/eliminar/:id', (req, res) => {
     const usuario = req.session.usuario;
     const id = req.params.id;
@@ -657,9 +703,10 @@ router.post('/vehiculos/eliminar/:id', (req, res) => {
     });
 });
 
-//----------------------------
+//============================
 // RUTAS DE ESTADÍSTICAS
-//----------------------------
+//============================
+
 // Obtener vehículos más usados por concesionario
 router.get('/estadisticas/vehiculo-mas-usado', (req, res) => {
     const query = `

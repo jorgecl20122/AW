@@ -9,7 +9,7 @@ const {
     validarContraseñaSegura,
     validarRegistro,
     validarCoincidenciaContraseñas
-} = require('../public/javascripts/validaciones');
+} = require('../middlewares/validaciones');
 
 // ============================================
 // CONFIGURACIÓN DE MULTER PARA SUBIDA DE FOTOS
@@ -31,7 +31,7 @@ const storage = multer.diskStorage({
         cb(null, uploadPath);
     },
     filename: function(req, file, cb) {
-        // Generar nombre único: userId_timestamp.ext
+        // Generar nombre único
         const uniqueName = `user_${req.session.userId}_${Date.now()}${path.extname(file.originalname)}`;
         cb(null, uniqueName);
     }
@@ -70,7 +70,7 @@ function verificarAutenticacion(req, res, next) {
 }
 
 // ============================================
-// FUNCIÓN AUXILIAR
+// FUNCIONES AUXILIARES
 // ============================================
 function extraerConcesionarios(callback) {
     pool.query(`SELECT id_concesionario AS id, nombre FROM concesionarios`, (err, result) => {     
@@ -83,44 +83,40 @@ function extraerConcesionarios(callback) {
 }
 
 function obtenerEstadoFlota(callback) {
-    // Obtener vehículos disponibles (estado NO activo)
-    pool.query(`SELECT COUNT(*) as disponibles FROM vehiculos WHERE estado != 'activo'`, (err, vehiculosDisponibles) => {
+    // Query mejorada que cuenta vehículos basándose en reservas activas
+    const query = `
+        SELECT 
+            COUNT(DISTINCT CASE WHEN r.estado = 'activa' THEN v.id_vehiculo END) as en_uso,
+            COUNT(DISTINCT CASE WHEN r.id_vehiculo IS NULL OR r.estado != 'activa' THEN v.id_vehiculo END) as disponibles,
+            COALESCE(SUM(CASE WHEN r.estado = 'activa' THEN r.incidencias_reportadas ELSE 0 END), 0) as incidencias_totales
+        FROM vehiculos v
+        LEFT JOIN reservas r ON v.id_vehiculo = r.id_vehiculo AND r.estado = 'activa'
+    `;
+    
+    pool.query(query, (err, result) => {
         if (err) {
-            console.error('Error al obtener vehículos disponibles:', err);
-            return callback(null); // Retorna null si hay error
+            console.error('Error al obtener estado de la flota:', err);
+            return callback(null);
         }
         
-        // Obtener vehículos en uso (estado activo)
-        pool.query(`SELECT COUNT(*) as en_uso FROM vehiculos WHERE estado = 'activo'`, (err, vehiculosEnUso) => {
-            if (err) {
-                console.error('Error al obtener vehículos en uso:', err);
-                return callback(null); // Retorna null si hay error
-            }
-            
-            const disponibles = vehiculosDisponibles[0].disponibles || 0;
-            const enUso = vehiculosEnUso[0].en_uso || 0;
-            const total = disponibles + enUso;
-            
-            callback({
-                disponibles: disponibles,
-                en_uso: enUso,
-                total: total
-            });
+        const datos = result[0] || {
+            disponibles: 0,
+            en_uso: 0,
+            incidencias_totales: 0
+        };
+        
+        callback({
+            disponibles: datos.disponibles || 0,
+            en_uso: datos.en_uso || 0,
+            incidencias_totales: datos.incidencias_totales || 0
         });
     });
 }
+
 // ============================================
 
 // Ruta principal - Verificar BD vacía
 router.get('/', (req, res) => {
-  // Si el usuario ya tiene sesión, redirigir
-  if (req.session && req.session.userId) {
-    if (req.session.userRole === 'administrador') {
-      return res.redirect('/admin/vista_ini');
-    } else if (req.session.userRole === 'empleado') {
-      return res.redirect('/empleado/vista_empleado');
-    }
-  }
 
   // Verificar si la BD está vacía
   const query = `
@@ -146,7 +142,7 @@ router.get('/', (req, res) => {
   });
 });
 
-// Página de registro
+// Vista de registro
 router.get('/registro', (req, res) => {
     extraerConcesionarios((err, concesionarios) => {
         if (err) {
@@ -157,56 +153,87 @@ router.get('/registro', (req, res) => {
 });
 
 // Registro de usuario 
-router.post('/signup', validarRegistro, (req, res) => {
+router.post('/signup', validarRegistro, validarContraseñaSegura, (req, res) => {
     const { nombre, apellido, email, contraseña, rol, telefono, id_concesionario } = req.body;
-
     const nombreCompleto = `${nombre} ${apellido}`;
 
-    validarDatosBBDD(email, telefono, pool)
-    .then(result => {
-        if (result.error) {
-            extraerConcesionarios((err, concesionarios) => {
-                return res.render('RegistroUsuario', {
-                    concesionarios: concesionarios || [],
-                    error: result.error,
-                    success: null
-                });
-            });
-        } else {
-            // Encriptar contraseña
-            const hashedPassword = bcryptjs.hashSync(contraseña, 10);
-            
-            const queryInsert = `
-                INSERT INTO usuarios (nombre_completo, correo, contraseña, rol, telefono, id_concesionario)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `;
+    // Extraer concesionarios para el select
+    extraerConcesionarios((err, concesionarios) => {
+        if (err) concesionarios = [];
 
-            const values = [nombreCompleto, email, hashedPassword, rol, telefono, id_concesionario];
-
-            pool.query(queryInsert, values, (error) => {
-                if (error) {
-                    console.error("Error al insertar el usuario:", error);
-                    return res.status(500).json({ error: "Error al crear el usuario" });
+        // Manejar errores de validación
+        if (req.erroresValidacion && req.erroresValidacion.length > 0) {
+            return res.render('RegistroUsuario', {
+                concesionarios,
+                error: req.erroresValidacion.join(', '),
+                success: null,
+                // Preservar datos del formulario
+                formData: {
+                    nombre: nombre || '',
+                    apellido: apellido || '',
+                    email: email || '',
+                    telefono: telefono || '',
+                    rol: rol || '',
+                    id_concesionario: id_concesionario || ''
                 }
-                return res.render('InicioSesion', {
-                    success: "Usuario creado correctamente. Por favor, inicie sesión para acceder.",
-                    error: null
-                });
             });
         }
-    })
-    .catch(err => {
-        console.error("Error en la validación:", err);
-        res.status(500).json({ error: err.error });
+
+        // Validar email y teléfono en la base de datos
+        validarDatosBBDD(email, telefono, pool)
+            .then(result => {
+                if (result.error) {
+                    return res.render('RegistroUsuario', {
+                        concesionarios,
+                        error: result.error,
+                        success: null,
+                        // Preservar datos del formulario
+                        formData: {
+                            nombre: nombre || '',
+                            apellido: apellido || '',
+                            email: email || '',
+                            telefono: telefono || '',
+                            rol: rol || '',
+                            id_concesionario: id_concesionario || ''
+                        }
+                    });
+                }
+
+                // Encriptar contraseña
+                const hashedPassword = bcryptjs.hashSync(contraseña, 10);
+
+                const queryInsert = `
+                    INSERT INTO usuarios (nombre_completo, correo, contraseña, rol, telefono, id_concesionario)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                `;
+                const values = [nombreCompleto, email, hashedPassword, rol, telefono, id_concesionario];
+
+                pool.query(queryInsert, values, (error) => {
+                    if (error) {
+                        console.error("Error al insertar el usuario:", error);
+                        return res.status(500).json({ error: "Error al crear el usuario" });
+                    }
+
+                    return res.render('InicioSesion', {
+                        success: "Usuario creado correctamente. Por favor, inicie sesión para acceder.",
+                        error: null
+                    });
+                });
+            })
+            .catch(err => {
+                console.error("Error en la validación:", err);
+                res.status(500).json({ error: err.error });
+            });
     });
 });
+
 
 // Vista de login
 router.get('/login', (req, res) => {
     res.render('InicioSesion', { success: null, error: null });
 });
 
-// Login
+// Inicio de sesión 
 router.post('/login', validarCorreoCorporativo, validarContraseñaSegura, (req, res) => {
     const { email, contraseña } = req.body;
 
@@ -240,54 +267,62 @@ router.post('/login', validarCorreoCorporativo, validarContraseñaSegura, (req, 
             });
         }
 
-       // Crear sesión
-req.session.usuario = {
-    id: usuario.id_usuario,
-    rol: usuario.rol,
-    nombre_completo: usuario.nombre_completo,
-    email: email,
-    avatar: usuario.avatar || '/img/default-avatar.png'
-};
+        req.session.usuario = {
+            id: usuario.id_usuario,
+            rol: usuario.rol,
+            nombre_completo: usuario.nombre_completo,
+            email: email,
+            avatar: usuario.avatar || '/img/usuarios/avatar.jpg'
+        };
 
-req.session.userId = usuario.id_usuario;
-req.session.userRole = usuario.rol;
+        req.session.userId = usuario.id_usuario;
+        req.session.userRole = usuario.rol;
 
-// Guarda la sesión antes de redirigir
-req.session.save((err) => {
-    if (err) {
-        console.error('Error al guardar sesión:', err);
-        return res.render('InicioSesion', { 
-            success: null, 
-            error: 'Error al iniciar sesión.' 
+        // Guardamos la sesión antes de redirigir
+        req.session.save((err) => {
+            if (err) {
+                console.error('Error al guardar sesión:', err);
+                return res.render('InicioSesion', { 
+                    success: null, 
+                    error: 'Error al iniciar sesión.' 
+                });
+            }
+
+            // Redirigimos según el rol DESPUÉS de guardar la sesión
+            if (usuario.rol === 'administrador') {
+                return res.redirect(`/admin/vista_ini`);
+            } else if (usuario.rol === 'empleado') {
+                return res.redirect(`/empleado/vista_empleado`);
+            } else {
+                return res.render('InicioSesion', { 
+                    success: null, 
+                    error: 'Rol desconocido. Por favor, contacte al administrador.' 
+                });
+            }
         });
-    }
-
-    // Redirigir según rol DESPUÉS de guardar la sesión
-    if (usuario.rol === 'administrador') {
-        return res.redirect(`/admin/vista_ini`);
-    } else if (usuario.rol === 'empleado') {
-        return res.redirect(`/empleado/vista_empleado`);
-    } else {
-        return res.render('InicioSesion', { 
-            success: null, 
-            error: 'Rol desconocido. Por favor, contacte al administrador.' 
-        });
-    }
-});
     });
 });
 
-// Logout
 router.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error('Error al cerrar sesión:', err);
         }
-        res.render('InicioSesion', { success: 'Sesión cerrada correctamente.', error: null });
+        res.clearCookie('connect.sid');
+        res.redirect('/usuario/login?logout=success');
     });
 });
 
-// Vista de restablecer contraseña
+router.get('/login', (req, res) => {
+    const success = req.query.logout === 'success' ? 'Sesión cerrada correctamente.' : null;
+    
+    res.render('InicioSesion', {
+        success: success,
+        error: null
+    });
+});
+
+// Vista de Restablecer Contraseña
 router.get('/restablecer_con', (req, res) => {
     res.render('RestablecerContraseña', { success: null, error: null });
 });
@@ -459,45 +494,106 @@ router.get('/actual', (req, res) => {
     });
 });
 
-// ============================================
-// RUTA: CAMBIAR FOTO DE PERFIL
-// ============================================
+// Ruta para Cambiar la Foto de perfil
 router.post('/cambiar-foto', verificarAutenticacion, upload.single('foto_perfil'), (req, res) => {
+    
     if (!req.file) {
         return res.status(400).json({ mensaje: 'No se subió ninguna imagen' });
     }
-    
+
     const userId = req.session.userId;
     const fotoPath = `/img/usuarios/${req.file.filename}`;
-    
-    // Primero obtener la foto anterior para actualizarla
+
     const queryGetOldPhoto = 'SELECT avatar FROM usuarios WHERE id_usuario = ?';
-    
+
     pool.query(queryGetOldPhoto, [userId], (error, results) => {
         if (error) {
-            console.error('Error al obtener foto anterior:', error);
             return res.status(500).json({ mensaje: 'Error al procesar la solicitud' });
         }
-        
-        // Actualizar la nueva foto en la base de datos
+
+        const oldPhoto = results[0]?.avatar;
+
         const queryUpdate = 'UPDATE usuarios SET avatar = ? WHERE id_usuario = ?';
-        
-        pool.query(queryUpdate, [fotoPath, userId], (error, results) => {
+
+        pool.query(queryUpdate, [fotoPath, userId], (error, updateResults) => {
             if (error) {
-                console.error(' Error al actualizar foto de perfil:', error);
-                
-                return res.status(500).json({ mensaje: 'Error al actualizar la foto de perfil en la base de datos' });
+                return res.status(500).json({ 
+                    mensaje: 'Error al actualizar la foto de perfil en la base de datos' 
+                });
             }
-            
-            res.json({
-                mensaje: 'Foto de perfil actualizada correctamente',
-                avatar: fotoPath
+
+            if (updateResults.affectedRows === 0) {
+                return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+            }
+
+            // Recargar usuario desde BD
+            const queryReloadUser = `
+                SELECT 
+                    id_usuario,
+                    nombre_completo,
+                    correo,
+                    telefono,
+                    avatar,
+                    rol,
+                    id_concesionario
+                FROM usuarios 
+                WHERE id_usuario = ?
+            `;
+
+            pool.query(queryReloadUser, [userId], (errorReload, userResults) => {
+                if (errorReload) {
+                    return res.status(500).json({ 
+                        mensaje: 'Error al recargar datos del usuario' 
+                    });
+                }
+
+                if (userResults.length === 0) {
+                    return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+                }
+
+                // Actualizar sesión
+                const usuarioActualizado = userResults[0];
+                req.session.usuario = {
+                    id_usuario: usuarioActualizado.id_usuario,
+                    nombre_completo: usuarioActualizado.nombre_completo,
+                    correo: usuarioActualizado.correo,
+                    telefono: usuarioActualizado.telefono,
+                    avatar: usuarioActualizado.avatar,
+                    rol: usuarioActualizado.rol,
+                    id_concesionario: usuarioActualizado.id_concesionario
+                };
+
+                req.session.save((errSave) => {
+                    if (errSave) {
+                        return res.status(500).json({ 
+                            mensaje: 'Error al guardar la sesión' 
+                        });
+                    }
+
+                    // Eliminar foto antigua
+                    if (oldPhoto && oldPhoto !== '/img/usuarios/avatar.jpg' && oldPhoto !== fotoPath) {
+                        const oldPhotoPath = path.join(__dirname, '../public', oldPhoto);
+                        fs.unlink(oldPhotoPath, (errDelete) => {
+                            if (errDelete) {
+                                console.error('Error al eliminar foto antigua:', errDelete);
+                            } else {
+                                console.log('Foto antigua eliminada');
+                            }
+                        });
+                    }
+                    return res.json({
+                        success: true,
+                        mensaje: 'Foto de perfil actualizada correctamente',
+                        avatar: fotoPath
+                    });
+                });
             });
         });
     });
 });
 
-// Actualizar usuario (POST tradicional, sin AJAX)
+
+// Actualizar usuario 
 router.post('/editar', (req, res) => {
     const usuario = req.session.usuario;
     const { id_usuario, rol, concesionario_id } = req.body;
@@ -609,7 +705,11 @@ router.post('/editar', (req, res) => {
     });
 });
 
-// ==================== CARGAR DATOS DESDE JSON ====================
+// ====================
+// CARGA DE DATOS JSON
+// ====================
+
+//Ruta para cargar los datos del json 
 router.post('/cargar-datos-json', (req, res) => {
   const datos = req.body;
 
@@ -621,7 +721,7 @@ router.post('/cargar-datos-json', (req, res) => {
   }
 
 
-  // Verificar que la BD esté vacía antes de cargar
+  // Verificamos que la BD esté vacía antes de cargar
   const checkQuery = `
     SELECT 
       (SELECT COUNT(*) FROM concesionarios) as total_concesionarios,
@@ -641,7 +741,7 @@ router.post('/cargar-datos-json', (req, res) => {
       });
     }
 
-    // Procesar la carga de datos
+    // Procesamos la carga de datos
     cargarDatosJSON(datos, (err, resultado) => {
       if (err) {
         return res.status(500).json({ 
@@ -676,11 +776,11 @@ function cargarDatosJSON(datos, callback) {
         return callback(errTrans, null);
       }
 
-      // Procesar cada concesionario
+      // Procesamos cada concesionario
       let concesionariosProcesados = 0;
 
       datos.concesionarios.forEach((concesionario, index) => {
-        // Insertar concesionario
+        // Insertamos concesionario
         const queryConcesionario = `
           INSERT INTO concesionarios (nombre, ciudad, telefono, correo)
           VALUES (?, ?, ?, ?)
@@ -704,7 +804,7 @@ function cargarDatosJSON(datos, callback) {
           concesionariosCargados++;
           const idConcesionario = resultConc.insertId;
 
-          // Insertar vehículos de este concesionario
+          // Insertamos vehículos de este concesionario
           if (concesionario.vehiculos && Array.isArray(concesionario.vehiculos)) {
             let vehiculosProcesados = 0;
 

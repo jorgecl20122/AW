@@ -1,5 +1,5 @@
 /* ===================================== */
-/* Layout Principal */
+/* VARIABLES Y CONFIGURACIÓN GENERAL */
 /* ===================================== */
 
 body {
@@ -7,11 +7,9 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-.logo_img {
-  width: 100%;
-  max-width: 12em;
-  height: auto;
-}
+/* ===================================== */
+/* HEADER Y NAVEGACIÓN */
+/* ===================================== */
 
 .header {
   background: #bceef38a;
@@ -30,6 +28,26 @@ body {
   border-bottom: 0.0625rem solid #e5e7eb;
 }
 
+/* ===================================== */
+/* LOGOS */
+/* ===================================== */
+
+.logo_img {
+  width: 100%;
+  max-width: 12em;
+  height: auto;
+}
+
+.logo_img_footer {
+  width: 100%;
+  max-width: 8em;
+  height: auto;
+}
+
+/* ===================================== */
+/* BOTONES */
+/* ===================================== */
+
 .btn {
   background: #9fcfd3;
 }
@@ -39,13 +57,36 @@ body {
   color: #fff !important;
 }
 
+.btn-primary {
+  background: #9fcfd3;
+  border: none;
+  font-weight: 600;
+  border-radius: 0.625rem;
+}
+
+.modal-footer .btn-primary:hover {
+  background: #8bb8bc;
+}
+
+.btn-primary {
+  border-radius: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.0187rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.5rem 1.25rem rgba(13, 110, 253, 0.3) !important;
+}
+
 /* ===================================== */
-/* Sidebar */
+/* SIDEBAR */
 /* ===================================== */
 
 .sidebar {
   width: 100%;
-  max-width: 15.625em;
+  max-width: 15.625rem;
   background: #fff;
   border-right: 0.0625rem solid #e5e7eb;
   display: flex;
@@ -68,7 +109,7 @@ body {
 }
 
 /* ===================================== */
-/* Estado Flota */
+/* ESTADO DE LA FLOTA */
 /* ===================================== */
 
 .status-box {
@@ -94,7 +135,7 @@ body {
 }
 
 /* ===================================== */
-/* Tarjetas Estadísticas */
+/* TARJETAS ESTADÍSTICAS */
 /* ===================================== */
 
 .stat-card {
@@ -128,7 +169,7 @@ body {
 }
 
 /* ===================================== */
-/* Vehículos */
+/* TARJETAS DE VEHÍCULOS */
 /* ===================================== */
 
 .vehicle-card {
@@ -157,7 +198,34 @@ body {
 }
 
 /* ===================================== */
-/* Modal Custom Styles */
+/* IMÁGENES DE VEHÍCULOS */
+/* ===================================== */
+
+table img.vehiculo-img {
+  width: 100%;
+  max-width: 12rem;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
+}
+
+.vehiculo-destacado-img {
+  transition: transform 0.3s ease;
+  border-radius: 0.625rem;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 12.5rem;
+  object-fit: cover;
+}
+
+.vehiculo-destacado-img:hover {
+  transform: scale(1.05);
+}
+
+/* ===================================== */
+/* MODALES */
 /* ===================================== */
 
 .modal-content {
@@ -188,14 +256,15 @@ body {
 }
 
 .modal, .modal * {
-    filter: none !important;
-    transform: none !important;
+  filter: none !important;
+  transform: none !important;
 }
 
 /* ===================================== */
-/* Sliders Personalizados */
+/* CONTROLES DE FORMULARIO */
 /* ===================================== */
 
+/* Sliders personalizados */
 .form-range {
   height: 0.375rem;
   background: #d1d5db;
@@ -232,33 +301,19 @@ body {
   border-radius: 0.3125rem;
 }
 
-/* ===================================== */
-/* Inputs de Color */
-/* ===================================== */
-
+/* Inputs de color */
 input[type="color"].form-control-color {
   border: 0.125rem solid #8bb8bc;
   border-radius: 0.5rem;
   cursor: pointer;
 }
 
-/* ===================================== */
-/* Botones */
-/* ===================================== */
-
-.btn-primary {
-  background: #9fcfd3;
-  border: none;
-  font-weight: 600;
-  border-radius: 0.625rem;
-}
-
-.modal-footer .btn-primary:hover {
-  background: #8bb8bc;
+#formVehiculoContainer {
+  position: relative;
 }
 
 /* ===================================== */
-/* Main Content */
+/* CONTENIDO PRINCIPAL */
 /* ===================================== */
 
 main {
@@ -268,38 +323,247 @@ main {
   overflow-y: auto;
 }
 
-@media (min-width: 62em) {
+@media (min-width: 62rem) {
   main {
-    width: calc(100% - 15.625em);
+    width: calc(100% - 15.625rem);
+  }
+}
+
+.container-fluid {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 48rem) {
+  .container-fluid {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 
 /* ===================================== */
-/* Formulario Container */
+/* INFORMACIÓN DE USUARIO */
 /* ===================================== */
 
-#formVehiculoContainer {
-  position: relative;
+.user-info {
+  padding: 0.9375rem;
+  border-top: 0.0625rem solid #dee2e6;
+}
+
+#userAvatar {
+  border: 0.125rem solid #0D8ABC;
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.user-info p {
+  font-size: 0.875rem;
+}
+
+.user-info small {
+  font-size: 0.75rem;
 }
 
 /* ===================================== */
-/* Accesibilidad */
+/* DASHBOARD - TARJETAS Y GRÁFICAS */
 /* ===================================== */
-/* Modo Bajo Contraste / Modo Noche */
+
+#tarjetas-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+#tarjetas-resumen .card {
+  flex: 1;
+  min-width: 12rem;
+  background-color: #fff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#tarjetas-resumen .card:hover {
+  transform: translateY(-0.3125rem);
+  box-shadow: 0 0.5rem 0.9375rem rgba(0, 0, 0, 0.1);
+}
+
+#tarjetas-resumen h6 {
+  font-size: 0.95rem;
+  color: #555;
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03125rem;
+  font-weight: 700;
+}
+
+#tarjetas-resumen h3 {
+  margin: 0.3rem 0 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+#tarjetas-resumen .card-body i {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+#vehiculo-top {
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
 /* ===================================== */
-/* MODO BAJO CONTRASTE - GRIS OSCURO */
+/* TARJETAS GENERALES */
+/* ===================================== */
+
+.card-header {
+  font-weight: 600;
+  background-color: #9fcfd3;
+}
+
+.card-bienvenida {
+  background-color: #d1d5db9c;
+}
+
+.card-bienvenida h5 {
+  font-size: 2rem;
+  color: #555;
+}
+
+.card-bienvenida p {
+  color: #444;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  color: #2d3748;
+}
+
+/* Tarjetas con hover */
+.hover-card {
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
+}
+
+.hover-card:hover {
+  transform: translateY(-0.5rem);
+  box-shadow: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ===================================== */
+/* ICONOS Y BADGES */
+/* ===================================== */
+
+.icon-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-box i {
+  font-size: 1.2rem;
+}
+
+.badge {
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: 0.375rem;
+}
+
+.incidencias-badge {
+  backdrop-filter: blur(0.625rem);
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border: 0.125rem solid rgba(255, 255, 255, 0.3);
+}
+
+/* ===================================== */
+/* ANIMACIONES */
+/* ===================================== */
+
+.pulse-animation {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* ===================================== */
+/* TABLAS RESPONSIVE */
+/* ===================================== */
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===================================== */
+/* FOOTER */
+/* ===================================== */
+
+.footer {
+  background: #bceef38a;
+  border-top: 0.0625rem solid #9fcfd3;
+  margin-top: 3rem;
+}
+
+.footer-content {
+  max-width: 87.5rem;
+  margin: 0 auto;
+}
+
+.footer-title {
+  color: #31a1a9;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.footer-subtitle {
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.footer-center small {
+  color: #666;
+  font-weight: 500;
+}
+
+.footer-link {
+  color: #31a1a9;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #258a91;
+  text-decoration: underline;
+}
+
+/* ===================================== */
+/* ACCESIBILIDAD - MODO BAJO CONTRASTE */
 /* ===================================== */
 
 .bajo-contraste {
-  background-color: #2e2e2e !important; /* fondo general */
-  color: #d0d0d0 !important; /* texto general */
+  background-color: #2e2e2e !important;
+  color: #d0d0d0 !important;
   transition: all 0.3s ease;
 }
 
 /* Header */
 .bajo-contraste .header {
   background-color: #3a3a3a !important;
-  border-bottom: 1px solid #555555 !important;
+  border-bottom: 0.0625rem solid #555555 !important;
 }
 
 .bajo-contraste .header h4,
@@ -310,7 +574,7 @@ main {
 /* Navbar */
 .bajo-contraste .navbar {
   background-color: #3a3a3a !important;
-  border-bottom: 1px solid #555555 !important;
+  border-bottom: 0.0625rem solid #555555 !important;
 }
 
 .bajo-contraste .btn,
@@ -331,7 +595,7 @@ main {
 /* Sidebar */
 .bajo-contraste .sidebar {
   background-color: #3a3a3a !important;
-  border-right: 1px solid #555555 !important;
+  border-right: 0.0625rem solid #555555 !important;
 }
 
 .bajo-contraste .sidebar .nav-link {
@@ -413,19 +677,17 @@ main {
 
 /* Modal */
 .bajo-contraste .modal-body {
-  background-color: #3c3c3c !important; /* gris oscuro */
+  background-color: #3c3c3c !important;
   color: #dcdcdc !important;
   border-color: #555555 !important;
 }
 
-/* Modal Header un poco más oscuro */
 .bajo-contraste .modal-header {
-  background-color: #2f2f2f !important; /* más oscuro que el modal body */
+  background-color: #2f2f2f !important;
   color: #f0f0f0 !important;
   border-bottom-color: #555555 !important;
 }
 
-/* Modal Footer */
 .bajo-contraste .modal-footer {
   background-color: #3a3a3a !important;
   border-top-color: #555555 !important;
@@ -452,183 +714,48 @@ main {
   filter: brightness(0.8) !important;
 }
 
+/* Footer */
+.bajo-contraste .footer {
+  background-color: #3a3a3a !important;
+  border-top: 0.0625rem solid #555555 !important;
+}
 
-/* Filtro aplicado a todo el body EXCEPTO el modal */
+.bajo-contraste .footer-title,
+.bajo-contraste .footer-subtitle,
+.bajo-contraste .footer-center small,
+.bajo-contraste .footer-link {
+  color: #d0d0d0 !important;
+}
+
+.bajo-contraste .footer-link:hover {
+  color: #ffffff !important;
+}
+
+/* ===================================== */
+/* ACCESIBILIDAD - DALTONISMO */
+/* ===================================== */
+
 body.daltonismo > *:not(.modal) {
   filter: grayscale(0.5);
 }
 
-/* Evitar que el modal herede el filtro */
 body.daltonismo .modal,
 body.daltonismo .modal * {
   filter: none !important;
 }
 
-/* Asegurar centrado vertical y horizontal */
 body.daltonismo .modal-dialog-centered {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
 }
 
-
-
-/* ===================================== */
-/* Imagen de Coches */
-/* ===================================== */
-
-table img.vehiculo-img {
-  width: 100%;
-  max-width: 12em;
-  height: auto;
-  object-fit: cover;
-  display: block;
-  margin: 0 auto;
-}
-
-.vehiculo-destacado-img {
-  transition: transform 0.3s ease;
-  border-radius: 0.625rem;
-  width: 100%;
-  height: auto;
-  max-width: 100%;
-}
-
-.vehiculo-destacado-img:hover {
-  transform: scale(1.05);
-}
-
-/* ===================================== */
-/* User Info */
-/* ===================================== */
-
-.user-info {
-  padding: 0.9375rem;
-  border-top: 0.0625rem solid #dee2e6;
-}
-
-#userAvatar {
-  border: 0.125rem solid #0D8ABC;
-  width: 4em;
-  height: 4em;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.user-info p {
-  font-size: 0.875rem;
-}
-
-.user-info small {
-  font-size: 0.75rem;
-}
-
-/* ===================================== */
-/* Dashboard - Tarjetas y Gráficas */
-/* ===================================== */
-
-#tarjetas-resumen {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: space-between;
-}
-
-#tarjetas-resumen .card {
-  flex: 1;
-  min-width: 12em;
-  background-color: #fff;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-#tarjetas-resumen .card:hover {
-  transform: translateY(-0.3125rem);
-  box-shadow: 0 0.5rem 0.9375rem rgba(0, 0, 0, 0.1);
-}
-
-#tarjetas-resumen h6 {
-  font-size: 0.95rem;
-  color: #555;
-  margin-top: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03125rem;
-  font-weight: 700;
-}
-
-#tarjetas-resumen h3 {
-  margin: 0.3rem 0 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-}
-
-#tarjetas-resumen .card-body i {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  display: block;
-}
-
-#vehiculo-top {
-  font-size: 1rem;
-  margin-top: 0.5rem;
-}
-
-/* ===================================== */
-/* Card Header */
-/* ===================================== */
-
-.card-header {
-  font-weight: 600;
-  background-color: #9fcfd3;
-}
-
-/* ===================================== */
-/* Card de Bienvenida */
-/* ===================================== */
-
-.card-bienvenida {
-  background-color: #d1d5db9c;
-}
-
-.card-bienvenida h5 {
-  font-size: 2rem;
-  color: #555;
-}
-
-.card-bienvenida p {
-  color: #444;
-}
-
-/* ===================================== */
-/* Container Fluid Spacing */
-/* ===================================== */
-
-.container-fluid {
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@media (min-width: 48em) {
-  .container-fluid {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-}
-
-/* ===================================== */
-/* Tablas Responsive */
-/* ===================================== */
-
-.table-responsive {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
 /* ===================================== */
 /* RESPONSIVE DESIGN */
 /* ===================================== */
 
-/* Tablets (62em = 992px) */
-@media (max-width: 62em) {
+/* Tablets (62rem = 992px) */
+@media (max-width: 62rem) {
   .sidebar {
     position: fixed;
     left: -100%;
@@ -664,10 +791,29 @@ table img.vehiculo-img {
   .vehicle-card h5 {
     font-size: 1.1rem;
   }
+
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .footer-brand {
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  .footer-links {
+    text-align: center !important;
+    margin-top: 1rem;
+  }
+  
+  .logo_img_footer {
+    max-width: 6rem;
+  }
 }
 
-/* Móviles (36em = 576px) */
-@media (max-width: 36em) {
+/* Móviles (36rem = 576px) */
+@media (max-width: 36rem) {
   #tarjetas-resumen .card {
     flex: 0 0 100%;
   }
@@ -695,7 +841,7 @@ table img.vehiculo-img {
   }
 
   table img.vehiculo-img {
-    max-width: 8em;
+    max-width: 8rem;
   }
 
   .status-box {
@@ -708,17 +854,30 @@ table img.vehiculo-img {
   }
 
   .logo_img {
-    max-width: 8em;
+    max-width: 8rem;
   }
 
   .btn {
     font-size: 0.875rem;
     padding: 0.5rem 1rem;
   }
+
+  .footer-link {
+    display: block;
+    margin: 0.5rem 0 !important;
+  }
+  
+  .logo_img_footer {
+    max-width: 5rem;
+  }
+  
+  .footer-title {
+    font-size: 1rem;
+  }
 }
 
-/* Móviles pequeños (< 23.4375em = 375px) */
-@media (max-width: 23.4375em) {
+/* Móviles pequeños (< 23.4375rem = 375px) */
+@media (max-width: 23.4375rem) {
   .header h4 {
     font-size: 1.2rem;
   }
@@ -737,158 +896,108 @@ table img.vehiculo-img {
   }
 }
 
-.vehiculo-destacado-img {
-    max-height: 12.5rem; 
-    object-fit: cover;
+.incidencias-badge {
+  backdrop-filter: blur(10px);
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
+.pulse-animation {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* Efecto hover en la tarjeta */
 .hover-card {
-  transition: all 0.3s ease;
-  border-radius: 0.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hover-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
 }
 
+/* Contenedor del avatar */
+.avatar-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Imagen del usuario */
+.user-avatar {
+  width: 5rem; 
+  height: 5rem; 
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* Botón de la cámara superpuesto al avatar */
+.avatar-camera-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 0.3125rem; 
+  border-radius: 50%;
+}
+
+/* Contenedor de imagen del vehículo */
+.vehicle-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.5rem 0.5rem 0 0;
+    background-color: #f8f9fa;
+}
+
+/* Imagen del vehículo */
+.vehicle-image-container .card-img-top {
+    height: 13.75rem; /* 220px */
+    width: 100%;
+    object-fit: contain;
+    object-position: center;
+    padding: 1rem;
+}
+
+/* Placeholder cuando no hay imagen */
+.vehicle-placeholder {
+    height: 13.75rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vehicle-placeholder i {
+    font-size: 5rem;
+    opacity: 0.9;
+}
+
+/* Icono de información */
 .icon-box {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
 }
 
 .icon-box i {
-  font-size: 1.2rem;
+    font-size: 1.25rem;
 }
 
-.card-title {
-  font-size: 1.25rem;
-  color: #2d3748;
+/* Efecto hover en las tarjetas */
+.hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.btn-primary {
-  border-radius: 0.5rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3) !important;
-}
-
-.badge {
-  font-weight: 600;
-  font-size: 0.85rem;
-  border-radius: 0.375rem;
-}
-
-/* ===================================== */
-/* Footer */
-/* ===================================== */
-
-.footer {
-  background: #bceef38a;
-  border-top: 0.0625rem solid #9fcfd3;
-  margin-top: 3rem;
-}
-
-.footer-content {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.logo_img_footer {
-  width: 100%;
-  max-width: 8em;
-  height: auto;
-}
-
-.footer-title {
-  color: #31a1a9;
-  font-size: 1.2rem;
-  margin: 0;
-}
-
-.footer-subtitle {
-  color: #555;
-  font-size: 0.85rem;
-}
-
-.footer-center small {
-  color: #666;
-  font-weight: 500;
-}
-
-.footer-link {
-  color: #31a1a9;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.footer-link:hover {
-  color: #258a91;
-  text-decoration: underline;
-}
-
-/* Modo Bajo Contraste - Footer */
-.bajo-contraste .footer {
-  background-color: #3a3a3a !important;
-  border-top: 1px solid #555555 !important;
-}
-
-.bajo-contraste .footer-title,
-.bajo-contraste .footer-subtitle,
-.bajo-contraste .footer-center small,
-.bajo-contraste .footer-link {
-  color: #d0d0d0 !important;
-}
-
-.bajo-contraste .footer-link:hover {
-  color: #ffffff !important;
-}
-
-/* Responsive Footer */
-@media (max-width: 62em) {
-  .footer-content {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .footer-brand {
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-  
-  .footer-links {
-    text-align: center !important;
-    margin-top: 1rem;
-  }
-  
-  .logo_img_footer {
-    max-width: 6em;
-  }
-}
-
-@media (max-width: 36em) {
-  .footer-link {
-    display: block;
-    margin: 0.5rem 0 !important;
-  }
-  
-  .logo_img_footer {
-    max-width: 5em;
-  }
-  
-  .footer-title {
-    font-size: 1rem;
-  }
+.hover-card:hover {
+    transform: translateY(-0.5rem);
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
 }

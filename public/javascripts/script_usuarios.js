@@ -1,4 +1,38 @@
 // --------------------------------------------
+// FUNCIÓN DE ALERTAS
+// --------------------------------------------
+
+function mostrarAlerta(mensaje, tipo) {
+    // Buscar contenedor de alertas o crear uno
+    let contenedorAlertas = document.getElementById('contenedor-alertas');
+    
+    if (!contenedorAlertas) {
+        contenedorAlertas = document.createElement('div');
+        contenedorAlertas.id = 'contenedor-alertas';
+        contenedorAlertas.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+        document.body.appendChild(contenedorAlertas);
+    }
+    
+    // Crear alerta
+    const alerta = document.createElement('div');
+    alerta.className = `alert alert-${tipo} alert-dismissible fade show shadow-sm`;
+    alerta.role = 'alert';
+    alerta.innerHTML = `
+        <i class="bi bi-${tipo === 'success' ? 'check-circle' : tipo === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    contenedorAlertas.appendChild(alerta);
+    
+    // Auto-cerrar después de 4 segundos
+    setTimeout(() => {
+        alerta.classList.remove('show');
+        setTimeout(() => alerta.remove(), 150);
+    }, 4000);
+}
+
+// --------------------------------------------
 // CARGA DE DATOS
 // --------------------------------------------
 
@@ -16,6 +50,7 @@ function cargarUsuariosTabla() {
     });
 }
 
+// Cargar datos del usuario actual 
 function cargarDatosUsuarioActual() {
     $.ajax({
         url: '/usuario/actual',
@@ -39,23 +74,19 @@ function cargarDatosUsuarioActual() {
                 $('#userName').text(usuario.nombre_completo);
             }
             
-            // Actualizar foto de perfil
-            if (usuario.foto_perfil && usuario.foto_perfil !== '/img/default-avatar.png') {
-                $('#userAvatar').attr('src', usuario.foto_perfil);
-                $('.user-avatar').attr('src', usuario.foto_perfil);
+            // Actualizar avatar
+            if (usuario.avatar && usuario.avatar !== '/img/usuarios/avatar.jpg') {
+                console.log('Actualizando avatar a:', usuario.avatar);
+                $('#userAvatar').attr('src', usuario.avatar + '?t=' + new Date().getTime());
+                $('.user-avatar').attr('src', usuario.avatar + '?t=' + new Date().getTime());
             } else {
-                const iniciales = obtenerIniciales(usuario.nombre_completo);
-                $('#userAvatar').attr('src', generarAvatarIniciales(iniciales));
+                // Si no hay avatar, usar el por defecto o iniciales
+                const avatarDefault = '/img/usuarios/avatar.jpg';
+                $('#userAvatar').attr('src', avatarDefault);
+                $('.user-avatar').attr('src', avatarDefault);
             }
         },
         error: function(xhr) {
-            // SILENCIAR error 401 (sin sesión) - es normal en setup/login
-            if (xhr.status === 401) {
-                console.log('ℹ️ Sin sesión activa');
-                return; // Salir sin mostrar error
-            }
-            
-            // Para otros errores, sí mostrarlos
             console.error('Error al cargar datos del usuario:', xhr);
             if ($('#userRole').length) {
                 $('#userRole').text('Usuario');
@@ -71,25 +102,20 @@ function cargarDatosUsuarioActual() {
 // CAMBIAR FOTO DE PERFIL
 // --------------------------------------------
 
-// Guardar nueva foto
 $(document).on('click', '#btnGuardarFoto', function() {
-    console.log('🔵 Botón clickeado');
-    
+    const $btn = $(this);
+    const $btnTexto = $('#btnTexto');
+    const $btnSpinner = $('#btnSpinner');
     const formData = new FormData($('#formCambiarFoto')[0]);
     
     if (!$('#inputFoto')[0].files.length) {
-        console.log('🔴 No hay archivo seleccionado');
-        mostrarErrorFoto('Por favor selecciona una imagen');
+        mostrarAlerta('Por favor selecciona una imagen', 'warning');
         return;
     }
     
-    console.log('🟢 Archivo seleccionado:', $('#inputFoto')[0].files[0].name);
-    console.log('🟢 Enviando petición a /usuario/cambiar-foto');
-    
-    // Mostrar spinner
-    $('#btnTexto').addClass('d-none');
-    $('#btnSpinner').removeClass('d-none');
-    $(this).prop('disabled', true);
+    $btnTexto.addClass('d-none');
+    $btnSpinner.removeClass('d-none');
+    $btn.prop('disabled', true);
     
     $.ajax({
         url: '/usuario/cambiar-foto',
@@ -98,41 +124,24 @@ $(document).on('click', '#btnGuardarFoto', function() {
         processData: false,
         contentType: false,
         success: function(response) {
-            console.log('✅ Respuesta exitosa:', response);
-            mostrarExitoFoto('Foto de perfil actualizada correctamente');
+            mostrarAlerta(response.mensaje || 'Foto actualizada correctamente', 'success');
             
-            $('#userAvatar').attr('src', response.avatar);
-            $('.user-avatar').attr('src', response.avatar);
-            
-            setTimeout(function() {
-                $('#modalCambiarFoto').modal('hide');
-                resetearModalFoto();
-            }, 1500);
+            // Recargar avatar después de cambiar la foto
+            setTimeout(() => {
+                cargarDatosUsuarioActual();
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalCambiarFoto'));
+                if (modal) modal.hide();
+            }, 1000);
         },
         error: function(xhr) {
-            console.error('❌ Error en la petición:', xhr);
-            console.error('❌ Status:', xhr.status);
-            console.error('❌ Response:', xhr.responseText);
-            
-            let mensaje = 'Error al actualizar la foto de perfil';
-            
-            if (xhr.responseJSON && xhr.responseJSON.mensaje) {
-                mensaje = xhr.responseJSON.mensaje;
-            } else if (xhr.status === 413) {
-                mensaje = 'El archivo es demasiado grande';
-            } else if (xhr.status === 401) {
-                mensaje = 'Sesión expirada. Por favor inicia sesión nuevamente';
-                setTimeout(function() {
-                    window.location.href = '/usuario/login';
-                }, 2000);
-            }
-            
-            mostrarErrorFoto(mensaje);
+            const msg = xhr.responseJSON?.mensaje || 'Hubo un error al subir la imagen';
+            mostrarAlerta(msg, 'danger');
         },
         complete: function() {
-            $('#btnTexto').removeClass('d-none');
-            $('#btnSpinner').addClass('d-none');
-            $('#btnGuardarFoto').prop('disabled', false);
+            $btn.prop('disabled', false);
+            $btnTexto.removeClass('d-none');
+            $btnSpinner.addClass('d-none');
         }
     });
 });
@@ -140,12 +149,6 @@ $(document).on('click', '#btnGuardarFoto', function() {
 // Resetear modal al cerrarlo
 $(document).on('hidden.bs.modal', '#modalCambiarFoto', function() {
     resetearModalFoto();
-});
-
-// Al abrir el modal, cargar el avatar actual en el preview
-$(document).on('show.bs.modal', '#modalCambiarFoto', function() {
-    const avatarActual = $('#userAvatar').attr('src');
-    $('#previewAvatar').attr('src', avatarActual);
 });
 
 // Funciones auxiliares para el modal de foto
@@ -306,95 +309,100 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadStatus = document.getElementById('uploadStatus');
 
     if (btnCargarJSON) {
-    btnCargarJSON.addEventListener('click', function() {
-        fileInput.click();
-    });
+        btnCargarJSON.addEventListener('click', function() {
+            fileInput.click();
+        });
 
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        
-        if (!file) return;
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            
+            if (!file) return;
 
-        if (!file.name.endsWith('.json')) {
-        mostrarEstado('error', 'Por favor, selecciona un archivo JSON válido');
-        return;
-        }
+            if (!file.name.endsWith('.json')) {
+                mostrarEstado('error', 'Por favor, selecciona un archivo JSON válido');
+                return;
+            }
 
-        cargarJSON(file);
-    });
+            cargarJSON(file);
+        });
     }
 
     function cargarJSON(file) {
-    const reader = new FileReader();
+        const reader = new FileReader();
 
-    mostrarEstado('loading', 'Cargando archivo JSON...');
+        mostrarEstado('loading', 'Cargando archivo JSON...');
 
-    reader.onload = function(e) {
-        try {
-        const jsonData = JSON.parse(e.target.result);
-        enviarJSON(jsonData);
-        } catch (error) {
-        mostrarEstado('error', 'Error al leer el archivo JSON: formato inválido');
-        }
-    };
+        reader.onload = function(e) {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+                enviarJSON(jsonData);
+            } catch (error) {
+                mostrarEstado('error', 'Error al leer el archivo JSON: formato inválido');
+            }
+        };
 
-    reader.onerror = function() {
-        mostrarEstado('error', 'Error al leer el archivo');
-    };
+        reader.onerror = function() {
+            mostrarEstado('error', 'Error al leer el archivo');
+        };
 
-    reader.readAsText(file);
+        reader.readAsText(file);
     }
 
     function enviarJSON(data) {
-    $.ajax({
-        url: '/usuario/cargar-datos-json',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(data),
-        success: function(response) {
-            mostrarEstado('success', response.mensaje || 'Datos cargados exitosamente');
-        },
-        error: function(xhr) {
-            
-            let mensaje = 'Error al cargar los datos';
-            
-            if (xhr.responseJSON && xhr.responseJSON.mensaje) {
-                mensaje = xhr.responseJSON.mensaje;
-            } else if (xhr.responseText) {
-                mensaje = xhr.responseText;
+        $.ajax({
+            url: '/usuario/cargar-datos-json',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                mostrarEstado('success', response.mensaje || 'Datos cargados exitosamente');
+                // Recargar tabla después de cargar datos
+                setTimeout(() => {
+                    cargarUsuariosTabla();
+                }, 1500);
+            },
+            error: function(xhr) {
+                let mensaje = 'Error al cargar los datos';
+                if (xhr.responseJSON?.mensaje) {
+                    mensaje = xhr.responseJSON.mensaje;
+                }
+                mostrarEstado('error', `${mensaje} (Status: ${xhr.status})`);
             }
-            
-            mostrarEstado('error', `${mensaje} (Status: ${xhr.status})`);
-        }
-    });
+        });
     }
 
     function mostrarEstado(tipo, mensaje) {
-    uploadStatus.style.display = 'block';
+        if (!uploadStatus) return;
+        
+        uploadStatus.style.display = 'block';
 
-    if (tipo === 'loading') {
-        uploadStatus.className = 'upload-status alert alert-info d-flex align-items-center';
-        uploadStatus.innerHTML = `
-        <div class="spinner-border spinner-border-sm me-3" role="status">
-            <span class="visually-hidden">Cargando...</span>
-        </div>
-        <span>${mensaje}</span>
-        `;
-    } else if (tipo === 'success') {
-        uploadStatus.className = 'upload-status alert alert-success d-flex align-items-center';
-        uploadStatus.innerHTML = `
-        <i class="bi bi-check-circle-fill me-3 fs-4"></i>
-        <span>${mensaje}</span>
-        `;
-    } else if (tipo === 'error') {
-        uploadStatus.className = 'upload-status alert alert-danger d-flex align-items-center';
-        uploadStatus.innerHTML = `
-        <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
-        <span>${mensaje}</span>
-        `;
+        if (tipo === 'loading') {
+            uploadStatus.className = 'upload-status alert alert-info d-flex align-items-center';
+            uploadStatus.innerHTML = `
+                <div class="spinner-border spinner-border-sm me-3" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <span>${mensaje}</span>
+            `;
+        } else if (tipo === 'success') {
+            uploadStatus.className = 'upload-status alert alert-success d-flex align-items-center';
+            uploadStatus.innerHTML = `
+                <i class="bi bi-check-circle-fill me-3 fs-4"></i>
+                <span>${mensaje}</span>
+            `;
+            // Ocultar después de 5 segundos
+            setTimeout(() => {
+                uploadStatus.style.display = 'none';
+            }, 5000);
+        } else if (tipo === 'error') {
+            uploadStatus.className = 'upload-status alert alert-danger d-flex align-items-center';
+            uploadStatus.innerHTML = `
+                <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                <span>${mensaje}</span>
+            `;
+        }
     }
-    }
-    });
+});
 
 // --------------------------------------------
 // INICIALIZACIÓN

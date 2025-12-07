@@ -1,3 +1,6 @@
+//==========================
+// MIDDLEWARES 
+//==========================
 
 // Middleware para validar correo corporativo
 function validarCorreoCorporativo(req, res, next) {
@@ -26,25 +29,24 @@ function validarCorreoCorporativo(req, res, next) {
 // Middleware para validar contraseña segura
 function validarContraseñaSegura(req, res, next) {
     const { contraseña } = req.body;
+    const errores = [];
 
     if (!contraseña) {
-        return res.render("InicioSesion", {
-            error: "La contraseña es obligatoria",
-            success: null
-        });
+        errores.push("La contraseña es obligatoria");
+    } else {
+        const regexContraseña = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!regexContraseña.test(contraseña)) {
+            errores.push("La contraseña debe tener mínimo 8 caracteres, al menos 1 mayúscula y 1 número");
+        }
     }
 
-    const regexContraseña = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-
-    if (!regexContraseña.test(contraseña)) {
-        return res.render("InicioSesion", {
-            error: "La contraseña debe tener mínimo 8 caracteres, al menos 1 mayúscula y 1 número",
-            success: null
-        });
+    if (errores.length > 0) {
+        req.erroresValidacion = errores; // guardamos el error en la request
     }
 
     next();
 }
+
 
 
 // Middleware combinado: valida correo Y contraseña

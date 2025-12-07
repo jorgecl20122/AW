@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../dataBase/conexion_db'); 
 
+
+// ============================================
+// FUNCIONES AUXILIARES
+// ============================================
+
 function finalizarReservasVencidasAuto(callback) {
   const selectQuery = `
     SELECT id_reserva 
@@ -42,8 +47,6 @@ function finalizarReservasVencidasAuto(callback) {
     });
   });
 }
-
-
 
 // ========== CREAR RESERVA ==========
 router.post('/crear_reserva', (req, res) => {
@@ -187,7 +190,7 @@ router.get('/vista_empleado', (req, res) => {
   });
 });
 
-
+// ========== VISTA DE LAS RESERVAS DEL EMPLEADO REALIZADAS ==========
 router.get('/mis_reservas', (req, res) => {
 
   if (!req.session || !req.session.userId || req.session.userRole !== 'empleado') {
@@ -310,8 +313,11 @@ router.delete('/cancelar_reserva/:idReserva', (req, res) => {
   });
 });
 
+//====================================
+// ESTADÍSTICAS DE LA VISTA PRINCIPAL
+//====================================
 
-// ========== ESTADÍSTICAS ==========
+//Ruta de reservas por concesionario 
 router.get('/estadisticas/reservas-concesionario', (req, res) => {
 
   if (!req.session || !req.session.userId || req.session.userRole !== 'administrador') {
@@ -345,6 +351,49 @@ router.get('/estadisticas/reservas-concesionario', (req, res) => {
     res.render('reservas_concesionario', { concesionarios: result });
   });
 });
+
+// ========== INCREMENTAR INCIDENCIAS DE UNA RESERVA (VERSIÓN SIMPLE) ==========
+router.post('/estadisticas/reportar_incidencia/:idReserva', (req, res) => {
+  
+  if (!req.session || !req.session.userId || req.session.userRole !== 'empleado') {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
+
+  const idReserva = req.params.idReserva; 
+  const id_usuario = req.session.userId;
+
+  const query = `
+    UPDATE reservas 
+    SET incidencias_reportadas = COALESCE(incidencias_reportadas, 0) + 1 
+    WHERE id_reserva = ? 
+      AND id_usuario = ? 
+      AND estado = 'activa'
+  `;
+
+  pool.query(query, [idReserva, id_usuario], (err, result) => {
+    if (err) {
+     ç
+      return res.status(500).json({ 
+        error: 'Error al reportar',
+        detalles: err.message
+      });
+    }
+
+    if (result.affectedRows === 0) {
+     ç
+      return res.status(404).json({ 
+        error: 'No tienes una reserva activa con ese ID' 
+      });
+    }
+
+    console.log('Incidencia reportada correctamente');
+    res.json({ 
+      success: true, 
+      mensaje: 'Incidencia reportada correctamente'
+    });
+  });
+});
+
 
 
 module.exports = router;

@@ -16,7 +16,6 @@ $(document).ready(function(){
     ordenTabulacion: "default"
   };
 
-  // Obtener rol del usuario
   const userRole = $('body').data('user-role') || 'empleado';
 
   // ============================================
@@ -245,7 +244,7 @@ $(document).ready(function(){
   });
 
   // ============================================
-  // MODAL INTUITIVO - PASO A PASO
+  // MODAL INTUITIVO
   // ============================================
 
   function mostrarModalAtajo(combinacion = null) {
@@ -291,7 +290,7 @@ $(document).ready(function(){
     }
   }
 
-  // PASO 1: Capturar combinación
+  //Capturar combinación
   $("#inputCombinacion").on("keydown", function(e) {
     e.preventDefault();
     
@@ -310,10 +309,10 @@ $(document).ready(function(){
       // Validar
       if(ATAJOS_PREDEFINIDOS[userRole] && ATAJOS_PREDEFINIDOS[userRole][combinacion]) {
         $(this).addClass("is-invalid");
-        alert("⚠️ Esta combinación está reservada para un atajo predefinido.");
+        alert("Esta combinación está reservada para un atajo predefinido.");
       } else if(atajosActivos[combinacion] && combinacion !== combinacionAnterior) {
         $(this).addClass("is-invalid");
-        alert("⚠️ Esta combinación ya está en uso.");
+        alert("Esta combinación ya está en uso.");
       } else {
         $(this).removeClass("is-invalid").addClass("is-valid");
         actualizarResumen();
@@ -321,7 +320,7 @@ $(document).ready(function(){
     }
   });
 
-  // PASO 2: Seleccionar tipo de acción
+  //Seleccionar tipo de acción
   $(".tipo-accion-card").on("click", function() {
     let tipo = $(this).data("tipo");
     seleccionarTipoAccion(tipo);
@@ -349,7 +348,7 @@ $(document).ready(function(){
     actualizarResumen();
   }
 
-  // PASO 3A: Cargar enlaces disponibles
+  //Cargar enlaces disponibles
   function cargarEnlacesDisponibles() {
     let $grupo = $("#grupoEnlaces");
     $grupo.empty();
@@ -379,7 +378,7 @@ $(document).ready(function(){
     }
   }
 
-  // PASO 3B: Cargar botones disponibles
+  //Cargar botones disponibles
   function cargarBotonesDisponibles() {
     let $grupo = $("#grupoBotones");
     $grupo.empty();
@@ -578,7 +577,6 @@ $(document).ready(function(){
   // ============================================
   
   $("#btnRestaurar").on("click", function(){
-    if(confirm("¿Restaurar toda la configuración a valores predeterminados?")) {
       sessionStorage.removeItem('accesibilidad');
       prefs = {...DEFAULTS};
       atajosActivos = obtenerAtajosActivos();
@@ -589,7 +587,7 @@ $(document).ready(function(){
       cargarAtajosEnTabla();
       
       bootstrap.Modal.getOrCreateInstance($('#configuradorModal')).hide();
-    }
+    
   });
 
   $("#form-configurador").on("submit", function(e){
@@ -617,6 +615,7 @@ $(document).ready(function(){
     if(p.tamanoTitulo){
       $("h4").css("font-size", p.tamanoTitulo + "rem");
       $("h5").css("font-size", (p.tamanoTitulo * 0.5) + "rem");
+      $("h6").css("font-size", (p.tamanoTitulo * 0.4) + "rem");
     }
     if(p.tamanoTexto){
       $("p, .vehicle-card p, .status-box, table, table th, table td, input, select, button, a")
@@ -624,8 +623,10 @@ $(document).ready(function(){
       $("small").css("font-size", (p.tamanoTexto * 0.9) + "rem");
     }
     if(p.colorTitulos){
+      $("h2").css("color", "#000000"); 
       $("h4").css("color", p.colorTitulos); 
-      $("h5").css("color", "#000000");       
+      $("h5").css("color", "#000000");   
+      $("h6").css("color", "#000000");       
     }
     if(p.colorTexto){
       $("p, .vehicle-card p, .status-box, small, table, table th, table td, input, select, button, a")
