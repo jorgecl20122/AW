@@ -1,16 +1,3 @@
--- Tabla USUARIOS
-CREATE TABLE  USUARIOS(
-    id_usuario INT PRIMARY KEY AUTO_INCREMENT,
-    nombre_completo VARCHAR(100) NOT NULL,
-    correo VARCHAR(100) UNIQUE NOT NULL,
-    contraseña VARCHAR(225),
-    rol ENUM('administrador', 'empleado') NOT NULL,
-    telefono VARCHAR(20),
-    id_concesionario INT,
-    avatar VARCHAR(255) DEFAULT '/img/usuarios/avatar.jpg',
-     FOREIGN KEY (id_concesionario) REFERENCES CONCESIONARIOS(id_concesionario)
-);
-
 -- Tabla CONCESIONARIOS
 CREATE TABLE CONCESIONARIOS (
     id_concesionario INT PRIMARY KEY AUTO_INCREMENT,
@@ -35,6 +22,19 @@ CREATE TABLE vehiculos (
     FOREIGN KEY (id_concesionario) REFERENCES concesionarios(id_concesionario)
 ); 
 
+-- Tabla USUARIOS
+CREATE TABLE  USUARIOS(
+    id_usuario INT PRIMARY KEY AUTO_INCREMENT,
+    nombre_completo VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) UNIQUE NOT NULL,
+    contraseña VARCHAR(225),
+    rol ENUM('administrador', 'empleado') NOT NULL,
+    telefono VARCHAR(20),
+    id_concesionario INT,
+    avatar VARCHAR(255) DEFAULT '/img/usuarios/avatar.jpg',
+     FOREIGN KEY (id_concesionario) REFERENCES CONCESIONARIOS(id_concesionario)
+);
+
 CREATE TABLE Reservas (
     id_reserva INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
@@ -49,3 +49,72 @@ CREATE TABLE Reservas (
     CONSTRAINT fk_reserva_vehiculo
         FOREIGN KEY (id_vehiculo) REFERENCES Vehiculos(id_vehiculo)
 );
+
+--------------------------------------------------------------------------------------------------------------------
+-- INSERTS para la tabla USUARIOS
+
+-- EcoFlota Madrid Centro (id_concesionario = 1)
+INSERT INTO USUARIOS (nombre_completo, correo, contraseña, rol, telefono, id_concesionario, avatar) VALUES
+('Carlos Martínez López', 'carlos@ecoflota.es', 'administrador123', 'administrador', '+34 678 123 456', NULL, '/img/usuarios/avatar.jpg'),
+('Ana García Ruiz', 'ana@ecoflota.es', 'empleado123', 'empleado', '+34 678 234 567', 1, '/img/usuarios/avatar.jpg');
+
+-- EcoFlota Barcelona Port (id_concesionario = 2)
+INSERT INTO USUARIOS (nombre_completo, correo, contraseña, rol, telefono, id_concesionario, avatar) VALUES
+('Marc Puig Ferrer', 'marc@ecoflota.es', 'administrador456', 'administrador', '+34 678 345 678', NULL, '/img/usuarios/avatar.jpg'),
+('Laura Soler Vila', 'laura@ecoflota.es', 'empleado456', 'empleado', '+34 678 456 789', 2, '/img/usuarios/avatar.jpg');
+
+-- EcoFlota Valencia Marina (id_concesionario = 3)
+INSERT INTO USUARIOS (nombre_completo, correo, contraseña, rol, telefono, id_concesionario, avatar) VALUES
+('José Ramón Molina', 'jose@ecoflota.es', 'administrador789', 'administrador', '+34 678 567 890', NULL, '/img/usuarios/avatar.jpg'),
+('Carmen Beltrán Sanz', 'carmen@ecoflota.es', 'empleado789', 'empleado', '+34 678 678 901', 3, '/img/usuarios/avatar.jpg');
+
+-- EcoFlota Sevilla Centro (id_concesionario = 4)
+INSERT INTO USUARIOS (nombre_completo, correo, contraseña, rol, telefono, id_concesionario, avatar) VALUES
+('Manuel Romero Díaz', 'manuel@ecoflota.es', 'administrador012', 'administrador', '+34 678 789 012', NULL, '/img/usuarios/avatar.jpg'),
+('Isabel Navarro Cruz', 'isabel@ecoflota.es', 'empleado012', 'empleado', '+34 678 890 123', 4, '/img/usuarios/avatar.jpg');
+
+-- EcoFlota Bilbao Norte (id_concesionario = 5)
+INSERT INTO USUARIOS (nombre_completo, correo, contraseña, rol, telefono, id_concesionario, avatar) VALUES
+('Iñaki Aguirre Etxebarria', 'inaki@ecoflota.es', 'administrador345', 'administrador', '+34 678 901 234', NULL, '/img/usuarios/avatar.jpg'),
+('Amaia Zabala Urrutia', 'amaia@ecoflota.es', 'empleado345', 'empleado', '+34 678 012 345', 5, '/img/usuarios/avatar.jpg');
+
+------------------------------------------------------------------------------------------------------------------------
+-- Reservas para EcoFlota Madrid Centro (Concesionario 1)
+INSERT INTO Reservas (id_usuario, id_vehiculo, fecha_inicio, fecha_fin, estado, kilometros_recorridos, incidencias_reportadas) VALUES
+(2, 1, '2025-12-11 09:00:00', '2025-12-13 18:00:00', 'finalizada', 145.50, NULL),
+(2, 2, '2025-12-14 08:00:00', '2025-12-16 20:00:00', 'finalizada', 210.30, NULL),
+(2, 3, '2025-12-17 10:00:00', '2025-12-19 15:00:00', 'activa', NULL, NULL),
+(2, 1, '2025-12-20 09:00:00', '2025-12-22 18:00:00', 'activa', NULL, NULL);
+
+-- Reservas para EcoFlota Barcelona Port (Concesionario 2)
+INSERT INTO Reservas (id_usuario, id_vehiculo, fecha_inicio, fecha_fin, estado, kilometros_recorridos, incidencias_reportadas) VALUES
+(4, 6, '2025-12-11 07:00:00', '2025-12-13 19:00:00', 'finalizada', 189.75, NULL),
+(4, 7, '2025-12-14 09:30:00', '2025-12-16 17:30:00', 'finalizada', 156.20, NULL),
+(4, 8, '2025-12-17 08:00:00', '2025-12-19 20:00:00', 'activa', NULL, NULL),
+(4, 9, '2025-12-21 10:00:00', '2025-12-23 12:00:00', 'activa', NULL, NULL),
+(4, 6, '2025-12-24 14:00:00', '2025-12-25 18:00:00', 'cancelada', NULL, NULL);
+------------------------------------------------------------------------------------------------------------------------
+
+-- Desactivar las restricciones de claves foráneas
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Vaciar todas las tablas con DELETE
+DELETE FROM reservas;
+DELETE FROM vehiculos;
+DELETE FROM usuarios;
+DELETE FROM concesionarios;
+
+-- Reiniciar los auto-incrementos a 1
+ALTER TABLE reservas AUTO_INCREMENT = 1;
+ALTER TABLE vehiculos AUTO_INCREMENT = 1;
+ALTER TABLE usuarios AUTO_INCREMENT = 1;
+ALTER TABLE concesionarios AUTO_INCREMENT = 1;
+
+-- Reactivar las restricciones de claves foráneas
+SET FOREIGN_KEY_CHECKS = 1;
+
+DROP TABLE IF EXISTS Reservas;
+DROP TABLE IF EXISTS Vehiculos;
+DROP TABLE IF EXISTS Usuarios;
+DROP TABLE IF EXISTS Concesionarios;
+
